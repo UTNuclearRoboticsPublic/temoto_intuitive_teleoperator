@@ -1,2 +1,2 @@
 # temoto_intuitive_teleoperator
-Hardware-agnostic intuitive teleoperation software using spatial-mapping and natural language input.
+### 手元 (temoto) is ROS-based hardware-agnostic intuitive teleoperation software using spatial-mapping and natural language input.
