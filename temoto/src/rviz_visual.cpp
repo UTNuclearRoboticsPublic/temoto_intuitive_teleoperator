@@ -344,9 +344,9 @@ int main(int argc, char **argv) {
     shift_arrow.color.a = 1;						// the arrow is not transparent
 
     // A tweak for extreme close-ups to make the arrow out of scale but more informative
-    if (latest_status.scale_by < 0.01 && camera_is_aligned && !latest_status.in_natural_control_mode) {	// only when the rviz camera is in the front
-      shift_arrow.points[0].z -= 0.02;					// shift arrow marker closer to the palm because camera is at the VIRTUAL_VIEW_SCREEN
-      shift_arrow.points[1].z -= 0.02;
+    if (latest_status.scale_by < 0.01 && camera_is_aligned /*&& !latest_status.in_natural_control_mode*/) {	// only when the rviz camera is in the front
+      shift_arrow.points[0].z -= 0.02;					// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
+      shift_arrow.points[1].z -= 0.02;     
       shift_arrow.scale.x = 0.0001;					// make the shaft thinner
       shift_arrow.scale.y = 0.0003;					// make the arrow head thinner
       shift_arrow.color.a = 0.6;					// and make the arrow a bit transparent
@@ -388,6 +388,7 @@ int main(int argc, char **argv) {
     } else {								// NATURAL CONTROL MODE
       display_distance.scale.z = 0.010 + latest_status.scale_by/20;	// scale the display text based on scale_by value
       display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
+      if (latest_status.scale_by < 0.03 && camera_is_aligned) display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// extreme close-up
     }
     // A tweak for when the camera is on the top facing down; lift text above the arrow
     if (!camera_is_aligned) display_distance.pose.position.y = 0.7*shift_arrow.scale.y; // lift text to the top of arrows head
@@ -429,6 +430,8 @@ int main(int argc, char **argv) {
 	pow_camera.eye.point.x = -2*latest_status.scale_by;	// Distance backwards from the end effector
 	pow_camera.eye.point.y = 0;				// Align with end effector
 	pow_camera.eye.point.z = 0.2 + 2*latest_status.scale_by;// Distance upwards from the end effector
+	// if constrained to a plane and scaled down align camrea with the end effector in z-direction
+	if (!latest_status.position_unlimited && latest_status.scale_by < 0.03) pow_camera.eye.point.z = 0;
 	
 	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
 	pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
