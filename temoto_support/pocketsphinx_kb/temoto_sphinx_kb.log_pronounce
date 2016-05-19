@@ -1,7 +1,10 @@
 ABORT - Main 
+ADD - Main 
 BEHIND - Main 
 CAMERA - Main 
 CANCEL - Main 
+CARTESIAN - Main 
+COMPUTE - Main 
 CONSIDER - Main 
 CONTROL - Main 
 DIRECTIONS - Main 
@@ -18,13 +21,16 @@ LIMIT - Main
 MODE - Main 
 MOVE - Main 
 NATURAL - Main 
+NEW - Main 
 NO - Main 
 OKAY - Main 
+PATH - Main 
 PLAN - Main 
 PLEASE - Main 
 RESET - Main 
 ROBOT - Main 
 ROTATION - Main 
+SET - Main 
 STOP - Main 
 pronounce: verbosity is 1
 TEMOTO - By LtoS rules

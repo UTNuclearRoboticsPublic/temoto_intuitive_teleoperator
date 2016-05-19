@@ -44,4 +44,12 @@ ignore rotation
 camera front
 camera top
 camera behind
-
+new
+set
+add
+path
+cartesian
+cartesian move
+execute cartesian move
+compute cartesian
+compute cartesian path

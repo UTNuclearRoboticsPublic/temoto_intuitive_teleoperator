@@ -160,6 +160,48 @@ void requestMove(moveit::planning_interface::MoveGroup& robot) {
  *  @param robot MoveGroup object of the robot.
  */
 void requestCartesianMove(moveit::planning_interface::MoveGroup& robot) {
+ 
+  // waypoints are interpreted in the "leap_motion" ref.frame
+  robot.setPoseReferenceFrame("leap_motion");
+  
+  // The full plan for Cartesian move.
+  moveit::planning_interface::MoveGroup::Plan cartesian_plan;
+//   cartesian_plan.start_state_ = *(robot.getCurrentState());
+  
+  // Waypoints for Cartesian move.
+  std::vector<geometry_msgs::Pose> waypoints;
+  /// ONLY FOR TESTING I SPECIFY A BUNCH OF WAYPOINTS HERE
+  geometry_msgs::Pose wp1, wp2, wp3, wp4, wp5;
+  wp2.orientation.w = 1;
+  wp2.position.y = -0.14;	//downwards
+  waypoints.push_back(wp2);
+  wp3.orientation.w = 1;
+  wp3.position.x = -0.14;	//to the left
+  waypoints.push_back(wp3);
+  wp4.orientation.w = 1;
+  wp4.position.x = 0.14;	//to the right
+  waypoints.push_back(wp4);
+  wp5.orientation.w = 1;
+  wp5.position.y = 0.14;	//upwards
+  waypoints.push_back(wp5);
+  wp1.orientation.w = 1;
+  wp1.position.x = 0;		//back to the start
+  waypoints.push_back(wp1);
+  
+//   robot.getCurrentPose()
+  
+  
+  // Computed Cartesian trajectory.
+  moveit_msgs::RobotTrajectory trajectory;
+  double fraction_of_plan = robot.computeCartesianPath(waypoints,
+                                             0.01,  // eef_step
+                                             0.0,   // jump_threshold
+                                             trajectory);
+  ROS_INFO("Cartesian path %.2f%% acheived", fraction_of_plan * 100.0);
+  
+  latest_plan.trajectory_ = trajectory;
+  is_new_plan = 1;
+  
   // TODO
   return;
 }
@@ -381,12 +423,18 @@ int main(int argc, char **argv) {
   
   while(ros::ok()){
 
-    if (new_move_req == 1) {		// if there has been a service request
+    if (new_move_req == 1 && req_action_type < 0x04) {		// if there has been a service request
 	requestMove(robot_group);	// plan and execute move using move_group
 	new_move_req = 0;		// set request flag to zero
 	new_end_effector_pose = 1;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
     } //end if
-        
+    if (new_move_req == 1 && req_action_type == 0x04) {		// if there has been a service request for cartesian move
+	requestCartesianMove(robot_group);	// launch cartesian move
+	new_move_req = 0;		// set request flag to zero
+	new_end_effector_pose = 1;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
+    } //end if
+
+    
     // get and publish current end effector pose;
     pub_end_effector.publish( robot_group.getCurrentPose() );
 

@@ -105,6 +105,20 @@ void callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target) {
   return;
 } // end callPlanAndMoveNamedTarget
 
+/** Function that makes the service call to /temoto/move_robot service.
+ * 
+ */
+void callCartesianMove() {
+  temoto::Goal move;				// create a service request
+  move.request.action_type = 4;	// set action_type
+  if (move_client.call(move)) {			// call for the service to move SIA5
+    ROS_INFO("Successfully called temoto/move_robot_service for Cartesian move.");
+  } else {
+    ROS_ERROR("Failed to call temoto/move_robot_service for Cartesian move.");
+  }
+  return;
+}
+
 /** Callback function for /leapmotion_general subscriber.
  *  It updates target pose based on latest left palm pose (any scaling and/or relevant limitations are also being applied).
  *  Presence of the right hand is used to lock and unlock forward motion.
@@ -272,6 +286,9 @@ void executeVoiceCommand(temoto::Command voice_command) {
   } else if (voice_command.cmd == 0x23) {
     ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
     orientation_locked = true;
+  } else if (voice_command.cmd == 0x31) {
+    ROS_INFO("Voice command received! Computing Cartesian path ...");
+    callCartesianMove();
   }
   
   else {

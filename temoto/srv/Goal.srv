@@ -1,6 +1,7 @@
 uint8 PLAN=1
 uint8 EXECUTE=2
 uint8 GO=3
+uint8 CARTESIAN_EXECUTE=4
 uint8 action_type
 
 # Goal pose

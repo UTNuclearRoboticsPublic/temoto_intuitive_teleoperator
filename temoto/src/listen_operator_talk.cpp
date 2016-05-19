@@ -34,7 +34,7 @@
 
 // TODO: can i implement some general ABORT to ROS, like ROS SHUTDOWN
 
-#define NUMBER_OF_VALID_COMMANDS 12
+#define NUMBER_OF_VALID_COMMANDS 17
 
 /** List of valid voice commands strings. */
 std::string valid_voice_commands[NUMBER_OF_VALID_COMMANDS] = {
@@ -49,14 +49,20 @@ std::string valid_voice_commands[NUMBER_OF_VALID_COMMANDS] = {
     "free directions",		// complete hand position is used
     "limit directions",		// some directions may be limited
     "consider rotation",	// interpretes hand orientation
-    "ignore rotation"		// hand orientation is ignored, i.e. using position only
+    "ignore rotation",		// hand orientation is ignored, i.e. using position only
+    "compute cartesian",	// computes cartesian path based on waypoints
+    "execute cartesian",	// executes the cartesian path
+    "cartesian go",		// computes and executes cartesian path
+    "new",			// first point in waypoints
+    "add"			// adds a point into waypoints
 };
 
 /** List of valid voice commands strings correspond to "actual" valid commands for which unsigned integers are used. */
 uint8_t valid_commands[NUMBER_OF_VALID_COMMANDS] = {
   0x00, 0x01, 0x02, 0x03, 0xf1, 0xf3,		// move related
   0x10, 0x11,					// control related
-  0x20, 0x21, 0x22, 0x23			// related to which data from the hand to use
+  0x20, 0x21, 0x22, 0x23,			// related to which data from the hand to use
+  0x31, 0x32, 0x33, 0x34, 0x35			// cartesian move related
 };
 
 /** Whenever a valid voice command is detected, latest_voice_command.cmd is set to hold a corresponding valid command. */

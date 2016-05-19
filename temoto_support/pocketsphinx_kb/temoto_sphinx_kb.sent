@@ -44,3 +44,12 @@
 <s> CAMERA FRONT </s>
 <s> CAMERA TOP </s>
 <s> CAMERA BEHIND </s>
+<s> NEW </s>
+<s> SET </s>
+<s> ADD </s>
+<s> PATH </s>
+<s> CARTESIAN </s>
+<s> CARTESIAN MOVE </s>
+<s> EXECUTE CARTESIAN MOVE </s>
+<s> COMPUTE CARTESIAN </s>
+<s> COMPUTE CARTESIAN PATH </s>
