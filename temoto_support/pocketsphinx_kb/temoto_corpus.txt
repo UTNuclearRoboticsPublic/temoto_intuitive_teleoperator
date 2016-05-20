@@ -47,9 +47,12 @@ camera behind
 new
 set
 add
+remove
+delete
 path
 cartesian
 cartesian move
 execute cartesian move
 compute cartesian
 compute cartesian path
+cancel cartesian

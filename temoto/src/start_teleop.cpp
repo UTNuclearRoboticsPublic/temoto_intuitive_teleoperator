@@ -51,6 +51,7 @@ ros::ServiceClient tf_client;		///< Service client for requesting changes of con
 
 geometry_msgs::PoseStamped current_pose;///< Latest pose value received for the end effector.
 geometry_msgs::PoseStamped desired_pose;///< Properly scaled target pose in reference to leap motion frame.
+std::vector<geometry_msgs::Pose> wayposes;	///< Vector of desired wayposes for a Cartesian move of the end-effector. Specified in the frame of the end-effector.
 
 // 'natural' robot and human are oriented the same way; 'inverted' means the human operator is facing the robot so that left and right are inverted.
 bool using_natural_control = true;	///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
@@ -110,7 +111,7 @@ void callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target) {
  */
 void callCartesianMove() {
   temoto::Goal move;				// create a service request
-  move.request.action_type = 4;	// set action_type
+  move.request.action_type = 0x04;		// set action_type
   if (move_client.call(move)) {			// call for the service to move SIA5
     ROS_INFO("Successfully called temoto/move_robot_service for Cartesian move.");
   } else {
