@@ -48,7 +48,9 @@ new
 set
 add
 remove
+remove last
 delete
+delete last
 path
 cartesian
 cartesian move

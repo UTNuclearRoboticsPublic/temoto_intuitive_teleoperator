@@ -109,9 +109,11 @@ void callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target) {
 /** Function that makes the service call to /temoto/move_robot service.
  * 
  */
-void callCartesianMove() {
+void computeCartesian(std::string frame_id) {
   temoto::Goal move;				// create a service request
   move.request.action_type = 0x04;		// set action_type
+  move.request.cartesian_wayposes = wayposes;
+  move.request.cartesian_frame = frame_id;
   if (move_client.call(move)) {			// call for the service to move SIA5
     ROS_INFO("Successfully called temoto/move_robot_service for Cartesian move.");
   } else {
@@ -287,9 +289,22 @@ void executeVoiceCommand(temoto::Command voice_command) {
   } else if (voice_command.cmd == 0x23) {
     ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
     orientation_locked = true;
-  } else if (voice_command.cmd == 0x31) {
-    ROS_INFO("Voice command received! Computing Cartesian path ...");
-    callCartesianMove();
+  } else if (voice_command.cmd == 0x34) {				// Restart (delete all and add new) Cartesian waypoints 
+    ROS_INFO("Voice command received! Started defining new Cartesian path ...");
+    wayposes.clear();						// Clear existing wayposes
+    wayposes.push_back(desired_pose.pose);			// Add a waypose
+    computeCartesian(desired_pose.header.frame_id.c_str());	// Try to compute Cartesian path
+  } else if (voice_command.cmd == 0x35) {				// Add Cartesian waypoint to the end 
+    ROS_INFO("Voice command received! Adding a pose to Cartesian path ...");
+    wayposes.push_back(desired_pose.pose);			// Add a waypose
+    computeCartesian(desired_pose.header.frame_id.c_str());	// Try to compute Cartesian path
+  } else if (voice_command.cmd == 0x36) {				// Remove the last Cartesian wayposet 
+    ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
+    wayposes.pop_back();					// Remove last waypose
+    computeCartesian(desired_pose.header.frame_id.c_str());	// Try to compute Cartesian path
+  } else if (voice_command.cmd == 0x37) {				// Remove the last Cartesian wayposet 
+    ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
+    wayposes.clear();						// Clear all wayposes
   }
   
   else {
@@ -307,6 +322,7 @@ temoto::Status getStatus() {
   status.header.frame_id = "start_teleop";
   status.scale_by = scale_by;					// Latest scale_by value
   status.live_hand_pose = desired_pose;				// Latest hand pose stamped
+  status.cartesian_wayposes = wayposes;				// Latest cartesian wayposes
   status.in_natural_control_mode = using_natural_control;
   status.orientation_free = !orientation_locked;
   status.position_unlimited = !position_limited;

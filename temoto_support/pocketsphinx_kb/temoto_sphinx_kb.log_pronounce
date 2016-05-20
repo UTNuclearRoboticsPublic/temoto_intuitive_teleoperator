@@ -7,6 +7,7 @@ CARTESIAN - Main
 COMPUTE - Main 
 CONSIDER - Main 
 CONTROL - Main 
+DELETE - Main 
 DIRECTIONS - Main 
 ECHO - Main 
 EXECUTE - Main 
@@ -17,6 +18,7 @@ HELLO - Main
 HOME - Main 
 IGNORE - Main 
 INVERTED - Main 
+LAST - Main 
 LIMIT - Main 
 MODE - Main 
 MOVE - Main 
@@ -27,6 +29,7 @@ OKAY - Main
 PATH - Main 
 PLAN - Main 
 PLEASE - Main 
+REMOVE - Main 
 RESET - Main 
 ROBOT - Main 
 ROTATION - Main 

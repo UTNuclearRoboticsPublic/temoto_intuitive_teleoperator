@@ -40,29 +40,6 @@
 #include "tf/tf.h"
 #include "tf/transform_listener.h"
 
-// int8_t new_move_req = 0; 			///< If new move has been requested by a client, it is set to 1; after calling move(), it is set to 0.
-// int8_t new_end_effector_pose = 0;		///< If end effector has a new position, this is set to 1; after requesting rviz camera move, it is 0.
-// geometry_msgs::PoseStamped target_pose_stamped;	///< Target pose for the robot.
-// std::string req_named_target;			///< Named target for the robot.
-// uint8_t req_action_type = 0xff;			///< Action type associated with target request, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03).
-
-// bool use_named_target = false;			///< When named target is requested, use_named_target is set to true.
-// moveit::planning_interface::MoveGroup::Plan latest_plan;	///< Latest motion plan.
-// int8_t is_new_plan = 0;				///< After calculating a new motion plan, is_new_plan is set to 1; after executing the plan, is_new_plan is set to 0.
-// std_srvs::Empty empty_srv;			///< Empty service.
-
-// class MoveRobotInterface {
-//  public:
-// 
-//    moveit::planning_interface::MoveGroup robot_group;
-//    bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
-//    void requestMove();
-//    void requestCartesianMove();
-//    MoveRobotInterface(std::string mg) :
-//    robot_group(mg) {
-//    };  
-// };
-
 /** This method is executed when temoto/move_robot_service service is called.
  *  It updates target_pose_stamped based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.
  *  @param req temoto::Goal service request.
@@ -74,8 +51,12 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 //  ROS_INFO("New service update requested.");
 
   if (req.action_type == req.CARTESIAN_COMPUTE) {
+    // Set current state as the start state for planner. For some reason the actual built-in function doesn't do that.
+    movegroup_.setStartState( *(movegroup_.getCurrentState()) );
+    
     // waypoints are interpreted in the "leap_motion" ref.frame
-    movegroup_.setPoseReferenceFrame("leap_motion");	//TODO Take the value from req
+    movegroup_.setPoseReferenceFrame(req.cartesian_frame);
+    
     // Computed Cartesian trajectory.
     moveit_msgs::RobotTrajectory trajectory;
     res.cartesian_fraction = movegroup_.computeCartesianPath(req.cartesian_wayposes,
@@ -88,25 +69,23 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
     new_plan_available_ = true;
     
   } else {
-  
     // sets the action associated to target pose
-    req_action_type_ = req.action_type;			// TODO SHOULD IT BE BEFORE THE IFs
+    req_action_type_ = req.action_type;				// TODO: Should it be in the beginning, before IF?
     
     // sets target requested pose
     target_pose_stamped_ = req.goal;
     
     // check for named target
     use_named_target_ = false;					// by default do not use named_target.
-    named_target_ = req.named_target;				// get named_target from service request.
+    named_target_ = req.named_target;				// get named_target from the service request.
     ROS_INFO("[MoveRobotInterface::serviceUpdate] named_target_='%s'", named_target_.c_str());
-    if (!named_target_.empty()) use_named_target_ = true;		// if named_target was specified, set use_named_target_ to true.
-    if (use_named_target_) ROS_INFO("[MoveRobotInterface::serviceUpdate] use_named_target was set TRUE");
+    if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
+    if (use_named_target_) ROS_INFO("[MoveRobotInterface::serviceUpdate] use_named_target is set TRUE");
     
-    // Set new_move_req to 1 for main() to see
+    // Set new_move_requested_ TRUE for main() to see it
     new_move_requested_ = true;
-    ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ was set TRUE.");
-  
-    
+    ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ is set TRUE");
+
   }
   return true;
 } // end serviceUpdate
@@ -189,58 +168,6 @@ void MoveRobotInterface::requestMove(/*moveit::planning_interface::MoveGroup& ro
   return;
 } // end requestMove
 
-/** Plans and executes the motion of the robot as a cartesian move.
- *  @param robot MoveGroup object of the robot.
- */
-void MoveRobotInterface::requestCartesianMove(/*moveit::planning_interface::MoveGroup& robot*/) {
- 
-  // waypoints are interpreted in the "leap_motion" ref.frame
-  movegroup_.setPoseReferenceFrame("leap_motion");
-  
-  // The full plan for Cartesian move.
-  moveit::planning_interface::MoveGroup::Plan cartesian_plan;
-//   cartesian_plan.start_state_ = *(robot.getCurrentState());
-  
-  // Waypoints for Cartesian move.
-  std::vector<geometry_msgs::Pose> waypoints;
-  /// ONLY FOR TESTING I SPECIFY A BUNCH OF WAYPOINTS HERE
-  geometry_msgs::Pose wp1, wp2, wp3, wp4, wp5;
-  wp2.orientation.w = 1;
-  wp2.position.y = -0.14;	//downwards
-  waypoints.push_back(wp2);
-  wp3.orientation.w = 1;
-  wp3.position.x = -0.14;	//to the left
-  waypoints.push_back(wp3);
-  wp4.orientation.w = 1;
-  wp4.position.x = 0.14;	//to the right
-  waypoints.push_back(wp4);
-  wp5.orientation.w = 1;
-  wp5.position.y = 0.14;	//upwards
-  waypoints.push_back(wp5);
-  wp1.orientation.w = 1;
-  wp1.position.x = 0;		//back to the start
-  waypoints.push_back(wp1);
-  
-//   robot.getCurrentPose()
-  
-  
-  // Computed Cartesian trajectory.
-  moveit_msgs::RobotTrajectory trajectory;
-  double fraction_of_plan = movegroup_.computeCartesianPath(waypoints,
-                                             0.01,  // eef_step
-                                             0.0,   // jump_threshold
-                                             trajectory);
-  ROS_INFO("Cartesian path %.2f%% acheived", fraction_of_plan * 100.0);
-  
-  latest_plan_.trajectory_ = trajectory;
-  new_plan_available_ = true;
-  
-  // TODO
-  return;
-}
-
-
-
 /** Main method. */
 int main(int argc, char **argv) {
   ros::init(argc, argv, "move_robot");
@@ -279,20 +206,15 @@ int main(int argc, char **argv) {
   // ROS client for /temoto/adjust_rviz_camera
   ros::ServiceClient client_visual = n.serviceClient<std_srvs::Empty>("temoto/adjust_rviz_camera");
   std_srvs::Empty empty_srv;			// Empty service.
-  
+
   while(ros::ok()){
 
-    if (moveIF.new_move_requested_ && moveIF.req_action_type_ < 0x04) {	// if there has been a service request for new move
-	moveIF.requestMove(/*robot_group*/);	// plan and execute move using move_group
-	moveIF.new_move_requested_ = false;	// set request flag to false
-	moveIF.new_end_effector_pose_ = true;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
-    } //end if
-    if (moveIF.new_move_requested_ && moveIF.req_action_type_ == 0x04) {	// if there has been a service request for cartesian move
-	moveIF.requestCartesianMove(/*robot_group*/);	// launch cartesian move
-	moveIF.new_move_requested_ = false;	// set request flag to false
-	moveIF.new_end_effector_pose_ = true;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
-    } //end if
-
+    // check if there has been a service request for a new move
+    if (moveIF.new_move_requested_ && moveIF.req_action_type_ < 0x04) {
+      moveIF.requestMove(/*robot_group*/);	// plan and execute move using move_group
+      moveIF.new_move_requested_ = false;	// set request flag to false
+      moveIF.new_end_effector_pose_ = true;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
+    }
     
     // get and publish current end effector pose;
     pub_end_effector.publish( moveIF.movegroup_.getCurrentPose() );

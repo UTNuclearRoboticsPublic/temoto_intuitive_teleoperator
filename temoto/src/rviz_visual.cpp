@@ -285,6 +285,37 @@ visualization_msgs::Marker initTargetAid3D() {
   return aid_box;
 }
 
+/** Creates the initial marker that visualizes hand pose as a flattened box.
+ *  It is called only once when rviz_visual node is started.
+ *  @return visualization_msgs::Marker.
+ */
+visualization_msgs::Marker initCartesianWaypoints() {
+  visualization_msgs::Marker waypoints;
+  waypoints.header.frame_id = "leap_motion";
+  waypoints.header.stamp = ros::Time();
+  waypoints.ns = "waypoints";
+  waypoints.id = 0;
+  waypoints.type = visualization_msgs::Marker::LINE_STRIP;
+  waypoints.action = visualization_msgs::Marker::ADD;
+
+  waypoints.scale.x = 0.01;	// width of the line
+
+  
+  // begin at the position of end effector
+//   hand_proxy.pose.position.x = 0.0;
+//   hand_proxy.pose.position.y = 0.0;
+//   hand_proxy.pose.position.z = 0.0;
+
+  // Make the box visible by setting alpha to 1.
+  waypoints.color.a = 1;  
+  // Make the line strip blue.
+  waypoints.color.r = 0.0;
+  waypoints.color.g = 0.0;
+  waypoints.color.b = 1.0;
+  
+  return waypoints;
+}
+
 /** Main method. */
 int main(int argc, char **argv) {
 
@@ -315,6 +346,7 @@ int main(int argc, char **argv) {
   visualization_msgs::Marker display_distance = initDisplayDistance();
   visualization_msgs::Marker hand_pose = initHandPoseMarker();
   visualization_msgs::Marker aid3D = initTargetAid3D();
+  visualization_msgs::Marker cartesian_path = initCartesianWaypoints();
   
   // publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
   pub_cam.publish( pow_camera );
@@ -414,6 +446,19 @@ int main(int argc, char **argv) {
     else hand_pose.color.a = 1;
     
     pub_marker.publish( hand_pose );
+    
+    // == CARTESIAN WAYPOINTS =================================== \\
+    
+    cartesian_path.points.clear();
+    geometry_msgs::Point nill;
+    cartesian_path.points.push_back( nill );	// Start from the current end effector position
+    for (int i = 0; i < latest_status.cartesian_wayposes.size(); ++i) {
+//       geometry_msgs::Pose tmp = latest_status.cartesian_wayposes.at(i);
+      cartesian_path.points.push_back( latest_status.cartesian_wayposes.at(i).position );
+    }
+    
+//     cartesian_waypoints.points = latest_status.cartesian_wayposes;
+    pub_marker.publish( cartesian_path );
     
     // == CAMERA POSE =========================================== \\
     // Camera moves relative to 'temoto_end_effector' frame.
