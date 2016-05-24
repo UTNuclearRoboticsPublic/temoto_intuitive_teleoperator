@@ -115,10 +115,16 @@ void computeCartesian(std::string frame_id) {
   move.request.cartesian_wayposes = wayposes;
   move.request.cartesian_frame = frame_id;
   if (move_client.call(move)) {			// call for the service to move SIA5
-    ROS_INFO("Successfully called temoto/move_robot_service for Cartesian move.");
+    ROS_INFO("[start_teleop] Successfully called temoto/move_robot_service for Cartesian move. Fraction of computed path is %f", move.response.cartesian_fraction);
+    if (move.response.cartesian_fraction < 1 && !wayposes.empty()) {
+      ROS_INFO("[start_teleop] Failed to compute the entire Cartesian path. Removing the last waypose and retrying...");
+      wayposes.pop_back();
+      computeCartesian(frame_id);		// going recursive
+    }
   } else {
-    ROS_ERROR("Failed to call temoto/move_robot_service for Cartesian move.");
+    ROS_ERROR("[start_teleop] Failed to call temoto/move_robot_service for Cartesian move.");
   }
+  
   return;
 }
 
@@ -239,6 +245,19 @@ void processEndEffector(geometry_msgs::PoseStamped end_effector_pose) {
   return;
 } // end processEndeffector()
 
+
+// // TODO DOXYGEN
+// geometry_msgs::Pose oneEightyAroundZ(geometry_msgs::Pose pose_in) {
+//   geometry_msgs::Pose pose_out = pose_in;
+//   // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
+//   tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
+//   tf::Quaternion palm_orientation;						// incoming palm orientation
+//   tf::quaternionMsgToTF(pose_in.orientation, palm_orientation);			// convert incoming quaternion msg to tf qauternion
+//   tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
+//   final_rotation.normalize();							// normalize quaternion
+//   tf::quaternionTFToMsg(final_rotation, pose_out.orientation);			// convert tf quaternion to quaternion msg
+// }
+
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
@@ -292,11 +311,32 @@ void executeVoiceCommand(temoto::Command voice_command) {
   } else if (voice_command.cmd == 0x34) {				// Restart (delete all and add new) Cartesian waypoints 
     ROS_INFO("Voice command received! Started defining new Cartesian path ...");
     wayposes.clear();						// Clear existing wayposes
-    wayposes.push_back(desired_pose.pose);			// Add a waypose
+      // TODO maybe need a separate function for inverting the rotation, e.g. geometry_msgs::Pose oneEightyAroundZ(geometry_msgs::Pose pose)
+      // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
+      geometry_msgs::Pose tmp = desired_pose.pose;
+      if (!using_natural_control) {							// fix orientation for inverted view only
+	tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
+	tf::Quaternion palm_orientation;						// incoming palm orientation
+	tf::quaternionMsgToTF(tmp.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
+	tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
+	final_rotation.normalize();							// normalize quaternion
+	tf::quaternionTFToMsg(final_rotation, tmp.orientation);	// convert tf quaternion to quaternion msg
+      }    
+    wayposes.push_back(tmp);			// Add a waypose
     computeCartesian(desired_pose.header.frame_id.c_str());	// Try to compute Cartesian path
   } else if (voice_command.cmd == 0x35) {				// Add Cartesian waypoint to the end 
     ROS_INFO("Voice command received! Adding a pose to Cartesian path ...");
-    wayposes.push_back(desired_pose.pose);			// Add a waypose
+      // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
+      geometry_msgs::Pose tmp = desired_pose.pose;
+      if (!using_natural_control) {							// fix orientation for inverted view only
+	tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
+	tf::Quaternion palm_orientation;						// incoming palm orientation
+	tf::quaternionMsgToTF(tmp.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
+	tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
+	final_rotation.normalize();							// normalize quaternion
+	tf::quaternionTFToMsg(final_rotation, tmp.orientation);	// convert tf quaternion to quaternion msg
+      }
+    wayposes.push_back(tmp);			// Add a waypose
     computeCartesian(desired_pose.header.frame_id.c_str());	// Try to compute Cartesian path
   } else if (voice_command.cmd == 0x36) {				// Remove the last Cartesian wayposet 
     ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
