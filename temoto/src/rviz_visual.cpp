@@ -88,11 +88,11 @@ void updateStatus (temoto::Status status) {
   if (status.position_unlimited != latest_status.position_unlimited) adjust_camera = true;
   
   // Check difference between the known and new end effector positions
-  std::vector <geometry_msgs::Point> now_and_before;			// Vector that contains current and target points
-  now_and_before.push_back(status.end_effector_position);		// Add the just received position of end effector
-  now_and_before.push_back(latest_status.end_effector_position);	// Add the previous known position of end effector
-  double shift = calculateDistance(now_and_before);			// Calculate the linear distance between the two positions
-  if (shift > 0.001) adjust_camera = true;				// If the difference is more than 1 mm, set adjust_camera to true.
+  std::vector <geometry_msgs::Point> now_and_before;				// Vector that contains current and target points
+  now_and_before.push_back(status.end_effector_pose.pose.position);		// Add the just received position of end effector
+  now_and_before.push_back(latest_status.end_effector_pose.pose.position);	// Add the previous known position of end effector
+  double shift = calculateDistance(now_and_before);				// Calculate the linear distance between the two positions
+  if (shift > 0.001) adjust_camera = true;					// If the difference is more than 1 mm, set adjust_camera to true.
   
   // Overwrite latest_status values with the new status.
   latest_status = status;
@@ -291,7 +291,7 @@ visualization_msgs::Marker initTargetAid3D() {
  */
 visualization_msgs::Marker initCartesianWaypoints() {
   visualization_msgs::Marker waypoints;
-  waypoints.header.frame_id = "leap_motion";
+  waypoints.header.frame_id = "base_link"/*"leap_motion"*/;
   waypoints.header.stamp = ros::Time();
   waypoints.ns = "waypoints";
   waypoints.id = 0;
