@@ -450,9 +450,10 @@ int main(int argc, char **argv) {
     // == CARTESIAN WAYPOINTS =================================== \\
     
     cartesian_path.points.clear();
-    geometry_msgs::Point nill;
-    cartesian_path.points.push_back( nill );	// Start from the current end effector position
-    for (int i = 0; i < latest_status.cartesian_wayposes.size(); ++i) {
+//     geometry_msgs::Point nill;
+//     cartesian_path.points.push_back( nill );	// Start from the current end effector position
+    for (int i = 0; i < latest_status.cartesian_wayposes.size(); ++i)
+    {
 //       geometry_msgs::Pose tmp = latest_status.cartesian_wayposes.at(i);
       cartesian_path.points.push_back( latest_status.cartesian_wayposes.at(i).position );
     }

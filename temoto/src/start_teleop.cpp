@@ -30,9 +30,6 @@
 
 #define HEIGHT_OF_ZERO 0.2		///< Height of zero position above Leap Motion Controller.
 
-
-
-
 /** Function that actually makes the service call to temoto/move_robot_service.
  *  @param action_type determines what is requested from MoveGroup, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03). 
  */
@@ -54,7 +51,7 @@ void Teleoperator::callPlanAndMove(uint8_t action_type)
     tf::quaternionTFToMsg(final_rotation, move.request.goal.pose.orientation);	// convert tf quaternion to quaternion msg
   }
   
-  if (move_robot_client.call(move))			// call for the temoto/move_robot_service
+  if (move_robot_client_.call(move))			// call for the temoto/move_robot_service
   {
     ROS_INFO("Successfully called temoto/move_robot_service");
   }
@@ -75,7 +72,7 @@ void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string n
   move.request.action_type = action_type;	// set action_type
   move.request.named_target = named_target;	// set named_target as the goal
   
-  if (move_robot_client.call(move))			// call for the service to move robot group
+  if (move_robot_client_.call(move))			// call for the service to move robot group
   {
     ROS_INFO("Successfully called temoto/move_robot_service");
   }
@@ -89,6 +86,8 @@ void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string n
 
 
 /** Function that makes the service call to /temoto/move_robot service.
+ *  It requests computation/planning of cartesian path based on existing waypoints.
+ *  If a complete path cannot be calculated, it removes the last waypose and replans the cartesian path.
  * 
  */
 void Teleoperator::computeCartesian(std::string frame_id)
@@ -97,15 +96,16 @@ void Teleoperator::computeCartesian(std::string frame_id)
   move.request.action_type = 0x04;		// set action_type
   move.request.cartesian_wayposes = wayposes_;
   move.request.cartesian_frame = frame_id;
-  if (move_robot_client.call(move))			// call for the service to move robot group
+  if (move_robot_client_.call(move))			// call for the service to move robot group
   {
     ROS_INFO("[start_teleop] Successfully called temoto/move_robot_service for Cartesian move. Fraction of computed path is %f", move.response.cartesian_fraction);
-    if (move.response.cartesian_fraction < 1 && !wayposes_.empty()) {
+    if (move.response.cartesian_fraction < 1 && !wayposes_.empty())
+    {
       ROS_INFO("[start_teleop] Failed to compute the entire Cartesian path. Removing the last waypose and retrying...");
       wayposes_.pop_back();
       computeCartesian(frame_id);		// going recursive
     }
-//     wayposes_in_baselink = wayposesInBaseLinkFrame(wayposes, /*TODO*/);
+     wayposes_fixed_in_baselink_ = wayposesInFixedFrame(wayposes_);
   }
   else
   {
@@ -119,11 +119,12 @@ void Teleoperator::computeCartesian(std::string frame_id)
  * 
  *  @param wayposes_leapmotion vector of wayposes defined in "leap_motion" frame.
  *  @param tf_listener a TransformListener that has been around long enough to know a transform from "leap_motion" to "base_link"
- *  @return a vector of equal in size to exisitng wayposes but all the poses are defined in "base_link". 
+ *  @return a vector where all the poses are defined in "base_link" and current_pose_ is inserted as the first element.
  */
-std::vector<geometry_msgs::Pose> Teleoperator::wayposesInBaseLinkFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion/*, tf::TransformListener &tf_listener*/)
+std::vector<geometry_msgs::Pose> Teleoperator::wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion)
 {
   std::vector<geometry_msgs::Pose> wayposes_baselink;
+  wayposes_baselink.push_back(current_pose_.pose);			// Start the vector with current end-effector pose
   std::reverse(wayposes_leapmotion.begin(),wayposes_leapmotion.end());	// reversed the order of elements in wayposes_leapmotion
   geometry_msgs::PoseStamped stamped_pose_msg_lm, stamped_pose_msg_bl;	// temp stamped poses for leap_motion and base_link
   stamped_pose_msg_lm.header.frame_id = "leap_motion";			// stamp leap_motion poses with appropriate data
@@ -150,15 +151,6 @@ std::vector<geometry_msgs::Pose> Teleoperator::wayposesInBaseLinkFrame(std::vect
  */
 void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_data)
 {
-  // NOTE: I am now using voice commands to switch between control modes because key taps are not very well understood by LeapSDK.
-  // Right hand KeyTapGesture to switch between view modes
-//   if (leap_data.right_hand_key_tap) {
-//     ROS_INFO("LEAP has detected KeyTapGesture on right hand!");
-//     temoto::ChangeTf switch_tf;
-//     switch_tf.request.leap_motion_natural = !using_natural_control;		// request a change of view mode
-//     if ( tf_client.call( switch_tf ) ) using_natural_control = !using_natural_control;// if request successful, change the value of view mode in this node
-//   } // end if lefthand_key_tap
-
   
   // If position data is to be limited AND right_hand is detected AND right hand wasn't there before, toggle position_fwd_only_.
   if (position_limited_ && leap_data.right_hand && !right_hand_before_)
@@ -266,7 +258,7 @@ void Teleoperator::processPowermate(temoto::Dial powermate)
  *  Sets the received pose of an end effector as current_pose_.
  *  @param end_eff_pose geometry_msgs::PoseStamped for end effector.
  */
-void Teleoperator::processEndEffector(geometry_msgs::PoseStamped end_effector_pose)
+void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose)
 {
   current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
   return;
@@ -294,101 +286,140 @@ geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs:
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
  */
-void Teleoperator::executeVoiceCommand(temoto::Command voice_command)
+void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 {
   // TODO check for namespace
-  if (voice_command.cmd == 0xff) {
+  if (voice_command.cmd == 0xff)
+  {
     ROS_INFO("Voice command received! Aborting ...");
     // TODO
-  } else if (voice_command.cmd == 0x00) {
+  }
+  else if (voice_command.cmd == 0x00)
+  {
     ROS_INFO("Voice command received! Stopping ...");
     // TODO
-  } else if (voice_command.cmd == 0x01) {
+  }
+  else if (voice_command.cmd == 0x01)
+  {
     ROS_INFO("Voice command received! Planning ...");
     callPlanAndMove(0x01);
-  } else if (voice_command.cmd == 0x02) {
+  }
+  else if (voice_command.cmd == 0x02)
+  {
     ROS_INFO("Voice command received! Executing last plan ...");
     callPlanAndMove(0x02);
-  } else if (voice_command.cmd == 0x03) {
+  }
+  else if (voice_command.cmd == 0x03)
+  {
     ROS_INFO("Voice command received! Planning and moving ...");
     callPlanAndMove(0x03);
-  } else if (voice_command.cmd == 0xf1) {
+  }
+  else if (voice_command.cmd == 0xf1)
+  {
     ROS_INFO("Voice command received! Planning to home ...");
     callPlanAndMoveNamedTarget(0x01, "home_pose");
-  } else if (voice_command.cmd == 0xf3) {
+  }
+  else if (voice_command.cmd == 0xf3)
+  {
     ROS_INFO("Voice command received! Planning and moving to home ...");
     callPlanAndMoveNamedTarget(0x03, "home_pose");
-  } else if (voice_command.cmd == 0x10) {
+  }
+  else if (voice_command.cmd == 0x10)
+  {
     ROS_INFO("Voice command received! Using natural control mode ...");
     temoto::ChangeTf switch_tf;
-    switch_tf.request.leap_motion_natural = true;			// request a change of view mode
-    if ( tf_client.call( switch_tf ) ) using_natural_control_ = true;	// if request successful, change the value of view mode in this node
-  } else if (voice_command.cmd == 0x11) {
+    switch_tf.request.leap_motion_natural = true;	// request a change of view mode
+    // if service request successful, change the value of view mode in this node
+    if ( tf_change_client_.call( switch_tf ) ) using_natural_control_ = true;
+  }
+  else if (voice_command.cmd == 0x11)
+  {
     ROS_INFO("Voice command received! Using inverted control mode ...");
     temoto::ChangeTf switch_tf;
-    switch_tf.request.leap_motion_natural = false;			// request a change of view mode
-    if ( tf_client.call( switch_tf ) ) using_natural_control_ = false;	// if request successful, change the value of view mode in this node
-  } else if (voice_command.cmd == 0x20) {
+    switch_tf.request.leap_motion_natural = false;	// request a change of view mode
+    // if service request successful, change the value of view mode in this node
+    if ( tf_change_client_.call( switch_tf ) ) using_natural_control_ = false;
+  }
+  else if (voice_command.cmd == 0x20)
+  {
     ROS_INFO("Voice command received! Acknowledging 'Free directions' ...");
     position_limited_ = false;
-    position_fwd_only_ = false;						// if input position is not limited, then there cannot be "forward only" mode
-  } else if (voice_command.cmd == 0x21) {
+    position_fwd_only_ = false;				// once input position is not limited, there cannot be "forward only" mode
+  }
+  else if (voice_command.cmd == 0x21)
+  {
     ROS_INFO("Voice command received! Acknowledging 'Limit directions' ...");
     position_limited_ = true;
-  } else if (voice_command.cmd == 0x22) {
+  }
+  else if (voice_command.cmd == 0x22)
+  {
     ROS_INFO("Voice command received! Considering hand rotation/orientation ...");
     orientation_locked_ = false;
-  } else if (voice_command.cmd == 0x23) {
+  }
+  else if (voice_command.cmd == 0x23)
+  {
     ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
     orientation_locked_ = true;
-  } else if (voice_command.cmd == 0x34) {			// Restart (delete all and add new) Cartesian wayposes
+  }
+  else if (voice_command.cmd == 0x34)			// Restart (delete all and add new) Cartesian wayposes
+  {
     ROS_INFO("Voice command received! Started defining new Cartesian path ...");
-    wayposes_.clear();						// Clear existing wayposes
+    wayposes_.clear();					// Clear existing wayposes
     geometry_msgs::Pose new_waypose = live_pose_.pose;	// Set live_pose_ as a new waypose
-    if (!using_natural_control_) {				// Fix orientation, for inverted view only
+    if (!using_natural_control_)			// Fix orientation if in inverted control perspective
+    {
       new_waypose.orientation = oneEightyAroundOperatorUp(new_waypose.orientation);
     }
-    wayposes_.push_back(new_waypose);				// Add a waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());	// Try to compute Cartesian path
-  } else if (voice_command.cmd == 0x35) {			// Add a Cartesian waypose to the end existing Cartesian path
+    wayposes_.push_back(new_waypose);			// Add a waypose
+    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
+  }
+  else if (voice_command.cmd == 0x35)			// Add a Cartesian waypose to the end existing Cartesian path
+  {
     ROS_INFO("Voice command received! Adding a pose to Cartesian path ...");
     geometry_msgs::Pose new_waypose = live_pose_.pose;	// Set live_pose_ as a new waypose
-    if (!using_natural_control_) {				// Fix orientation, for inverted view only
+    if (!using_natural_control_)			// Fix orientation if in inverted control perspective
+    {
       new_waypose.orientation = oneEightyAroundOperatorUp(new_waypose.orientation);
     }
-    wayposes_.push_back(new_waypose);				// Add a waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());	// Try to compute Cartesian path
-  } else if (voice_command.cmd == 0x36) {				// Remove the last Cartesian wayposet 
+    wayposes_.push_back(new_waypose);			// Add a waypose
+    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
+  }
+  else if (voice_command.cmd == 0x36)			// Remove the last Cartesian waypose
+  {
     ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
-    wayposes_.pop_back();					// Remove last waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());	// Try to compute Cartesian path
-  } else if (voice_command.cmd == 0x37) {				// Remove the last Cartesian wayposet 
-    ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
-    wayposes_.clear();						// Clear all wayposes
+    wayposes_.pop_back();				// Remove last waypose
+    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
+  }
+  else if (voice_command.cmd == 0x37)			// Remove the last Cartesian waypose
+  { 
+    ROS_INFO("Voice command received! Removing all Cartesian wayposes  ...");
+    wayposes_.clear();					// Clear all wayposes
+    wayposes_fixed_in_baselink_.clear();		// Clear wayposes defined in base_link
   }
   
-  else {
+  else
+  {
     ROS_INFO("Voice command received! Unknown voice command.");
   }
   return;
 }
 
-/** Puts all the latest global variable values into temoto/status message.
+/** Puts all the latest private variable values into temoto/status message.
  *  @return temoto::Status message.
  */
-temoto::Status Teleoperator::getStatus( /*tf::TransformListener &transform_listener*/ )
+temoto::Status Teleoperator::getStatus()
 {
   temoto::Status status;
   status.header.stamp = ros::Time::now();
-  status.header.frame_id = "start_teleop";
+  status.header.frame_id = "teleoperator";
   status.scale_by = scale_by_;					// Latest scale_by_ value
   status.live_hand_pose = live_pose_;				// Latest hand pose stamped
-  status.cartesian_wayposes = wayposesInBaseLinkFrame(wayposes_/*, tee_eff_listener*/);	// Latest cartesian wayposes in base_link frame
+  status.cartesian_wayposes = wayposes_fixed_in_baselink_;	// Latest cartesian wayposes in base_link frame
   status.in_natural_control_mode = using_natural_control_;
   status.orientation_free = !orientation_locked_;
   status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
-  status.position_forward_only = position_fwd_only_;			// needs renaming
+  status.position_forward_only = position_fwd_only_;
 
   return status;
 } // end getStatus()
@@ -397,28 +428,40 @@ temoto::Status Teleoperator::getStatus( /*tf::TransformListener &transform_liste
 int main(int argc, char **argv)
 {
 
-  ros::init(argc, argv, "start_teleop");								// ROS init
-  ros::NodeHandle n;											// ROS handle
+  // ROS
+  ros::init(argc, argv, "start_teleop");
+  ros::NodeHandle n;
   
-  // Instance of teleoperator
+  // Instance of Teleoperator
   Teleoperator temoto_teleop;
- 
-  temoto_teleop.move_robot_client = n.serviceClient<temoto::Goal>("temoto/move_robot_service");				// ROS client for /temoto/move_robot_service
-  temoto_teleop.tf_client = n.serviceClient<temoto::ChangeTf>("temoto/change_tf");
 
-  ros::Subscriber sub_powermate = n.subscribe<temoto::Dial>("griffin_powermate", 10, &Teleoperator::processPowermate, &temoto_teleop);	// ROS subscriber on /griffin_powermate
-  ros::Subscriber sub_leap = n.subscribe("leapmotion_general", 10,  &Teleoperator::processLeap, &temoto_teleop);			// ROS subscriber on /leapmotion_general
-  ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::processEndEffector, &temoto_teleop);	// ROS subscriber on /temoto/end_effector_pose
-  ros::Subscriber sub_voicecommands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::executeVoiceCommand, &temoto_teleop);	// ROS subscriber on /temoto/voice_commands
+  // Setup Teleoperator ROS clients
+  // ROS client for /temoto/move_robot_service
+  temoto_teleop.move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
+  // ROS client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
+  temoto_teleop.tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_tf");
+
+  // Setup ROS subscribers
+  // ROS subscriber on /griffin_powermate
+  ros::Subscriber sub_scaling_factor = n.subscribe<temoto::Dial>("griffin_powermate", 10, &Teleoperator::processPowermate, &temoto_teleop);
+  // ROS subscriber on /leapmotion_general
+  ros::Subscriber sub_operator_hand = n.subscribe("leapmotion_general", 10,  &Teleoperator::processLeap, &temoto_teleop);
+  // ROS subscriber on /temoto/voice_commands
+  ros::Subscriber sub_voicecommands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
+  // ROS subscriber on /temoto/end_effector_pose
+  ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, &temoto_teleop);
   
-  ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);				// ROS publisher on /temoto/status
+  // Setup ROS publisher for Teleoperator::getStatus()
+  ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
   
   ROS_INFO("Starting teleoperation ...");
-  while (ros::ok()) {
+  while (ros::ok())
+  {
+    // publish status current
+    pub_status.publish( temoto_teleop.getStatus() );
     
-    pub_status.publish( temoto_teleop.getStatus( /*tf_listener*/ ) );		// publish status current
-      
-    ros::spinOnce();				// spins once to update subscribers or something like that
+    // spins once to update subscribers or something like that
+    ros::spinOnce();
   } // end while
   
   return 0;

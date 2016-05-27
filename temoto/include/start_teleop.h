@@ -38,7 +38,6 @@
 #include "leap_motion_controller/LeapMotionOutput.h"
 
 // Other includes
-#include "math.h"
 #include <cstdlib>
 #include <iostream>
 #include <algorithm>    // std::reverse
@@ -49,6 +48,7 @@
 class Teleoperator
 {
 public:
+  /// Constructor
   Teleoperator()
   {
     scale_by_ = 1;
@@ -70,11 +70,11 @@ public:
 
   // Helper functions
   
-  std::vector<geometry_msgs::Pose> wayposesInBaseLinkFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion/*, tf::TransformListener &tf_listener*/);
+  std::vector<geometry_msgs::Pose> wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion);
   
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
-  temoto::Status getStatus( /*tf::TransformListener &transform_listener*/ );
+  temoto::Status getStatus();
   
   //Callback functions
   
@@ -82,31 +82,42 @@ public:
   
   void processPowermate(temoto::Dial powermate);				// TODO rename to more general case, e.g. processScaleFactor
   
-  void processEndEffector(geometry_msgs::PoseStamped end_effector_pose);	// TODO rename to updateEndEffector or similar
+  void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
   
-  void executeVoiceCommand(temoto::Command voice_command);			// TODO rename to processVoiceCommand
+  void processVoiceCommand(temoto::Command voice_command);
   
-  ros::ServiceClient move_robot_client;		///< This service client for temoto/move_robot_service is global, so that callback funtions could see it.
-  ros::ServiceClient tf_client;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame. 
+  // Public variables
+  
+  ros::ServiceClient move_robot_client_;		///< This service client for temoto/move_robot_service is global, so that callback funtions could see it.
+  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame. 
 
 private:
+  /// Local TransformListener for transforming poses
+  tf::TransformListener transform_listener_;
 
-  tf::TransformListener transform_listener_;					// Local TransformListener
-
-  double scale_by_;			///< Scaling factor, it is normalized to 1.
-  int8_t AMP_HAND_MOTION_; 		///< Amplification of hand motion.
-
-  geometry_msgs::PoseStamped current_pose_;///< Latest pose value received for the end effector.
-  geometry_msgs::PoseStamped live_pose_;///< Properly scaled target pose in reference to leap motion frame.
-  std::vector<geometry_msgs::Pose> wayposes_;		///< Vector of desired wayposes for a Cartesian move of the end-effector. Specified in the frame of the end-effector.
-  std::vector<geometry_msgs::Pose> wayposes_fixed_to_baselink_;///< Vector of desired wayposes for a Cartesian move of the end-effector. Specified in the frame of the base_link.
-
-  // State variables:
+  /// Scaling factor. Normalized to 1.
+  double scale_by_;
   
-  // 'natural' robot and human are oriented the same way; 'inverted' means the human operator is facing the robot so that left and right are inverted.
-  bool using_natural_control_;	///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
+  /// Amplification of input hand motion. (Scaling factor scales the amplification.)
+  int8_t AMP_HAND_MOTION_;
 
-  bool orientation_locked_;	///< 'True' if hand orientation info is to be ignored.
+  /// Latest pose value received for the end effector.
+  geometry_msgs::PoseStamped current_pose_;
+  
+  /// Properly scaled target pose in reference to the hand pose input (e.g. leap_motion) frame.
+  geometry_msgs::PoseStamped live_pose_;
+  
+  /// Vector of desired wayposes for a Cartesian move of the end-effector. Specified in the hand pose input (e.g. leap_motion) frame.
+  std::vector<geometry_msgs::Pose> wayposes_;
+  
+  /// Vector of desired wayposes for a Cartesian move of the end-effector. Specified in a fixed (e.g. base_link) frame. Current pose included in the beginning.
+  std::vector<geometry_msgs::Pose> wayposes_fixed_in_baselink_;
+
+  // ~*~ VARIABLES DESCRIBING THE STATE ~*~
+  // NATURAL control: robot and human are oriented the same way
+  // INVERTED control: the human operator is facing the robot so that left and right are inverted.
+  bool using_natural_control_;		///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
+  bool orientation_locked_;		///< 'True' if hand orientation info is to be ignored.
   bool position_limited_;		///< 'True' if hand position is restricted to a specific direction/plane.
   bool position_fwd_only_;		///< 'True' when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
   bool right_hand_before_;		///< Presense of right hand during the previous iteration of Leap Motion's callback processLeap(..).
