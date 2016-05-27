@@ -19,7 +19,9 @@
   <node name="async_tf_broadcaster" pkg="temoto" type="async_tf_broadcaster" />
 
   <group if="$(arg robotiq)">
-    <node name="s_model_joint_states" pkg="robotiq_joint_state_publisher" type="s_model_joint_states" args="robotiq_" />
+    <node name="s_model_joint_states" pkg="robotiq_joint_state_publisher" type="s_model_joint_states">
+      <param name="prefix" value="robotiq_" />
+    </node>
     <node name="robotiqSModel" pkg="robotiq_s_model_control" type="SModelTcpNode.py" args="192.168.1.12" />
   </group>
   
