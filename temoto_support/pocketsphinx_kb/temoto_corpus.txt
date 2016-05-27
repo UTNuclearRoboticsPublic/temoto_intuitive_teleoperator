@@ -45,13 +45,11 @@ camera front
 camera top
 camera behind
 new
-set
 add
 remove
 remove last
 delete
 delete last
-path
 cartesian
 cartesian move
 execute cartesian move

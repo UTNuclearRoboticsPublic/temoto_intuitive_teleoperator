@@ -45,13 +45,11 @@
 <s> CAMERA TOP </s>
 <s> CAMERA BEHIND </s>
 <s> NEW </s>
-<s> SET </s>
 <s> ADD </s>
 <s> REMOVE </s>
 <s> REMOVE LAST </s>
 <s> DELETE </s>
 <s> DELETE LAST </s>
-<s> PATH </s>
 <s> CARTESIAN </s>
 <s> CARTESIAN MOVE </s>
 <s> EXECUTE CARTESIAN MOVE </s>
