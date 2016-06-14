@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_core
   moveit_ros_planning_interface
   tf
+  move_base_msgs
+  actionlib
 #   leap_motion_controller
 #   cv_bridge
 #   roslib
@@ -166,6 +168,10 @@ add_dependencies(robotiq temoto_gencpp)
 add_executable(async_tf_broadcaster src/async_tf_broadcaster.cpp)
 target_link_libraries(async_tf_broadcaster ${catkin_LIBRARIES})
 add_dependencies(async_tf_broadcaster temoto_gencpp)
+
+add_executable(navigate_robot src/navigate_robot.cpp)
+target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_include)
+add_dependencies(navigate_robot temoto_gencpp)
 
 #############
 ## Install ##
