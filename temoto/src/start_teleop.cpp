@@ -40,6 +40,41 @@ void Teleoperator::callPlanAndMove(uint8_t action_type)
   move.request.goal = live_pose_;		// set live_pose_ as the requested pose for the motion planner
   move.request.action_type = action_type;	// set action_type
 
+  ////////////////////////////////////////////////////
+  // INITIAL INSERTION FOR TESTING NAVIGATION GOALS //
+  if (navigate_to_goal_ && action_type == 0x03) // if navigation is turned ON and the operator said "robot please go"
+  {
+    // TODO translate leap_motion pose to base_link
+    geometry_msgs::PoseStamped goal_in_baselink;
+    // live_pose_ is given in leap_motion frame and shall be transformed into base_link
+    transform_listener_.transformPose("base_link", live_pose_, goal_in_baselink);
+
+    move.request.goal = goal_in_baselink;
+    
+//     move.request.goal.pose.position.x = 4.0;
+//     move.request.goal.pose.position.z = 0;				// ignore height information
+    
+    // for the time being, ignore rotation
+    move.request.goal.pose.orientation.w = 1;				// setting the quaternion to identity; TODO use pitch of the palm
+    move.request.goal.pose.orientation.x = 0;
+    move.request.goal.pose.orientation.y = 0;
+    move.request.goal.pose.orientation.z = 0;
+    
+//     move.request.goal.header.frame_id = "base_link";
+    // make a service request to navigate_robot
+    if (navigate_robot_client_.call(move))			// call for the temoto/navigate_robot_srv
+    {
+      ROS_INFO("Successfully called temoto/navigate_robot_srv");
+    }
+    else
+    {
+      ROS_ERROR("Failed to call temoto/navigate_robot_srv");
+    }
+    return;
+  }
+  //  
+  ////////////////////////////////////////////////////
+  
   // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
   if (!using_natural_control_)							// fix orientation for inverted view only
   {
@@ -128,7 +163,7 @@ std::vector<geometry_msgs::Pose> Teleoperator::wayposesInFixedFrame(std::vector<
   std::reverse(wayposes_leapmotion.begin(),wayposes_leapmotion.end());	// reversed the order of elements in wayposes_leapmotion
   geometry_msgs::PoseStamped stamped_pose_msg_lm, stamped_pose_msg_bl;	// temp stamped poses for leap_motion and base_link
   stamped_pose_msg_lm.header.frame_id = "leap_motion";			// stamp leap_motion poses with appropriate data
-  stamped_pose_msg_lm.header.stamp = ros::Time(0);			// ros::Time(0) is different from ros::Time::now() and is bettere in this case, idky
+  stamped_pose_msg_lm.header.stamp = ros::Time(0);			// ros::Time(0) is different from ros::Time::now() and is better in this case, idky
   while ( !wayposes_leapmotion.empty() )
   {
     stamped_pose_msg_lm.pose = wayposes_leapmotion.back();		// access the last element of reversed wayposes_
@@ -211,7 +246,7 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   // Setting properly scaled and limited pose as the live_pose_
   live_pose_.pose = scaled_pose.pose;
   live_pose_.header.frame_id = leap_data.header.frame_id;
-  live_pose_.header.stamp = ros::Time::now();
+  live_pose_.header.stamp = ros::Time(0);//ros::Time::now();
 
   // Print position info to terminal
   printf("Scale motion by %f; move SIA5 by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
@@ -440,6 +475,8 @@ int main(int argc, char **argv)
   temoto_teleop.move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
   // ROS client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
   temoto_teleop.tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_tf");
+  // ROS client for /temoto/navigate_robot_srv
+  temoto_teleop.navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
 
   // Setup ROS subscribers
   // ROS subscriber on /griffin_powermate

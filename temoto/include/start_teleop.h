@@ -58,6 +58,7 @@ public:
     position_limited_ = true;
     position_fwd_only_ = false;
     right_hand_before_ = false;
+    navigate_to_goal_ = true;
   };
   
   // Callout functions
@@ -87,8 +88,8 @@ public:
   void processVoiceCommand(temoto::Command voice_command);
   
   // Public variables
-  
-  ros::ServiceClient move_robot_client_;		///< This service client for temoto/move_robot_service is global, so that callback funtions could see it.
+  ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
+  ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame. 
 
 private:
@@ -117,10 +118,11 @@ private:
   // NATURAL control: robot and human are oriented the same way
   // INVERTED control: the human operator is facing the robot so that left and right are inverted.
   bool using_natural_control_;		///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
-  bool orientation_locked_;		///< 'True' if hand orientation info is to be ignored.
-  bool position_limited_;		///< 'True' if hand position is restricted to a specific direction/plane.
-  bool position_fwd_only_;		///< 'True' when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
+  bool orientation_locked_;		///< Hand orientation info is to be ignored if TRUE.
+  bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
+  bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
   bool right_hand_before_;		///< Presense of right hand during the previous iteration of Leap Motion's callback processLeap(..).
+  bool navigate_to_goal_;		///< TRUE: interpret live_pose_ as 2D navigation goal; FALSE: live_pose_ is the motion planning target for robot EEF.
 };
 
 #endif
