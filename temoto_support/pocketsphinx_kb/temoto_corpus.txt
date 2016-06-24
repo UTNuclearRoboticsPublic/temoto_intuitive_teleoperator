@@ -56,3 +56,5 @@ execute cartesian move
 compute cartesian
 compute cartesian path
 cancel cartesian
+navigation
+manipulation
