@@ -48,7 +48,7 @@ bool service_change_tf(	temoto::ChangeTf::Request  &req,
 			temoto::ChangeTf::Response &res) {
 
   // Get the value from the request
-  leap_motion_frame_natural = req.leap_motion_natural;
+  leap_motion_frame_natural = req.first_person_perspective;
   leap_motion_navigate = req.navigate;
   ROS_INFO("[async_tf_broadcaster] New service update requested. Now leap_motion_frame_natural = %d; leap_motion_navigate = %d", leap_motion_frame_natural, leap_motion_navigate);
   

@@ -9,5 +9,7 @@ bool orientation_free
 bool position_unlimited
 bool position_forward_only
 
+bool in_navigation_mode
+
 geometry_msgs/PoseStamped end_effector_pose
 

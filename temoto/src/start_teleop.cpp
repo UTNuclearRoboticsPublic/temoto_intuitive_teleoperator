@@ -178,6 +178,28 @@ std::vector<geometry_msgs::Pose> Teleoperator::wayposesInFixedFrame(std::vector<
   return wayposes_baselink;
 }
 
+// Function for conversion of quaternion to roll pitch and yaw.
+// TODO: test if it actually works properly
+geometry_msgs::Quaternion Teleoperator::extractOnlyRotY(geometry_msgs::Quaternion msg)
+{
+  // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
+  tf::Quaternion quat;
+  tf::quaternionMsgToTF(msg, quat);
+
+  // the tf::Quaternion has a method to acess roll pitch and yaw
+  double roll, pitch, yaw;
+  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
+  
+  // modify quaternion by setting roll and yaw to zero
+  quat.setRPY(0, pitch, 0);
+  quat.normalize();
+  
+  // the modified quaternion is converted to a geometry_msgs::Quaternion
+  geometry_msgs::Quaternion outbound_msg;
+  tf::quaternionTFToMsg(quat, outbound_msg);
+  return outbound_msg;
+}
+
 /** Callback function for /leapmotion_general subscriber.
  *  It updates target pose based on latest left palm pose (any scaling and/or relevant limitations are also being applied).
  *  Presence of the right hand is used to lock and unlock forward motion.
@@ -216,7 +238,13 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   // Orientation of left palm is copied unaltered, i.e., is not scaled
   scaled_pose.pose.orientation = leap_data.left_palm_pose.orientation;
   // Apply any relevant limitations to direction and/or orientation
-  if (position_limited_ && position_fwd_only_) 		// if position is limited and position_fwd_only_ is true
+  if (navigate_to_goal_)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
+  {
+    scaled_pose.pose.position.y = 0;
+    // TODO: get only relevant hand rotation here
+    // scaled_pose.pose.orientation = extractOnlyRotY(scaled_pose.pose.orientation)
+  }
+  else if (position_limited_ && position_fwd_only_) 	// if position is limited and position_fwd_only_ is true
   {
     scaled_pose.pose.position.x = 0;
     scaled_pose.pose.position.y = 0;
@@ -225,6 +253,7 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   {
     scaled_pose.pose.position.z = 0;
   }
+
   
   if (orientation_locked_)				// if palm orientation is to be ignored 
   {
@@ -361,19 +390,21 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   }
   else if (voice_command.cmd == 0x10)
   {
-    ROS_INFO("Voice command received! Using natural control mode ...");
-    temoto::ChangeTf switch_tf;
-    switch_tf.request.leap_motion_natural = true;	// request a change of view mode
-    // if service request successful, change the value of view mode in this node
-    if ( tf_change_client_.call( switch_tf ) ) using_natural_control_ = true;
+    ROS_INFO("Voice command received! Using natural control perspective ...");
+    temoto::ChangeTf switch_human2robot_tf;
+    switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
+    switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+    // if service request successful, change the value of control perspective in this node
+    if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = true;
   }
   else if (voice_command.cmd == 0x11)
   {
-    ROS_INFO("Voice command received! Using inverted control mode ...");
-    temoto::ChangeTf switch_tf;
-    switch_tf.request.leap_motion_natural = false;	// request a change of view mode
-    // if service request successful, change the value of view mode in this node
-    if ( tf_change_client_.call( switch_tf ) ) using_natural_control_ = false;
+    ROS_INFO("Voice command received! Using inverted control perspective ...");
+    temoto::ChangeTf switch_human2robot_tf;
+    switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
+    switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+    // if service request successful, change the value of control perspective in this node
+    if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = false;
   }
   else if (voice_command.cmd == 0x20)
   {
@@ -431,6 +462,24 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     wayposes_.clear();					// Clear all wayposes
     wayposes_fixed_in_baselink_.clear();		// Clear wayposes defined in base_link
   }
+  else if (voice_command.cmd == 0x40)			// Switch over to manipulation (MoveIt!) mode
+  { 
+    ROS_INFO("Voice command received! Going into MANIPULATION mode  ...");
+    temoto::ChangeTf switch_human2robot_tf;
+    switch_human2robot_tf.request.navigate = false;	// request a change of control mode
+    switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
+    // if service request successful, change the value of control mode in this node
+    if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
+  }
+  else if (voice_command.cmd == 0x41)			// Switch over to navigation mode
+  { 
+    ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
+    temoto::ChangeTf switch_human2robot_tf;
+    switch_human2robot_tf.request.navigate = true;	// request a change of control mode
+    switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
+    // if service request successful, change the value of control mode in this node
+    if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
+  }
   
   else
   {
@@ -455,6 +504,7 @@ temoto::Status Teleoperator::getStatus()
   status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
   status.position_forward_only = position_fwd_only_;
+  status.in_navigation_mode = navigate_to_goal_;
 
   return status;
 } // end getStatus()

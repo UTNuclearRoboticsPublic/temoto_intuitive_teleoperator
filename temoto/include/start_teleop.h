@@ -73,6 +73,8 @@ public:
   
   std::vector<geometry_msgs::Pose> wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion);
   
+  geometry_msgs::Quaternion extractOnlyRotY(geometry_msgs::Quaternion msg);
+  
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
   temoto::Status getStatus();
