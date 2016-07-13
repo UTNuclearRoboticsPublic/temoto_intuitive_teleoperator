@@ -26,6 +26,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/** @file start_teleop.cpp
+ * 
+ *  'rosrun temoto start_teleop'
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
 #include "start_teleop.h"
 
 #define HEIGHT_OF_ZERO 0.2		///< Height of zero position above Leap Motion Controller.
@@ -44,12 +51,14 @@ void Teleoperator::callPlanAndMove(uint8_t action_type)
   // INITIAL INSERTION FOR TESTING NAVIGATION GOALS //
   if (navigate_to_goal_ && action_type == 0x03) // if navigation is turned ON and the operator said "robot please go"
   {
-    // TODO translate leap_motion pose to base_link
+    // Translate leap_motion pose to base_link
     geometry_msgs::PoseStamped goal_in_baselink;
     // live_pose_ is given in leap_motion frame and shall be transformed into base_link
     transform_listener_.transformPose("base_link", live_pose_, goal_in_baselink);
 
     move.request.goal = goal_in_baselink;
+    
+    // TODO figure out if i need to apply any additional transform to orientation
     
 //     move.request.goal.pose.position.x = 4.0;
 //     move.request.goal.pose.position.z = 0;				// ignore height information
@@ -178,19 +187,23 @@ std::vector<geometry_msgs::Pose> Teleoperator::wayposesInFixedFrame(std::vector<
   return wayposes_baselink;
 }
 
-// Function for conversion of quaternion to roll pitch and yaw.
-// TODO: test if it actually works properly
-geometry_msgs::Quaternion Teleoperator::extractOnlyRotY(geometry_msgs::Quaternion msg)
+/** Alters a quaternion so that the pitch is preserved while roll and yaw are set to zero.
+ * 
+ *  @param quaternion_msg incoming quaternion as a geometry_msgs.
+ *  @return normalized quaternion as a geometry_msgs that contains only pitch information.
+ */
+geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaternion quaternion_msg)
 {
   // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
   tf::Quaternion quat;
-  tf::quaternionMsgToTF(msg, quat);
+  tf::quaternionMsgToTF(quaternion_msg, quat);
 
   // the tf::Quaternion has a method to acess roll pitch and yaw
   double roll, pitch, yaw;
   tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
   
   // modify quaternion by setting roll and yaw to zero
+//   ROS_INFO("[start_teleop/extractOnlyPitch] PITCH: %.2f", pitch);
   quat.setRPY(0, pitch, 0);
   quat.normalize();
   
@@ -235,14 +248,16 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   scaled_pose.pose.position.x = scale_by_*AMP_HAND_MOTION_*leap_data.left_palm_pose.position.x;
   scaled_pose.pose.position.y = scale_by_*AMP_HAND_MOTION_*(leap_data.left_palm_pose.position.y - HEIGHT_OF_ZERO);
   scaled_pose.pose.position.z = scale_by_*AMP_HAND_MOTION_*leap_data.left_palm_pose.position.z;
+  
   // Orientation of left palm is copied unaltered, i.e., is not scaled
   scaled_pose.pose.orientation = leap_data.left_palm_pose.orientation;
-  // Apply any relevant limitations to direction and/or orientation
+  
+  // Applying relevant limitations to direction and/or orientation
   if (navigate_to_goal_)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
   {
     scaled_pose.pose.position.y = 0;
-    // TODO: get only relevant hand rotation here
-    // scaled_pose.pose.orientation = extractOnlyRotY(scaled_pose.pose.orientation)
+    // preserve only pitch (rotation around UP vector) of hand orientation
+    scaled_pose.pose.orientation = extractOnlyPitch( scaled_pose.pose.orientation );
   }
   else if (position_limited_ && position_fwd_only_) 	// if position is limited and position_fwd_only_ is true
   {
@@ -265,7 +280,7 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   }
   
     // == Additional explanation of the above coordinates and origins ==
-    // While the motion planner of sia5 uses base_link as origin, it is not convenient for the operator as s/he likely wishes to see the motion relative to end effector.
+    // While the motion planner often uses base_link as origin, it is not convenient for the operator as s/he likely wishes to see the motion relative to end effector.
     // leap_motion frame has been attached to the end effector and, thus, hand motion is visualized relative to the pose of end effector.
     // If hand is moved to the origin of hand motion system, the target position is at current position. This makes the UI more intuitive for the operator, imho.
     // Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).

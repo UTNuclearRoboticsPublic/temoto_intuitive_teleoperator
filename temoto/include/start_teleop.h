@@ -26,6 +26,11 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/** @file start_teleop.h
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
 // ROS includes
 #include "ros/ros.h"
 #include "geometry_msgs/Pose.h"
@@ -73,7 +78,7 @@ public:
   
   std::vector<geometry_msgs::Pose> wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion);
   
-  geometry_msgs::Quaternion extractOnlyRotY(geometry_msgs::Quaternion msg);
+  geometry_msgs::Quaternion extractOnlyPitch(geometry_msgs::Quaternion msg);
   
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
@@ -89,7 +94,7 @@ public:
   
   void processVoiceCommand(temoto::Command voice_command);
   
-  // Public variables
+  // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame. 
@@ -117,7 +122,7 @@ private:
   std::vector<geometry_msgs::Pose> wayposes_fixed_in_baselink_;
 
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
-  // NATURAL control: robot and human are oriented the same way
+  // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
   // INVERTED control: the human operator is facing the robot so that left and right are inverted.
   bool using_natural_control_;		///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
   bool orientation_locked_;		///< Hand orientation info is to be ignored if TRUE.
