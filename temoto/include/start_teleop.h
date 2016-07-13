@@ -57,7 +57,7 @@ public:
   Teleoperator()
   {
     scale_by_ = 1;
-    AMP_HAND_MOTION_ = 10;
+    AMP_HAND_MOTION_ = 40;		// 40 for navigation, and 10 for manipulation
     using_natural_control_ = true;
     orientation_locked_ = false;
     position_limited_ = true;
@@ -68,9 +68,9 @@ public:
   
   // Callout functions
   
-  void callPlanAndMove(uint8_t action_type);
+  void callRobotMotionInterface(uint8_t action_type);
   
-  void callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target);
+  void callRobotMotionInterfaceWithNamedTarget(uint8_t action_type, std::string named_target);
   
   void computeCartesian(std::string frame_id);
 
