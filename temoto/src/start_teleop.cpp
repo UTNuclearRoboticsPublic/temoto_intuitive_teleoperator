@@ -45,31 +45,32 @@
 void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 {
   // Create a service request
-  temoto::Goal move;	
-  move.request.goal = live_pose_;		// set live_pose_ as the requested pose for the motion planner
-  move.request.action_type = action_type;	// set action_type
+  temoto::Goal motion;	
+  motion.request.goal = live_pose_;		// set live_pose_ as the requested pose for the motion planner
+  motion.request.action_type = action_type;	// set action_type
 
+  // =================================================
   // === Calling NavigateRobotInterface ==============
+  // =================================================
   if (navigate_to_goal_ && action_type == 0x03) // if in NAVIGATION mode and the operator said "robot please go"
   {
     // ------------------------- DEBUG START {
-    double roll, pitch, yaw;
+    double lm_roll, lm_pitch, lm_yaw;
     ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in leap_motion: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
-	     move.request.goal.pose.orientation.x, move.request.goal.pose.orientation.y, move.request.goal.pose.orientation.z, move.request.goal.pose.orientation.w);
+	     motion.request.goal.pose.orientation.x, motion.request.goal.pose.orientation.y, motion.request.goal.pose.orientation.z, motion.request.goal.pose.orientation.w);
     tf::Quaternion quat_leap_motion;
-    tf::quaternionMsgToTF(move.request.goal.pose.orientation, quat_leap_motion);
-    tf::Matrix3x3(quat_leap_motion).getRPY(roll, pitch, yaw);
-    ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in leap_motion: ROLL=%.3f, PITCH=%.3f, YAW=%.3f", roll, pitch, yaw);
+    tf::quaternionMsgToTF(motion.request.goal.pose.orientation, quat_leap_motion);
+    tf::Matrix3x3(quat_leap_motion).getRPY(lm_roll, lm_pitch, lm_yaw);
+    ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in leap_motion: ROLL=%.3f, PITCH=%.3f, YAW=%.3f", lm_roll, lm_pitch, lm_yaw);
     // } ----------------------- END DEBUG
     
     // Translate leap_motion pose to base_link
     geometry_msgs::PoseStamped goal_in_baselink;
     // live_pose_ is given in leap_motion frame and shall be transformed into base_link
-    transform_listener_.transformPose("base_link", move.request.goal, goal_in_baselink);
-
-    move.request.goal = goal_in_baselink;
-    
+    transform_listener_.transformPose("base_link", motion.request.goal, goal_in_baselink);
+  
     // ------------------------- DEBUG START {
+    double bl_roll, bl_pitch, bl_yaw;
     ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in base_link: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
 	     goal_in_baselink.pose.orientation.x, goal_in_baselink.pose.orientation.y, goal_in_baselink.pose.orientation.z, goal_in_baselink.pose.orientation.w);
 
@@ -78,12 +79,23 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
     tf::quaternionMsgToTF(goal_in_baselink.pose.orientation, quat_base_link);
 
     // the tf::Quaternion has a method to acess roll pitch and yaw
-    tf::Matrix3x3(quat_base_link).getRPY(roll, pitch, yaw);  
-    ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in base_link Roll=%.3f, Pitch=%.3f, Yaw=%.3f", roll, pitch, yaw);
+    tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);  
+    ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in base_link Roll=%.3f, Pitch=%.3f, Yaw=%.3f", bl_roll, bl_pitch, bl_yaw);
     // } ----------------------- END DEBUG 
     
-    // TODO figure out if i need to apply any additional transform to orientation
-   
+    // TODO Figure it out!!
+    // I still don't understand why the transformPose() is not doing this but ...
+    // ... I set hand pitch from leap_motion frame as the yaw in base_link frame,
+    // i.e., set rotation around UP in leap_motion as rotation around UP in base_link.
+    ROS_INFO("[start_teleop/callRobotMotionInterface] Setting rotation around UP directly");
+    quat_base_link.setRPY(0, 0, lm_pitch);
+    quat_base_link.normalize();
+    tf::quaternionTFToMsg(quat_base_link, goal_in_baselink.pose.orientation);
+    ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in base_link: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
+	     goal_in_baselink.pose.orientation.x, goal_in_baselink.pose.orientation.y, goal_in_baselink.pose.orientation.z, goal_in_baselink.pose.orientation.w);
+
+    // Set goal_in_baselink as the target goal
+    motion.request.goal = goal_in_baselink;
     
     // for the time being, ignore rotation, so setting the quaternion to identity
 //     move.request.goal.pose.orientation.w = 1;
@@ -92,7 +104,7 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 //     move.request.goal.pose.orientation.z = 0;
     
     // make a service request to navigate_robot_srv
-    if (navigate_robot_client_.call(move))
+    if ( navigate_robot_client_.call( motion ) )
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
     }
@@ -102,22 +114,24 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
     }
     return;
   }
-  // === Calling MoveRobotInterface ==============
-  else if (!navigate_to_goal_)							// If Teleoperator is in MANIPULATION (MoveIt!) mode
+  // =================================================
+  // === Calling MoveRobotInterface ==================
+  // =================================================
+  else if ( !navigate_to_goal_ )						// If Teleoperator is in MANIPULATION (MoveIt!) mode
   {  
     // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
-    if (!using_natural_control_)						// fix orientation for inverted view only
+    if ( !using_natural_control_)						// fix orientation for inverted view only
     {
       tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
       tf::Quaternion palm_orientation;						// incoming palm orientation
-      tf::quaternionMsgToTF(move.request.goal.pose.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
+      tf::quaternionMsgToTF(motion.request.goal.pose.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
       tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
       final_rotation.normalize();						// normalize quaternion
-      tf::quaternionTFToMsg(final_rotation, move.request.goal.pose.orientation);// convert tf quaternion to quaternion msg
+      tf::quaternionTFToMsg(final_rotation, motion.request.goal.pose.orientation);// convert tf quaternion to quaternion msg
     }
     
     // Call temoto/move_robot_service
-    if (move_robot_client_.call(move))
+    if ( move_robot_client_.call( motion ) )
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/move_robot_service");
     }
@@ -127,7 +141,9 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
     }
     return;
   }
-  // === Unexpected case ==============
+  // =================================================
+  // === Unexpected case =============================
+  // =================================================
   else
   {
     ROS_INFO("[start_teleop/callRobotMotionInterface] Request unavailable for current list of robot interfaces.");
@@ -142,14 +158,14 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 // void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target)
 void Teleoperator::callRobotMotionInterfaceWithNamedTarget(uint8_t action_type, std::string named_target)
 {
-  if (!navigate_to_goal_)			// currenly implemented for only MoveRobotInterface
+  if ( !navigate_to_goal_ )			// currenly implemented for only MoveRobotInterface
   {
-    temoto::Goal move;				// create a service request
-    move.request.action_type = action_type;	// set action_type
-    move.request.named_target = named_target;	// set named_target as the goal
+    temoto::Goal motion;			// create a service request
+    motion.request.action_type = action_type;	// set action_type
+    motion.request.named_target = named_target;	// set named_target as the goal
     
     // call for the service to move robot group
-    if (move_robot_client_.call(move))
+    if ( move_robot_client_.call( motion ) )
     {
       ROS_INFO("Successfully called temoto/move_robot_service");
     }
