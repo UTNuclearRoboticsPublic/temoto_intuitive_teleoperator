@@ -64,6 +64,17 @@ bool adjustCameraPlacement (std_srvs::Empty::Request  &req,
  */
 void updateStatus (temoto::Status status) {
   
+  // Before overwriting previous status, checks if switch between camera views is necesassry due to switch between navigation and manipulation modes.
+  if (status.in_navigation_mode && !latest_status.in_navigation_mode) {
+    adjust_camera = true;
+//     camera_is_aligned = false;	// Change to top-view as operator has switched to forward only motion pattern
+    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION.");
+  } else if (!status.in_navigation_mode && latest_status.in_navigation_mode) {
+    adjust_camera = true;
+//     camera_is_aligned = true;	// Change to the so-called aligned view because operator has stopped using forward only
+    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from NAVIGATION to MANIPULATION.");
+  }
+
   // Before overwriting previous status, checks if switch between camera views is necesassry due to limited directions.
   if (status.position_forward_only && !latest_status.position_forward_only) {
     adjust_camera = true;
@@ -352,7 +363,7 @@ int main(int argc, char **argv) {
   pub_cam.publish( pow_camera );
 
   // This is where rviz_visual thinks the camera is.
-  uint8_t latest_known_camera_mode = 0; 	// 0-unknown, 1-natural, 2-inverted
+  uint8_t latest_known_camera_mode = 0; 	// 0-unknown, 1-natural, 2-inverted, 11-navigation natural, 12-navigation inverted
   
   while (ros::ok()) {
     
@@ -462,83 +473,122 @@ int main(int argc, char **argv) {
     pub_marker.publish( cartesian_path );
     
     // == CAMERA POSE =========================================== \\
-    // Camera moves relative to 'temoto_end_effector' frame.
     // Setting 'adjust_camera' triggers repositioning of the point-of-view camera.
-    // Adjust camera for NATURAL CONTROL MODE
-    if (adjust_camera && latest_status.in_natural_control_mode) {
-      if (camera_is_aligned) {					// here alignment means the so-called bird's view
-	ROS_INFO("NATURAL: Switching to aligned view.");
-	// Set +Z as 'UP'
-	pow_camera.up.vector.x = 0;
-	pow_camera.up.vector.z = 1;
-
-	// Camera will be behind temoto_end_effector, somewhat elevated
-	pow_camera.eye.point.x = -2*latest_status.scale_by;	// Distance backwards from the end effector
-	pow_camera.eye.point.y = 0;				// Align with end effector
-	pow_camera.eye.point.z = 0.2 + 2*latest_status.scale_by;// Distance upwards from the end effector
-	// if constrained to a plane and scaled down align camrea with the end effector in z-direction
-	if (!latest_status.position_unlimited && latest_status.scale_by < 0.1) pow_camera.eye.point.z = 0;
-	
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-	pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
-      } else {							// natural control mode top view
-	ROS_INFO("NATURAL: Switching to top view.");
-	// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-	pow_camera.up.vector.x = 1;
-	pow_camera.up.vector.z = 0;
-
-	// Camera is positioned directly above the virtual FRONT view screen.
-	pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
-	pow_camera.eye.point.y = 0;
-	pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
-
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
-      }
-      latest_known_camera_mode = 1;				// set latest_known_camera_mode to 1, i.e natural
-      pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
-      adjust_camera = false;					// set adjust_camera 'false'
-    } // if adjust_camera in_natural_control_mode
     
-    // adjust camera for INVERTED CONTROL MODE
-    if (adjust_camera && !latest_status.in_natural_control_mode) {
-      if (camera_is_aligned) {					// here alignment means the camera is in the front facing the end effector
-	ROS_INFO("INVERTED: Switching to aligned view.");
-	// Set +Z as 'UP'
-	pow_camera.up.vector.z = 1;
-	pow_camera.up.vector.x = 0;
+    // Adjust camera in NAVIGATION mode
+    if (latest_status.in_navigation_mode && adjust_camera)
+    {
+      // During NAVIGATION camera moves relative to 'base_link' frame.
+      pow_camera.target_frame = "base_footprint";		// should be in the center of the robot 
+      ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
+      // In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
+      pow_camera.up.vector.x = 1;
+      pow_camera.up.vector.z = 0;
 
-	// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-	pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT + 1.5*latest_status.scale_by;
-	pow_camera.eye.point.y = 0;				// move camera to align with end effector along the y-axis
-	pow_camera.eye.point.z = 0;				// move camera to align with end effector along the z-axis
-	if (latest_status.position_unlimited) pow_camera.eye.point.z = 0.1 + 1*latest_status.scale_by;	// shift camera upwards ... 
+      // Camera is positioned directly above the virtual FRONT view screen.
+      pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
+      pow_camera.eye.point.y = 0;
+      pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
 
-	// Look at the origin of temoto_end_effector, i.e. all zeros
-	pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
-      } else {							// else means camera should be in the top position
-	ROS_INFO("INVERTED: Switching to top view.");
-	// In the top view of inverted control mode, -X is considered 'UP'.
-	pow_camera.up.vector.z = 0;
-	pow_camera.up.vector.x = -1;
-
-	// Camera is positioned directly above the virtual FRONT view screen.
-	pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
-	pow_camera.eye.point.y = 0;
-	pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
-	
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
-      }
-      latest_known_camera_mode = 2;				// set latest_known_camera_mode to 2, i.e inverted
+      // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
+      pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+      
+      latest_known_camera_mode = 11;				// set latest_known_camera_mode to 11, i.e navigation natural
       pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
-      adjust_camera = false;					// set adjust_camera 'false'
-    } // if adjust_camera not in_natural_control_mode
+      adjust_camera = false;					// set adjust_camera 'false'     
 
+    }
+    // Adjust camera in MANIPULATION mode
+    else if (!latest_status.in_navigation_mode && adjust_camera)
+    {
+      // During MANIPULATION camera moves relative to 'temoto_end_effector' frame.
+      pow_camera.target_frame = "temoto_end_effector";
+      // Adjust camera for NATURAL CONTROL MODE
+      if (/*adjust_camera && */latest_status.in_natural_control_mode)
+      {
+	if (camera_is_aligned)					// here alignment means the so-called bird's view
+	{
+	  ROS_INFO("NATURAL: Switching to aligned view.");
+	  // Set +Z as 'UP'
+	  pow_camera.up.vector.x = 0;
+	  pow_camera.up.vector.z = 1;
+
+	  // Camera will be behind temoto_end_effector, somewhat elevated
+	  pow_camera.eye.point.x = -2*latest_status.scale_by;	// Distance backwards from the end effector
+	  pow_camera.eye.point.y = 0;				// Align with end effector
+	  pow_camera.eye.point.z = 0.2 + 2*latest_status.scale_by;// Distance upwards from the end effector
+	  // if constrained to a plane and scaled down align camrea with the end effector in z-direction
+	  if (!latest_status.position_unlimited && latest_status.scale_by < 0.1) pow_camera.eye.point.z = 0;
+	  
+	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	}
+	else							// natural control mode top view
+	{
+	  ROS_INFO("NATURAL: Switching to top view.");
+	  // In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
+	  pow_camera.up.vector.x = 1;
+	  pow_camera.up.vector.z = 0;
+
+	  // Camera is positioned directly above the virtual FRONT view screen.
+	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;				// Above the virtual FRONT view screen
+	  pow_camera.eye.point.y = 0;
+	  pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+
+	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
+	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	}
+	latest_known_camera_mode = 1;				// set latest_known_camera_mode to 1, i.e natural
+	pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
+	adjust_camera = false;					// set adjust_camera 'false'
+      } // if adjust_camera in_natural_control_mode
+      
+      // adjust camera for INVERTED CONTROL MODE
+      if (/*adjust_camera && */!latest_status.in_natural_control_mode) {
+	if (camera_is_aligned)					// here alignment means the camera is in the front facing the end effector
+	{
+	  ROS_INFO("INVERTED: Switching to aligned view.");
+	  // Set +Z as 'UP'
+	  pow_camera.up.vector.z = 1;
+	  pow_camera.up.vector.x = 0;
+
+	  // Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
+	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT + 1.5*latest_status.scale_by;
+	  pow_camera.eye.point.y = 0;				// move camera to align with end effector along the y-axis
+	  pow_camera.eye.point.z = 0;				// move camera to align with end effector along the z-axis
+	  if (latest_status.position_unlimited) pow_camera.eye.point.z = 0.1 + 1*latest_status.scale_by;	// shift camera upwards ... 
+
+	  // Look at the origin of temoto_end_effector, i.e. all zeros
+	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	}
+	else							// else means camera should be in the top position
+	{
+	  ROS_INFO("INVERTED: Switching to top view.");
+	  // In the top view of inverted control mode, -X is considered 'UP'.
+	  pow_camera.up.vector.z = 0;
+	  pow_camera.up.vector.x = -1;
+
+	  // Camera is positioned directly above the virtual FRONT view screen.
+	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
+	  pow_camera.eye.point.y = 0;
+	  pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+	  
+	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
+	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	}
+	latest_known_camera_mode = 2;				// set latest_known_camera_mode to 2, i.e inverted
+	pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
+	adjust_camera = false;					// set adjust_camera 'false'
+      } // if adjust_camera not in_natural_control_mode
+    } // else if (!latest_status.in_navigation_mode && adjust_camera)
+    
+    // Doublecheck    
     // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pow camera.
     if (latest_known_camera_mode!=1 && latest_status.in_natural_control_mode) adjust_camera = 1;
     // If camera IS NOT in inverted mode but the system IS in inverted mode, try adjusting the pow camera.
     if (latest_known_camera_mode!=2 && !latest_status.in_natural_control_mode) adjust_camera = 1;
+    // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pow camera.
+    if (latest_known_camera_mode!=11 && latest_status.in_navigation_mode) adjust_camera = 1;
     
   } // end while()
 } // end main()
