@@ -591,7 +591,7 @@ int main(int argc, char **argv)
   // ROS
   ros::init(argc, argv, "start_teleop");
   ros::NodeHandle n;
-  
+
   // Instance of Teleoperator
   Teleoperator temoto_teleop;
 

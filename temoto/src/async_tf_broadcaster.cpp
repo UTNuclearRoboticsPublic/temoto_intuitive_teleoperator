@@ -72,8 +72,9 @@ int main(int argc, char **argv) {
 
   ros::init(argc, argv, "async_tf_broadcaster");	// ROS init
   ros::NodeHandle nh;					// ROS node handle
-  ros::AsyncSpinner spinner(1);				// using async spinner
-  spinner.start();					// starting async spinner
+//   ros::AsyncSpinner spinner(1);				// using async spinner
+//   spinner.start();					// starting async spinner
+  ros::Rate r(10); // 10 hz
   
   // Create a tranform broadcaster.
   static tf::TransformBroadcaster tf_broadcaster;
@@ -118,6 +119,8 @@ int main(int argc, char **argv) {
 //     sleep(1);
 //     // Publish hand_frame
 //     tf_broadcaster.sendTransform( hand_frame );
+    ros::spinOnce();
+    r.sleep();
   }
   
   return 1;
