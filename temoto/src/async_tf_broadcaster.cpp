@@ -98,7 +98,7 @@ int main(int argc, char **argv) {
       // in navigation mode, leap_motion rotated RPY=(90, 0, -90) in base_link
       tf_leap_motion_to_robot.setRotation(tf::Quaternion(0.5, -0.5, -0.5, 0.5));	// set leap_motion about base_link
       // Broadcast a transform that attaches leap_motion to leap_motion_on_robot using the tf_leap_motion_to_robot specified above.
-      tf_broadcaster.sendTransform( tf::StampedTransform(tf_leap_motion_to_robot, ros::Time::now(), "base_link", "leap_motion") );
+      tf_broadcaster.sendTransform( tf::StampedTransform(tf_leap_motion_to_robot, ros::Time::now()/*-ros::Duration(25)*/, "base_link", "leap_motion") );
     }
     // ELSE: hand motion is used for moving end effector
     else
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
       }
 
       // Broadcast a transform that attaches leap_motion to leap_motion_on_robot using the tf_leap_motion_to_robot specified above.
-      tf_broadcaster.sendTransform( tf::StampedTransform(tf_leap_motion_to_robot, ros::Time::now(), "leap_motion_on_robot", "leap_motion") );
+      tf_broadcaster.sendTransform( tf::StampedTransform(tf_leap_motion_to_robot, /*ros::Time(0)*/ros::Time::now()/*-ros::Duration(25)*/, "leap_motion_on_robot", "leap_motion") );
     }
     // For debug.
 //     sleep(1);
