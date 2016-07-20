@@ -125,16 +125,26 @@ void dialEvent (temoto::Dial powermate) {
  */
 std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector) {
   std::string  distance_as_text;
+  std::string  units;
   int precision = 2;
   // Calculate the distance between the first two points in the input vector of points
 //  double distance = sqrt( pow(twoPointVector[1].x-twoPointVector[0].x, 2) + pow(twoPointVector[1].y-twoPointVector[0].y, 2) + pow(twoPointVector[1].z-twoPointVector[0].z, 2));
   double distance = calculateDistance(twoPointVector);
-  // Covnvert the distance m -> mm
-  distance = distance*1000;
-  if (distance >= 10) precision = 1;
+  if (distance < 1)
+  {
+    // Covnvert the distance m -> mm
+    distance = distance*1000;
+    units = " mm";
+    if (distance >= 10) precision = 1;
+  }
+  else
+  {
+    units = " m";
+  }
   // use fixed precision of 2 fractional digits to put distance into stringstream and add units.
   std::ostringstream sstream;
-  sstream << std::fixed << std::setprecision(precision) << distance << " mm";
+  sstream << std::fixed << std::setprecision(precision) << distance << units;
+
   // stringstream to string
   distance_as_text = sstream.str();
   return distance_as_text;
@@ -144,29 +154,87 @@ std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVect
  *  It is called only once when rviz_visual node is started.
  *  @return view_controller_msgs::CameraPlacement.
  */
-view_controller_msgs::CameraPlacement initCameraPlacement() {
-  view_controller_msgs::CameraPlacement rviz_cam_placement;
-  // Set target frame and animation time
-  rviz_cam_placement.target_frame = "temoto_end_effector";
-  rviz_cam_placement.time_from_start = ros::Duration(0.5);
-  // Position of the camera relative to target_frame
-  rviz_cam_placement.eye.header.frame_id = rviz_cam_placement.target_frame;
-  rviz_cam_placement.eye.point.x = -2;
-  rviz_cam_placement.eye.point.y = 0;
-  rviz_cam_placement.eye.point.z = 0;
-  // The frame-relative point for the focus
-  rviz_cam_placement.focus.header.frame_id = rviz_cam_placement.target_frame;
-  rviz_cam_placement.focus.point.x = 0;
-  rviz_cam_placement.focus.point.y = 0;
-  rviz_cam_placement.focus.point.z = 0;
-  // The frame-relative vector that maps to "up" in the view plane.
-  rviz_cam_placement.up.header.frame_id = rviz_cam_placement.target_frame;
-  rviz_cam_placement.up.vector.x = 0;
-  rviz_cam_placement.up.vector.y = 0;
-  rviz_cam_placement.up.vector.z = 1;
+// view_controller_msgs::CameraPlacement initCameraPlacement() {
+//   view_controller_msgs::CameraPlacement rviz_cam_placement;
+//   // Set target frame and animation time
+//   rviz_cam_placement.target_frame = "temoto_end_effector";
+//   rviz_cam_placement.time_from_start = ros::Duration(0.5);
+//   // Position of the camera relative to target_frame
+//   rviz_cam_placement.eye.header.frame_id = rviz_cam_placement.target_frame;
+//   rviz_cam_placement.eye.point.x = -2;
+//   rviz_cam_placement.eye.point.y = 0;
+//   rviz_cam_placement.eye.point.z = 0;
+//   // The frame-relative point for the focus
+//   rviz_cam_placement.focus.header.frame_id = rviz_cam_placement.target_frame;
+//   rviz_cam_placement.focus.point.x = 0;
+//   rviz_cam_placement.focus.point.y = 0;
+//   rviz_cam_placement.focus.point.z = 0;
+//   // The frame-relative vector that maps to "up" in the view plane.
+//   rviz_cam_placement.up.header.frame_id = rviz_cam_placement.target_frame;
+//   rviz_cam_placement.up.vector.x = 0;
+//   rviz_cam_placement.up.vector.y = 0;
+//   rviz_cam_placement.up.vector.z = 1;
+//   
+//   return rviz_cam_placement;
+// }
+
+class POWCamera
+{
+public:
+  // default constructor
+  POWCamera()
+  {
+    initCameraPlacement("temoto_end_effector");
+  }
+  view_controller_msgs::CameraPlacement placement;
+  void initCameraPlacement(std::string frame_id);
+  void changeTargetFrameTo(std::string frame_id);
   
-  return rviz_cam_placement;
+};
+
+/** Creates the initial CameraPlacment message that is used for positioning point-of-view camera in RViz.
+ *  It is called only once when rviz_visual node is started.
+ *  @return view_controller_msgs::CameraPlacement.
+ */
+void POWCamera::initCameraPlacement(std::string frame_id)
+{
+  // Set target frame and animation time
+  placement.target_frame = frame_id;
+  placement.time_from_start = ros::Duration(0.5);
+
+  // Position of the camera relative to target_frame
+  placement.eye.header.frame_id = placement.target_frame;
+  placement.eye.point.x = -2;
+  placement.eye.point.y = 0;
+  placement.eye.point.z = 0;
+
+  // The frame-relative point for the focus
+  placement.focus.header.frame_id = placement.target_frame;
+  placement.focus.point.x = 0;
+  placement.focus.point.y = 0;
+  placement.focus.point.z = 0;
+
+  // The frame-relative vector that maps to "up" in the view plane.
+  placement.up.header.frame_id = placement.target_frame;
+  placement.up.vector.x = 0;
+  placement.up.vector.y = 0;
+  placement.up.vector.z = 1;
+  
 }
+
+/** Changes all the frame names in CameraPlacement to frame_id.
+ * 
+ */
+void POWCamera::changeTargetFrameTo(std::string frame_id)
+{
+  placement.target_frame = frame_id;
+  placement.eye.header.frame_id = placement.target_frame;
+  placement.focus.header.frame_id = placement.target_frame;
+  placement.up.header.frame_id = placement.target_frame;
+}
+
+
+
 
 /** Creates the initial marker that visualizes hand movement as an shift arrow.
  *  It is called only once when rviz_visual node is started.
@@ -348,7 +416,8 @@ int main(int argc, char **argv) {
   // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
   ros::Publisher pub_cam = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
   // Create a complete CameraPlacement message.
-  view_controller_msgs::CameraPlacement pow_camera = initCameraPlacement();
+//   view_controller_msgs::CameraPlacement pow_camera = initCameraPlacement();
+  POWCamera pow_cam;
 
   // The following is related to getting visual marker to represent target pose in rviz
   // publish on /visualization_marker to depict the hand position with this marker (this is picked up by rviz)
@@ -360,117 +429,155 @@ int main(int argc, char **argv) {
   visualization_msgs::Marker cartesian_path = initCartesianWaypoints();
   
   // publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
-  pub_cam.publish( pow_camera );
+  pub_cam.publish( /*pow_camera*/pow_cam.placement );
 
   // This is where rviz_visual thinks the camera is.
   uint8_t latest_known_camera_mode = 0; 	// 0-unknown, 1-natural, 2-inverted, 11-navigation natural, 12-navigation inverted
   
   while (ros::ok()) {
-    
-    // == ARROW ================================================= \\
-    // Update arrow marker properties and make hand tracking visible in rviz
-    // Arrow marker is described in leap_motion frame.
-    // Start point of the arrow is always at (0, 0, 0).
-    shift_arrow.points[1] = latest_status.live_hand_pose.pose.position;	// set the end point of the arrow to actual hand position
-    if (latest_status.in_natural_control_mode) {
-      shift_arrow.points[0].z = -VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
-      shift_arrow.points[1].z -= VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
-    } else {
-      shift_arrow.points[0].z = VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
-      shift_arrow.points[1].z += VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
-    }
-
-    // Change arrow's thickness based on scaling factor
-    shift_arrow.scale.x = 0.001 + latest_status.scale_by/1000;		// shaft diameter when start and end point are defined
-    shift_arrow.scale.y = 0.002 + latest_status.scale_by/100;		// head diameter when start and end point are defined
-    shift_arrow.scale.z = 0;						// automatic head length
-    shift_arrow.color.a = 1;						// the arrow is not transparent
-
-    // A tweak for extreme close-ups to make the arrow out of scale but more informative
-    if (latest_status.scale_by < 0.01 && camera_is_aligned /*&& !latest_status.in_natural_control_mode*/) {	// only when the rviz camera is in the front
-      shift_arrow.points[0].z -= 0.02;					// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
-      shift_arrow.points[1].z -= 0.02;     
-      shift_arrow.scale.x = 0.0001;					// make the shaft thinner
-      shift_arrow.scale.y = 0.0003;					// make the arrow head thinner
-      shift_arrow.color.a = 0.6;					// and make the arrow a bit transparent
-    }
-    
-    // Change arrow's appearance when camera in on the top, looking down
-    if (!camera_is_aligned && !latest_status.position_unlimited) {	// if camera is on the top and facing down, the arrow marker must be made more visible
-      shift_arrow.scale.x = 0.15;					// shaft is now quite fat
-      shift_arrow.scale.y = 0.18;					// head is also made large
-      shift_arrow.color.a = 0.4;					// the arrow marker is transparent
-    }
-
-    if (latest_status.position_unlimited) shift_arrow.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
-    else shift_arrow.color.g = 0.5;					// else, the arrow is orange
-    
-    pub_marker.publish( shift_arrow );					// publish shift_arrow visualization_marker; this is picked up by rviz
-    
-    // == 3D VISUAL AID ========================================= \\
-    // Use the same origin/pivot point as the start point of the arrow marker
-    aid3D.pose.position = shift_arrow.points[0];
-    // Dimensions of the box are determined by the hand position
-    aid3D.scale.x = latest_status.live_hand_pose.pose.position.x * 2;
-    aid3D.scale.y = latest_status.live_hand_pose.pose.position.y * 2;
-    aid3D.scale.z = latest_status.live_hand_pose.pose.position.z * 2;
-    // If setting pose in one plane only, give the aid box thickness of the arrow arrow
-    if (!latest_status.position_forward_only && !latest_status.position_unlimited) aid3D.scale.z = shift_arrow.scale.x;
-    // Coloring the visual aid box
-    aid3D.color = shift_arrow.color;					// use the same color as arrow
-    aid3D.color.a = 0.2;						// make it transparent
-    
-    pub_marker.publish( aid3D );					// publish the visual aid box
-    
-    // == TEXT LABEL ============================================ \\
-    // Update display_distance parameters (display_distance operates relative to leap_motion frame)
-    display_distance.text = getDistanceString(shift_arrow.points);	// get the distance between start and end point in mm as string
-    if (!latest_status.in_natural_control_mode) {			// INVERTED CONTROL MODE
-      display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// scale the display text based on scale_by value
-      display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
-    } else {								// NATURAL CONTROL MODE
-      display_distance.scale.z = 0.010 + latest_status.scale_by/20;	// scale the display text based on scale_by value
-      display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
-      if (latest_status.scale_by < 0.1 && camera_is_aligned) display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// extreme close-up
-    }
-    // A tweak for when the camera is on the top facing down; lift text above the arrow
-    if (!camera_is_aligned) display_distance.pose.position.y = 0.7*shift_arrow.scale.y; // lift text to the top of arrows head
-    // A tweak for bringing the text in front of the hand pose orientation marker for better visibility
-    if (latest_status.orientation_free && camera_is_aligned) display_distance.pose.position.z += 0.1;   // shift text in front of the hand pose rotation marker
-    
-    pub_marker.publish( display_distance );				// publish info_text visualization_marker; this is picked up by rivz
-    
-    // == HAND POSE BOX ========================================= \\
-    // Hand pose marker (relative to leap_motion frame)
-    hand_pose.pose = latest_status.live_hand_pose.pose;
-    
-    // Shift the marker in front of the ft sensor and robotiq gripper
-    if (latest_status.in_natural_control_mode) hand_pose.pose.position.z -= VIRTUAL_SCREEN_FRONT;
-    else hand_pose.pose.position.z += VIRTUAL_SCREEN_FRONT;
-    
-    // Paint the marker based on restricted motion molatest_status.des
-    if (latest_status.orientation_free) hand_pose.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else hand_pose.color.g = 0.5;					// else, the marker is orange
-
-    // SPECIAL CASE! Hide hand pose marker when orientation is to be ignored.
-    if (/*!latest_status.in_natural_control_mode &&*/ !latest_status.orientation_free) hand_pose.color.a = 0;	// make the marker invisible
-    else hand_pose.color.a = 1;
-    
-    pub_marker.publish( hand_pose );
-    
-    // == CARTESIAN WAYPOINTS =================================== \\
-    
-    cartesian_path.points.clear();
-//     geometry_msgs::Point nill;
-//     cartesian_path.points.push_back( nill );	// Start from the current end effector position
-    for (int i = 0; i < latest_status.cartesian_wayposes.size(); ++i)
+    if (latest_status.in_navigation_mode)
     {
-//       geometry_msgs::Pose tmp = latest_status.cartesian_wayposes.at(i);
-      cartesian_path.points.push_back( latest_status.cartesian_wayposes.at(i).position );
+      // == HAND POSE BOX ========================================= \\
+      // Resize of the hand pose marker to robot base dimensions
+      hand_pose.scale.x = 0.5;
+      hand_pose.scale.z = 1.0; 
+      
+      // Hand pose marker (relative to leap_motion frame)
+      hand_pose.pose = latest_status.live_hand_pose.pose;
+      
+      // Paint the marker based on restricted motion latest_status
+      if (latest_status.orientation_free) hand_pose.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
+      else hand_pose.color.g = 0.5;					// else, the marker is orange
+      
+      // In NAVIGATION, the hand pose marker must always be visible
+      hand_pose.color.a = 1;
+      
+      // Publish hand_pose marker
+      pub_marker.publish( hand_pose );
+      
+      // == TEXT LABEL ============================================ \\
+      // Update display_distance parameters (display_distance operates relative to leap_motion frame)
+      std::vector<geometry_msgs::Point> temp;
+      geometry_msgs::Point zero_point;
+      temp.push_back(zero_point);
+      temp.push_back(latest_status.live_hand_pose.pose.position);
+      display_distance.text = getDistanceString(temp);	// get the distance between start and end point in mm as string
+      display_distance.scale.z = 0.05 + latest_status.scale_by/8;	// scale the display text based on scale_by value
+      display_distance.pose.position = temp[1];		// text is positioned at the end of the arrow markerp
+      display_distance.pose.position.y = 1; // lift text to the top 1 m
+      
+      pub_marker.publish( display_distance );				// publish info_text visualization_marker; this is picked up by rivz
     }
-    
-//     cartesian_waypoints.points = latest_status.cartesian_wayposes;
-    pub_marker.publish( cartesian_path );
+    else
+      {
+      // == ARROW ================================================= \\
+      // Update arrow marker properties and make hand tracking visible in rviz
+      // Arrow marker is described in leap_motion frame.
+      // Start point of the arrow is always at (0, 0, 0).
+      shift_arrow.points[1] = latest_status.live_hand_pose.pose.position;	// set the end point of the arrow to actual hand position
+      if (latest_status.in_natural_control_mode) {
+	shift_arrow.points[0].z = -VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
+	shift_arrow.points[1].z -= VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
+      } else {
+	shift_arrow.points[0].z = VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
+	shift_arrow.points[1].z += VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
+      }
+
+      // Change arrow's thickness based on scaling factor
+      shift_arrow.scale.x = 0.001 + latest_status.scale_by/1000;		// shaft diameter when start and end point are defined
+      shift_arrow.scale.y = 0.002 + latest_status.scale_by/100;		// head diameter when start and end point are defined
+      shift_arrow.scale.z = 0;						// automatic head length
+      shift_arrow.color.a = 1;						// the arrow is not transparent
+
+      // A tweak for extreme close-ups to make the arrow out of scale but more informative
+      if (latest_status.scale_by < 0.01 && camera_is_aligned /*&& !latest_status.in_natural_control_mode*/) {	// only when the rviz camera is in the front
+	shift_arrow.points[0].z -= 0.02;					// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
+	shift_arrow.points[1].z -= 0.02;     
+	shift_arrow.scale.x = 0.0001;					// make the shaft thinner
+	shift_arrow.scale.y = 0.0003;					// make the arrow head thinner
+	shift_arrow.color.a = 0.6;					// and make the arrow a bit transparent
+      }
+      
+      // Change arrow's appearance when camera in on the top, looking down
+      if (!camera_is_aligned && !latest_status.position_unlimited) {	// if camera is on the top and facing down, the arrow marker must be made more visible
+	shift_arrow.scale.x = 0.15;					// shaft is now quite fat
+	shift_arrow.scale.y = 0.18;					// head is also made large
+	shift_arrow.color.a = 0.4;					// the arrow marker is transparent
+      }
+
+      if (latest_status.position_unlimited) shift_arrow.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
+      else shift_arrow.color.g = 0.5;					// else, the arrow is orange
+      
+      pub_marker.publish( shift_arrow );					// publish shift_arrow visualization_marker; this is picked up by rviz
+      
+      // == 3D VISUAL AID ========================================= \\
+      // Use the same origin/pivot point as the start point of the arrow marker
+      aid3D.pose.position = shift_arrow.points[0];
+      // Dimensions of the box are determined by the hand position
+      aid3D.scale.x = latest_status.live_hand_pose.pose.position.x * 2;
+      aid3D.scale.y = latest_status.live_hand_pose.pose.position.y * 2;
+      aid3D.scale.z = latest_status.live_hand_pose.pose.position.z * 2;
+      // If setting pose in one plane only, give the aid box thickness of the arrow arrow
+      if (!latest_status.position_forward_only && !latest_status.position_unlimited) aid3D.scale.z = shift_arrow.scale.x;
+      // Coloring the visual aid box
+      aid3D.color = shift_arrow.color;					// use the same color as arrow
+      aid3D.color.a = 0.2;						// make it transparent
+      
+      pub_marker.publish( aid3D );					// publish the visual aid box
+      
+      // == TEXT LABEL ============================================ \\
+      // Update display_distance parameters (display_distance operates relative to leap_motion frame)
+      display_distance.text = getDistanceString(shift_arrow.points);	// get the distance between start and end point in mm as string
+      if (!latest_status.in_natural_control_mode) {			// INVERTED CONTROL MODE
+	display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// scale the display text based on scale_by value
+	display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
+      } else {								// NATURAL CONTROL MODE
+	display_distance.scale.z = 0.010 + latest_status.scale_by/20;	// scale the display text based on scale_by value
+	display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
+	if (latest_status.scale_by < 0.1 && camera_is_aligned) display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// extreme close-up
+      }
+      // A tweak for when the camera is on the top facing down; lift text above the arrow
+      if (!camera_is_aligned) display_distance.pose.position.y = 0.7*shift_arrow.scale.y; // lift text to the top of arrows head
+      // A tweak for bringing the text in front of the hand pose orientation marker for better visibility
+      if (latest_status.orientation_free && camera_is_aligned) display_distance.pose.position.z += 0.1;   // shift text in front of the hand pose rotation marker
+      
+      pub_marker.publish( display_distance );				// publish info_text visualization_marker; this is picked up by rivz
+      
+      // == HAND POSE BOX ========================================= \\
+      // Size of the hand pose marker
+      hand_pose.scale.x = 0.06;
+      hand_pose.scale.z = 0.15; 
+      // Hand pose marker (relative to leap_motion frame)
+      hand_pose.pose = latest_status.live_hand_pose.pose;
+      
+      // Shift the marker in front of the ft sensor and robotiq gripper
+      if (latest_status.in_natural_control_mode) hand_pose.pose.position.z -= VIRTUAL_SCREEN_FRONT;
+      else hand_pose.pose.position.z += VIRTUAL_SCREEN_FRONT;
+      
+      // Paint the marker based on restricted motion molatest_status.des
+      if (latest_status.orientation_free) hand_pose.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
+      else hand_pose.color.g = 0.5;					// else, the marker is orange
+
+      // SPECIAL CASE! Hide hand pose marker when orientation is to be ignored.
+      if (/*!latest_status.in_natural_control_mode &&*/ !latest_status.orientation_free) hand_pose.color.a = 0;	// make the marker invisible
+      else hand_pose.color.a = 1;
+      
+      pub_marker.publish( hand_pose );
+      
+      // == CARTESIAN WAYPOINTS =================================== \\
+      
+      cartesian_path.points.clear();
+  //     geometry_msgs::Point nill;
+  //     cartesian_path.points.push_back( nill );	// Start from the current end effector position
+      for (int i = 0; i < latest_status.cartesian_wayposes.size(); ++i)
+      {
+  //       geometry_msgs::Pose tmp = latest_status.cartesian_wayposes.at(i);
+	cartesian_path.points.push_back( latest_status.cartesian_wayposes.at(i).position );
+      }
+      
+  //     cartesian_waypoints.points = latest_status.cartesian_wayposes;
+      pub_marker.publish( cartesian_path );
+    }
     
     // == CAMERA POSE =========================================== \\
     // Setting 'adjust_camera' triggers repositioning of the point-of-view camera.
@@ -479,22 +586,23 @@ int main(int argc, char **argv) {
     if (latest_status.in_navigation_mode && adjust_camera)
     {
       // During NAVIGATION camera moves relative to 'base_link' frame.
-      pow_camera.target_frame = "base_footprint";		// should be in the center of the robot 
+//       pow_camera.target_frame = "base_link";		// should be in the center of the robot 
+      pow_cam.changeTargetFrameTo("base_link");
       ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
       // In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-      pow_camera.up.vector.x = 1;
-      pow_camera.up.vector.z = 0;
+      pow_cam.placement.up.vector.x = 1;
+      pow_cam.placement.up.vector.z = 0;
 
       // Camera is positioned directly above the virtual FRONT view screen.
-      pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
-      pow_camera.eye.point.y = 0;
-      pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+      pow_cam.placement.eye.point.x = 0;					// Above the virtual FRONT view screen
+      pow_cam.placement.eye.point.y = 0;
+      pow_cam.placement.eye.point.z = 2 + 8*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance ????
 
       // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-      pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+      pow_cam.placement.focus.point.x = 0;
       
       latest_known_camera_mode = 11;				// set latest_known_camera_mode to 11, i.e navigation natural
-      pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
+      pub_cam.publish( pow_cam.placement );				// publish a CameraPlacement msg
       adjust_camera = false;					// set adjust_camera 'false'     
 
     }
@@ -502,7 +610,8 @@ int main(int argc, char **argv) {
     else if (!latest_status.in_navigation_mode && adjust_camera)
     {
       // During MANIPULATION camera moves relative to 'temoto_end_effector' frame.
-      pow_camera.target_frame = "temoto_end_effector";
+//       pow_camera.target_frame = "temoto_end_effector";
+      pow_cam.changeTargetFrameTo("temoto_end_effector");
       // Adjust camera for NATURAL CONTROL MODE
       if (/*adjust_camera && */latest_status.in_natural_control_mode)
       {
@@ -510,36 +619,36 @@ int main(int argc, char **argv) {
 	{
 	  ROS_INFO("NATURAL: Switching to aligned view.");
 	  // Set +Z as 'UP'
-	  pow_camera.up.vector.x = 0;
-	  pow_camera.up.vector.z = 1;
+	  pow_cam.placement.up.vector.x = 0;
+	  pow_cam.placement.up.vector.z = 1;
 
 	  // Camera will be behind temoto_end_effector, somewhat elevated
-	  pow_camera.eye.point.x = -2*latest_status.scale_by;	// Distance backwards from the end effector
-	  pow_camera.eye.point.y = 0;				// Align with end effector
-	  pow_camera.eye.point.z = 0.2 + 2*latest_status.scale_by;// Distance upwards from the end effector
+	  pow_cam.placement.eye.point.x = -2*latest_status.scale_by;	// Distance backwards from the end effector
+	  pow_cam.placement.eye.point.y = 0;				// Align with end effector
+	  pow_cam.placement.eye.point.z = 0.2 + 2*latest_status.scale_by;// Distance upwards from the end effector
 	  // if constrained to a plane and scaled down align camrea with the end effector in z-direction
-	  if (!latest_status.position_unlimited && latest_status.scale_by < 0.1) pow_camera.eye.point.z = 0;
+	  if (!latest_status.position_unlimited && latest_status.scale_by < 0.1) pow_cam.placement.eye.point.z = 0;
 	  
 	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	  pow_cam.placement.focus.point.x = VIRTUAL_SCREEN_FRONT;
 	}
 	else							// natural control mode top view
 	{
 	  ROS_INFO("NATURAL: Switching to top view.");
 	  // In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-	  pow_camera.up.vector.x = 1;
-	  pow_camera.up.vector.z = 0;
+	  pow_cam.placement.up.vector.x = 1;
+	  pow_cam.placement.up.vector.z = 0;
 
 	  // Camera is positioned directly above the virtual FRONT view screen.
-	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;				// Above the virtual FRONT view screen
-	  pow_camera.eye.point.y = 0;
-	  pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+	  pow_cam.placement.eye.point.x = VIRTUAL_SCREEN_FRONT;				// Above the virtual FRONT view screen
+	  pow_cam.placement.eye.point.y = 0;
+	  pow_cam.placement.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
 
 	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	  pow_cam.placement.focus.point.x = VIRTUAL_SCREEN_FRONT;
 	}
 	latest_known_camera_mode = 1;				// set latest_known_camera_mode to 1, i.e natural
-	pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
+	pub_cam.publish( pow_cam.placement );				// publish a CameraPlacement msg
 	adjust_camera = false;					// set adjust_camera 'false'
       } // if adjust_camera in_natural_control_mode
       
@@ -549,42 +658,47 @@ int main(int argc, char **argv) {
 	{
 	  ROS_INFO("INVERTED: Switching to aligned view.");
 	  // Set +Z as 'UP'
-	  pow_camera.up.vector.z = 1;
-	  pow_camera.up.vector.x = 0;
+	  pow_cam.placement.up.vector.z = 1;
+	  pow_cam.placement.up.vector.x = 0;
 
 	  // Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT + 1.5*latest_status.scale_by;
-	  pow_camera.eye.point.y = 0;				// move camera to align with end effector along the y-axis
-	  pow_camera.eye.point.z = 0;				// move camera to align with end effector along the z-axis
-	  if (latest_status.position_unlimited) pow_camera.eye.point.z = 0.1 + 1*latest_status.scale_by;	// shift camera upwards ... 
+	  pow_cam.placement.eye.point.x = VIRTUAL_SCREEN_FRONT + 1.5*latest_status.scale_by;
+	  pow_cam.placement.eye.point.y = 0;				// move camera to align with end effector along the y-axis
+	  pow_cam.placement.eye.point.z = 0;				// move camera to align with end effector along the z-axis
+	  if (latest_status.position_unlimited) pow_cam.placement.eye.point.z = 0.1 + 1*latest_status.scale_by;	// shift camera upwards ... 
 
 	  // Look at the origin of temoto_end_effector, i.e. all zeros
-	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	  pow_cam.placement.focus.point.x = VIRTUAL_SCREEN_FRONT;
 	}
 	else							// else means camera should be in the top position
 	{
 	  ROS_INFO("INVERTED: Switching to top view.");
 	  // In the top view of inverted control mode, -X is considered 'UP'.
-	  pow_camera.up.vector.z = 0;
-	  pow_camera.up.vector.x = -1;
+	  pow_cam.placement.up.vector.z = 0;
+	  pow_cam.placement.up.vector.x = -1;
 
 	  // Camera is positioned directly above the virtual FRONT view screen.
-	  pow_camera.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
-	  pow_camera.eye.point.y = 0;
-	  pow_camera.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+	  pow_cam.placement.eye.point.x = VIRTUAL_SCREEN_FRONT;					// Above the virtual FRONT view screen
+	  pow_cam.placement.eye.point.y = 0;
+	  pow_cam.placement.eye.point.z = VIRTUAL_SCREEN_TOP + 1.5*latest_status.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
 	  
 	  // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	  pow_camera.focus.point.x = VIRTUAL_SCREEN_FRONT;
+	  pow_cam.placement.focus.point.x = VIRTUAL_SCREEN_FRONT;
 	}
 	latest_known_camera_mode = 2;				// set latest_known_camera_mode to 2, i.e inverted
-	pub_cam.publish( pow_camera );				// publish a CameraPlacement msg
+	pub_cam.publish( pow_cam.placement );				// publish a CameraPlacement msg
 	adjust_camera = false;					// set adjust_camera 'false'
       } // if adjust_camera not in_natural_control_mode
     } // else if (!latest_status.in_navigation_mode && adjust_camera)
     
     // Doublecheck    
     // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pow camera.
-    if (latest_known_camera_mode!=1 && latest_status.in_natural_control_mode) adjust_camera = 1;
+    if (latest_known_camera_mode!=1 && latest_status.in_natural_control_mode)
+    {
+      adjust_camera = 1;
+      // unless in recognized NAVIGATION mode, then all is OK
+      if (latest_known_camera_mode == 11 && latest_status.in_navigation_mode) adjust_camera = 0;
+    }    
     // If camera IS NOT in inverted mode but the system IS in inverted mode, try adjusting the pow camera.
     if (latest_known_camera_mode!=2 && !latest_status.in_natural_control_mode) adjust_camera = 1;
     // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pow camera.

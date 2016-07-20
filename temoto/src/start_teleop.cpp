@@ -548,7 +548,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   else if (voice_command.cmd == 0x41)			// Switch over to navigation mode
   { 
     ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
-    AMP_HAND_MOTION_ = 40;
+    AMP_HAND_MOTION_ = 100;
     temoto::ChangeTf switch_human2robot_tf;
     switch_human2robot_tf.request.navigate = true;	// request a change of control mode
     switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective

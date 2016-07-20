@@ -57,7 +57,7 @@ public:
   Teleoperator()
   {
     scale_by_ = 1;
-    AMP_HAND_MOTION_ = 40;		// 40 for navigation, and 10 for manipulation
+    AMP_HAND_MOTION_ = 100;		// 40 for navigation, and 10 for manipulation
     using_natural_control_ = true;
     orientation_locked_ = false;
     position_limited_ = true;
