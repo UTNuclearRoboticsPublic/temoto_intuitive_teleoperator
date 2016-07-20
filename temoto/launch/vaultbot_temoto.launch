@@ -11,6 +11,7 @@
   <node name="listen_operator_talk" pkg="temoto" type="listen_operator_talk" />
   <node name="async_tf_broadcaster" pkg="temoto" type="async_tf_broadcaster" />
 
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
 
   <!-- bringup proper rviz config -->
   
