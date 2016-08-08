@@ -50,7 +50,8 @@ temoto::Status latest_status;	///< latest recieved full system status published 
  *  @return always true.
  */
 bool adjustCameraPlacement (std_srvs::Empty::Request  &req,
-			    std_srvs::Empty::Response &res) {
+			    std_srvs::Empty::Response &res)
+{
   ROS_INFO("[rviz_visual/adjust_rviz_camera] adjust_camera is set 'true' due to service request.");
   // Set adjust_camera to TRUE.
   adjust_camera = true;
@@ -380,8 +381,8 @@ visualization_msgs::Marker initCartesianWaypoints()
 }
 
 /** Main method. */
-int main(int argc, char **argv) {
-
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "rviz_visual");		// ROS init
   ros::NodeHandle n;				// ROS node handle
   ros::AsyncSpinner spinner(1);			// Using AsyncSpinner
@@ -460,16 +461,19 @@ int main(int argc, char **argv) {
     }
     // Setting markers in MANIPULATION mode
     else
-      {
+    {
       /* ==  ARROW  ============================================ */
       // Update arrow marker properties and make hand tracking visible in rviz
       // Arrow marker is described in leap_motion frame.
       // Start point of the arrow is always at (0, 0, 0).
       shift_arrow.points[1] = latest_status.live_hand_pose.pose.position;// set the end point of the arrow to actual hand position
-      if (latest_status.in_natural_control_mode) {
+      if (latest_status.in_natural_control_mode)
+      {
 	shift_arrow.points[0].z = -VIRTUAL_SCREEN_FRONT;		// shift the marker in front of the FT sensor and gripper
 	shift_arrow.points[1].z -= VIRTUAL_SCREEN_FRONT;		// shift the marker in front of the FT sensor and gripper
-      } else {
+      }
+      else
+      {
 	shift_arrow.points[0].z = VIRTUAL_SCREEN_FRONT;			// shift the marker in front of the FT sensor and gripper
 	shift_arrow.points[1].z += VIRTUAL_SCREEN_FRONT;		// shift the marker in front of the FT sensor and gripper
       }
@@ -481,7 +485,8 @@ int main(int argc, char **argv) {
       shift_arrow.color.a = 1;						// the arrow is not transparent
 
       // A tweak for extreme close-ups to make the arrow out of scale but more informative
-      if (latest_status.scale_by < 0.01 && camera_is_aligned /*&& !latest_status.in_natural_control_mode*/) {	// only when the rviz camera is in the front
+      if (latest_status.scale_by < 0.01 && camera_is_aligned /*&& !latest_status.in_natural_control_mode*/)// only when the rviz camera is in the front
+      {
 	shift_arrow.points[0].z -= 0.02;				// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
 	shift_arrow.points[1].z -= 0.02;     
 	shift_arrow.scale.x = 0.0001;					// make the shaft thinner
@@ -490,7 +495,8 @@ int main(int argc, char **argv) {
       }
       
       // Change arrow's appearance when camera in on the top, looking down
-      if (!camera_is_aligned && !latest_status.position_unlimited) {	// if camera is on the top and facing down, the arrow marker must be made more visible
+      if (!camera_is_aligned && !latest_status.position_unlimited)	// if camera is on the top and facing down, the arrow marker must be made more visible
+      {
 	shift_arrow.scale.x = 0.15;					// shaft is now quite fat
 	shift_arrow.scale.y = 0.18;					// head is also made large
 	shift_arrow.color.a = 0.4;					// the arrow marker is transparent
@@ -519,10 +525,13 @@ int main(int argc, char **argv) {
       /* ==  TEXT LABEL  ======================================= */
       // Update display_distance parameters (display_distance operates relative to leap_motion frame)
       display_distance.text = getDistanceString(shift_arrow.points);	// get the distance between start and end point in mm as string
-      if (!latest_status.in_natural_control_mode) {			// INVERTED CONTROL MODE
+      if (!latest_status.in_natural_control_mode)			// INVERTED CONTROL MODE
+      {
 	display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// scale the display text based on scale_by value
 	display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
-      } else {								// NATURAL CONTROL MODE
+      }
+      else								// NATURAL CONTROL MODE
+      {
 	display_distance.scale.z = 0.010 + latest_status.scale_by/20;	// scale the display text based on scale_by value
 	display_distance.pose.position = shift_arrow.points[1];		// text is positioned at the end of the arrow marker
 	if (latest_status.scale_by < 0.1 && camera_is_aligned) display_distance.scale.z = 0.001 + latest_status.scale_by/20;	// extreme close-up
@@ -646,7 +655,8 @@ int main(int argc, char **argv) {
       } // if adjust_camera in_natural_control_mode
       
       // adjust camera for INVERTED CONTROL MODE
-      if (!latest_status.in_natural_control_mode) {
+      if (!latest_status.in_natural_control_mode)
+      {
 	if (camera_is_aligned)					// here alignment means the camera is in the front facing the end effector
 	{
 	  ROS_INFO("INVERTED: Switching to aligned view.");
