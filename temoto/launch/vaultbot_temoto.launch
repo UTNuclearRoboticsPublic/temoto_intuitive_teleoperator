@@ -14,5 +14,8 @@
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
 
   <!-- bringup proper rviz config -->
+  <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
   
 </launch>
