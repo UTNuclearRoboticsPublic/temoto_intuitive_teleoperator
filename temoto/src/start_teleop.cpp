@@ -607,7 +607,7 @@ int main(int argc, char **argv)
   // ROS subscriber on /griffin_powermate
   ros::Subscriber sub_scaling_factor = n.subscribe<temoto::Dial>("griffin_powermate", 10, &Teleoperator::processPowermate, &temoto_teleop);
   // ROS subscriber on /leapmotion_general
-  ros::Subscriber sub_operator_hand = n.subscribe("leapmotion_general", 10,  &Teleoperator::processLeap, &temoto_teleop);
+  ros::Subscriber sub_operator_hand = n.subscribe("leap_motion_output", 10,  &Teleoperator::processLeap, &temoto_teleop);
   // ROS subscriber on /temoto/voice_commands
   ros::Subscriber sub_voicecommands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
   // ROS subscriber on /temoto/end_effector_pose
