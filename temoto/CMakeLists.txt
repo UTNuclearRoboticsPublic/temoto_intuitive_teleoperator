@@ -165,9 +165,9 @@ add_executable(robotiq src/robotiq.cpp)
 target_link_libraries(robotiq ${catkin_LIBRARIES})
 add_dependencies(robotiq temoto_gencpp)
 
-add_executable(async_tf_broadcaster src/async_tf_broadcaster.cpp)
-target_link_libraries(async_tf_broadcaster ${catkin_LIBRARIES})
-add_dependencies(async_tf_broadcaster temoto_gencpp)
+add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
+target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES})
+add_dependencies(human_frame_broadcaster temoto_gencpp)
 
 add_executable(navigate_robot src/navigate_robot.cpp)
 target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_include)

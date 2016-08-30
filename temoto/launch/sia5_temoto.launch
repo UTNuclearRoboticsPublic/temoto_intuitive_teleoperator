@@ -16,7 +16,7 @@
   <node name="move_robot" pkg="temoto" type="move_robot" args="sia5" />
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
   <node name="listen_operator_talk" pkg="temoto" type="listen_operator_talk" />
-  <node name="async_tf_broadcaster" pkg="temoto" type="async_tf_broadcaster" />
+  <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
 
   <group if="$(arg robotiq)">
     <node name="s_model_joint_states" pkg="robotiq_joint_state_publisher" type="s_model_joint_states">
