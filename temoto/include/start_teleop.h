@@ -28,6 +28,8 @@
 
 /** @file start_teleop.h
  * 
+ *  @brief Central node for TEMOTO teleoperator. Subscribes to relevant messages, calls move and navigation interfaces, and publishes system status.
+ * 
  *  @author karl.kruusamae(at)utexas.edu
  */
 
@@ -86,7 +88,7 @@ public:
   
   //Callback functions
   
-  void processLeap(leap_motion_controller::LeapMotionOutput leap_data);		// TODO rename to more general case, e.g. processHandPose
+  void processLeap(leap_motion_controller::LeapMotionOutput leap_data);		// TODO rename to more general case, e.g. processHumanInput
   
   void processPowermate(temoto::Dial powermate);				// TODO rename to more general case, e.g. processScaleFactor
   
@@ -108,6 +110,11 @@ private:
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
+  
+  /// Offsett zero position of the Leap Motion Controller.
+  const double OFFSET_X_ = 0;
+  const double OFFSET_Y_ = 0.2;		// Height of zero
+  const double OFFSET_Z_ = 0;
 
   /// Latest pose value received for the end effector.
   geometry_msgs::PoseStamped current_pose_;
