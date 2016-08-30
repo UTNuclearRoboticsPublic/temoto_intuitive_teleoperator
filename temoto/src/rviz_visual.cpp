@@ -63,8 +63,8 @@ bool adjustCameraPlacement (std_srvs::Empty::Request  &req,
  *  Stores the received status in a global variable latest_status.
  *  @param status temoto::Status message
  */
-void updateStatus (temoto::Status status) {
-  
+void updateStatus (temoto::Status status)
+{
   // Before overwriting previous status, checks if switch between camera views is necesassry due to switch between navigation and manipulation modes.
   if (status.in_navigation_mode && !latest_status.in_navigation_mode)
   {
