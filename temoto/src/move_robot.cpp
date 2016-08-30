@@ -47,10 +47,11 @@
  *  @return always true.
  */
 bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
-				       temoto::Goal::Response &res) {
+				       temoto::Goal::Response &res)
+{
 //  ROS_INFO("New service update requested.");
-
-  if (req.action_type == req.CARTESIAN_COMPUTE) {
+  if (req.action_type == temoto::GoalRequest::CARTESIAN_COMPUTE)
+  {
     // Set current state as the start state for planner. For some reason the actual built-in function doesn't do that.
     movegroup_.setStartState( *(movegroup_.getCurrentState()) );
     
@@ -67,8 +68,9 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   
     latest_plan_.trajectory_ = trajectory;
     new_plan_available_ = true;
-    
-  } else {
+  }
+  else
+  {
     // sets the action associated to target pose
     req_action_type_ = req.action_type;				// TODO: Should it be in the beginning, before IF?
     
@@ -85,7 +87,6 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
     // Set new_move_requested_ TRUE for main() to see it
     new_move_requested_ = true;
     ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ is set TRUE");
-
   }
   return true;
 } // end serviceUpdate
@@ -93,7 +94,8 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 /** Plans and/or executes the motion of the robot.
  *  @param robot MoveGroup object of the robot.
  */
-void MoveRobotInterface::requestMove(/*moveit::planning_interface::MoveGroup& robot*/) {
+void MoveRobotInterface::requestMove()
+{
 
   // Set current state as the start state for planner. For some reason the actual built-in function doesn't do that.
   movegroup_.setStartState( *(movegroup_.getCurrentState()) );
@@ -106,21 +108,30 @@ void MoveRobotInterface::requestMove(/*moveit::planning_interface::MoveGroup& ro
   ROS_INFO("[robot_move/requestMove] Current pose (orien x, y, z, w): (%f, %f, %f, %f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
  
   // Use either named or pose target (named target takes the priority over regular pose target).
-  if (use_named_target_) {						// if use_named_target is true
+  if (use_named_target_)						// if use_named_target is true
+  {
     bool set_target_ok = movegroup_.setNamedTarget(named_target_);	// set target pose as a named target
-    if (!set_target_ok) {						// check if setting named target was successful
+    if (!set_target_ok)							// check if setting named target was successful
+    {
       ROS_INFO("[robot_move/requestMove] Failed to set named target. Please retry.");
-      return;								// return if set target failed
-    } else ROS_INFO("[robot_move/requestMove] Using NAMED TARGET for planning and/or moving.");
-  } else {
+      return;								// return if setNamedTarget failed
+    }
+    else
+      ROS_INFO("[robot_move/requestMove] Using NAMED TARGET for planning and/or moving.");
+  } // end if (use_named_target_)
+  else
+  {
 //     robot.setEndEffectorLink("leap_motion_on_robot");
     ROS_INFO("[robot_move/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
     bool set_target_ok = movegroup_.setPoseTarget(target_pose_stamped_/*, "leap_motion_inv"*/);
-    if (!set_target_ok) {						// check if set target pose failed
+    if (!set_target_ok)							// check if set target pose failed
+    {
       ROS_INFO("[robot_move/requestMove] Failed to set pose target. Please retry.");
-      return;								// return if set target failed
-    } else ROS_INFO("[robot_move/requestMove] Using POSE TARGET for planning and/or moving.");
+      return;								// return if setPoseTarget failed
+    }
+    else
+      ROS_INFO("[robot_move/requestMove] Using POSE TARGET for planning and/or moving.");
   }
 
   // TODO
@@ -140,19 +151,24 @@ void MoveRobotInterface::requestMove(/*moveit::planning_interface::MoveGroup& ro
   ROS_INFO("[robot_move/requestMove] Target pose (orien x, y, z, w): (%f, %f, %f, %f)", current_target.pose.orientation.x, current_target.pose.orientation.y, current_target.pose.orientation.z, current_target.pose.orientation.w);
 
   // Based on action type: PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03)
-  if ( req_action_type_ == 0x01 ) {
+  if ( req_action_type_ == temoto::GoalRequest::PLAN )
+  {
     ROS_INFO("[robot_move/requestMove] Starting to plan ...");
     ROS_INFO("[robot_move/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
     movegroup_.plan( latest_plan_ );				// Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
     ROS_INFO("[robot_move/requestMove] DONE planning.");
-  } else if ( req_action_type_ == 0x02 ) {
+  }
+  else if ( req_action_type_ == temoto::GoalRequest::EXECUTE )
+  {
     ROS_INFO("[robot_move/requestMove] Starting to execute last plan ...");
     if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );	// If there is a new plan, execute latest_plan_.
     else ROS_INFO("[robot_move/requestMove] No plan to execute.");	// Else do nothing but printout "no plan"
     new_plan_available_ = false;					// Either case, set new_plan_available_ to FALSE.
     ROS_INFO("[robot_move/requestMove] DONE executing the plan");
-  } else if ( req_action_type_ == 0x03 ) {
+  }
+  else if ( req_action_type_ == temoto::GoalRequest::GO )
+  {
     ROS_INFO("[robot_move/requestMove] Starting to move (i.e. plan & execute) ...");
 //     robot.move();						// Plan and execute.
     // Since move() has a bug of start state not being current state, I am going to plan and execute sequentally.
@@ -169,7 +185,8 @@ void MoveRobotInterface::requestMove(/*moveit::planning_interface::MoveGroup& ro
 } // end requestMove
 
 /** Main method. */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   ros::init(argc, argv, "move_robot");
   ros::NodeHandle n;
   ros::AsyncSpinner spinner(1);
@@ -177,6 +194,7 @@ int main(int argc, char **argv) {
   
   // user-specified move_group_name
   std::string move_group_name;
+  //TODO use private param, not argv[]
   if (argc > 1) move_group_name = argv[1];
   else {
     ROS_INFO("Usage: move_robot <move_group_name>");
@@ -207,11 +225,12 @@ int main(int argc, char **argv) {
   ros::ServiceClient client_visual = n.serviceClient<std_srvs::Empty>("temoto/adjust_rviz_camera");
   std_srvs::Empty empty_srv;			// Empty service.
 
-  while(ros::ok()){
-
+  while ( ros::ok() )
+  {
     // check if there has been a service request for a new move
-    if (moveIF.new_move_requested_ && moveIF.req_action_type_ < 0x04) {
-      moveIF.requestMove(/*robot_group*/);	// plan and execute move using move_group
+    if ( moveIF.new_move_requested_ && moveIF.req_action_type_ < 0x04 )
+    {
+      moveIF.requestMove();			// plan and execute move using move_group
       moveIF.new_move_requested_ = false;	// set request flag to false
       moveIF.new_end_effector_pose_ = true;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
     }
@@ -219,8 +238,9 @@ int main(int argc, char **argv) {
     // get and publish current end effector pose;
     pub_end_effector.publish( moveIF.movegroup_.getCurrentPose() );
 
-    // If pose of the end effector has changed. Update camera position only if the end effector has moved since the last time camera was positioned.
-    if (moveIF.new_end_effector_pose_) {
+    // If pose of the end effector has changed. Update camera position if the end effector has moved since the last time camera was positioned.
+    if ( moveIF.new_end_effector_pose_ )
+    {
       client_visual.call(empty_srv);
       moveIF.new_end_effector_pose_ = false;	// set new_end_effector_pose to zero
     } // end if
