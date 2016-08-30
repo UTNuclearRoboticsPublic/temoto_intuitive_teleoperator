@@ -26,6 +26,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/** @file move_robot.h
+ * 
+ *  @brief ROS server that acts as an interface for ROS MoveIt! and publishes end-effector pose.
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
 #ifndef MOVE_ROBOT_H
 #define MOVE_ROBOT_H
 
