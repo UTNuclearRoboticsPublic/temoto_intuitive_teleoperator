@@ -75,11 +75,11 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
 
   // Set up primary hand
   if (primary_hand == "right") {
-    primary_hand_is_left = false;
+    primary_hand_is_left_ = false;
   }
   else
   {
-    primary_hand_is_left = true;
+    primary_hand_is_left_ = true;
   }
 }
 
@@ -331,7 +331,7 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   geometry_msgs::Pose secondary_hand;
   bool primary_hand_is_present;
   bool secondary_hand_is_present;
-  if ( primary_hand_is_left )
+  if ( primary_hand_is_left_ )
   {
     // copy left hand data to primary_hand and right hand data to secondary_hand
     primary_hand = leap_data.left_hand.palm_pose.pose;
