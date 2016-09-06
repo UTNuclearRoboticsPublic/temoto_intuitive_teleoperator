@@ -280,15 +280,36 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
  */
 void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_data)
 {
-  
-  // If position data is to be limited AND right_hand is detected AND right hand wasn't there before, toggle position_fwd_only_.
-  if (position_limited_ && leap_data.right_hand && !right_hand_before_)
+  // First, set up primary and secondary hand.
+  geometry_msgs::Pose primary_hand;
+  geometry_msgs::Pose secondary_hand;
+  bool primary_hand_is_present;
+  bool secondary_hand_is_present;
+  if ( primary_hand_is_left )
   {
-    (position_fwd_only_) ? position_fwd_only_ = false : position_fwd_only_ = true;	// toggles position_fwd_only value between true and false
-    right_hand_before_ = true;							// sets right_hand_before_ true;
-    ROS_INFO("RIGHT HAND DETECTED, position_fwd_only_ is now %d", position_fwd_only_);
+    // copy left hand data to primary_hand and right hand data to secondary_hand
+    primary_hand = leap_data.left_hand.palm_pose.pose;
+    secondary_hand = leap_data.right_hand.palm_pose.pose;
+    primary_hand_is_present = leap_data.left_hand.is_present;
+    secondary_hand_is_present = leap_data.right_hand.is_present;
   }
-  else if (leap_data.right_hand == false) right_hand_before_ = false;		// if right hand is not detected, set right_hand_before_ false;
+  else
+  {
+    // copy right hand data to primary_hand and left hand data to secondary_hand
+    primary_hand = leap_data.right_hand.palm_pose.pose;
+    secondary_hand = leap_data.left_hand.palm_pose.pose;
+    primary_hand_is_present = leap_data.right_hand.is_present;
+    secondary_hand_is_present = leap_data.left_hand.is_present;
+  }
+  
+  // If position data is to be limited AND secondary hand is detected AND secondary hand wasn't there before, toggle position_fwd_only_.
+  if (position_limited_ && secondary_hand_is_present && !secondary_hand_before_)
+  {
+    (position_fwd_only_) ? position_fwd_only_ = false : position_fwd_only_ = true;	// toggles position_fwd_only value between TRUE and FALSE
+    secondary_hand_before_ = true;							// sets secondary_hand_before_ TRUE;
+    ROS_INFO("SECONDARY HAND DETECTED, position_fwd_only_ is now %d", position_fwd_only_);
+  }
+  else if (secondary_hand_is_present == false) secondary_hand_before_ = false;		// if secondary hand is not detected, set secondary_hand_before_ FALSE;
   
 
   // Leap Motion Controller uses different coordinate orientation from the ROS standard for SIA5:
@@ -303,14 +324,13 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   geometry_msgs::PoseStamped scaled_pose;
   // Header is copied without a change.
   scaled_pose.header = leap_data.header;
-  // Reads the position of left palm in meters, amplifies to translate default motion; scales to dynamically adjust range; shifts for better usability.
-  // TODO Should the offsetting be done on the leap_motion publisher side?
-  scaled_pose.pose.position.x = scale_by_*AMP_HAND_MOTION_*(leap_data.left_palm_pose.position.x - OFFSET_X_);
-  scaled_pose.pose.position.y = scale_by_*AMP_HAND_MOTION_*(leap_data.left_palm_pose.position.y - OFFSET_Y_);
-  scaled_pose.pose.position.z = scale_by_*AMP_HAND_MOTION_*(leap_data.left_palm_pose.position.z - OFFSET_Z_);
+  // Reads the position of primary palm in meters, amplifies to translate default motion; scales to dynamically adjust range; offsets for better usability.
+  scaled_pose.pose.position.x = scale_by_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
+  scaled_pose.pose.position.y = scale_by_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
+  scaled_pose.pose.position.z = scale_by_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
   
-  // Orientation of left palm is copied unaltered, i.e., is not scaled
-  scaled_pose.pose.orientation = leap_data.left_palm_pose.orientation;
+  // Orientation of primary palm is copied unaltered, i.e., is not scaled
+  scaled_pose.pose.orientation = primary_hand.orientation;
   
   // Applying relevant limitations to direction and/or orientation
   if (navigate_to_goal_)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
@@ -352,7 +372,7 @@ void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_dat
   live_pose_.header.stamp = ros::Time(0);//ros::Time::now();
 
   // Print position info to terminal
-  printf("Scale motion by %f; move SIA5 by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
+  printf("Scale motion by %f; move robot end-effector by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
 	   AMP_HAND_MOTION_*scale_by_, live_pose_.pose.position.x*1000, live_pose_.pose.position.y*1000, live_pose_.pose.position.z*1000, position_fwd_only_);
 
   return;
@@ -592,9 +612,14 @@ int main(int argc, char **argv)
   // ROS
   ros::init(argc, argv, "start_teleop");
   ros::NodeHandle n;
+  ros::NodeHandle pn("~");	// NodeHandle for accessing private parameters
 
+  // Getting user-specified primary hand from ROS parameter server
+  std::string primary_hand_name;
+  pn.param<std::string>("primary_hand", primary_hand_name, "left");
+  
   // Instance of Teleoperator
-  Teleoperator temoto_teleop;
+  Teleoperator temoto_teleop(primary_hand_name);
 
   // Setup Teleoperator ROS clients
   // ROS client for /temoto/move_robot_service

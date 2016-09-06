@@ -56,16 +56,25 @@ class Teleoperator
 {
 public:
   /// Constructor
-  Teleoperator()
+  Teleoperator(std::string primary_hand)
   {
     scale_by_ = 1;
-    AMP_HAND_MOTION_ = 100;		// 40 for navigation, and 10 for manipulation
+    AMP_HAND_MOTION_ = 100;		// 100 for navigation, and 10 for manipulation
     using_natural_control_ = true;
     orientation_locked_ = false;
     position_limited_ = true;
     position_fwd_only_ = false;
-    right_hand_before_ = false;
-    navigate_to_goal_ = true;
+    secondary_hand_before_ = false;
+    navigate_to_goal_ = true;		// TODO by default, it should actually be FALSE
+
+    // Set up primary hand
+    if (primary_hand == "right") {
+      primary_hand_is_left = false;
+    }
+    else
+    {
+      primary_hand_is_left = true;
+    }
   };
   
   // Callout functions
@@ -135,8 +144,9 @@ private:
   bool orientation_locked_;		///< Hand orientation info is to be ignored if TRUE.
   bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
   bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool right_hand_before_;		///< Presense of right hand during the previous iteration of Leap Motion's callback processLeap(..).
+  bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processLeap(..).
   bool navigate_to_goal_;		///< TRUE: interpret live_pose_ as 2D navigation goal; FALSE: live_pose_ is the motion planning target for robot EEF.
+  bool primary_hand_is_left;
 };
 
 #endif
