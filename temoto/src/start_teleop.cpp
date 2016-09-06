@@ -613,6 +613,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "start_teleop");
   ros::NodeHandle n;
   ros::NodeHandle pn("~");	// NodeHandle for accessing private parameters
+  ros::Rate rate(1000);		// work at 1 kHz
 
   // Getting user-specified primary hand from ROS parameter server
   std::string primary_hand_name;
@@ -651,7 +652,8 @@ int main(int argc, char **argv)
     // spins once to update subscribers or something like that
     ros::spinOnce();
     
-    // TODO add rate and sleep?
+    // sleep to meet rate
+    rate.sleep();
   } // end while
   
   return 0;
