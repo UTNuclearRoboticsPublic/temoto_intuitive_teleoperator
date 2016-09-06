@@ -11,7 +11,11 @@
   <node name="listen_operator_talk" pkg="temoto" type="listen_operator_talk" />
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
 
-  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
+    <param name="primary_hand" type="str" value="left" />
+    <param name="navigate" type="bool" value="true" />
+    <param name="manipulate" type="bool" value="true" />
+  </node>
 
   <!-- bringup proper rviz config -->
   <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">

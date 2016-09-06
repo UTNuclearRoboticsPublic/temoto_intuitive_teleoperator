@@ -35,7 +35,53 @@
 
 #include "start_teleop.h"
 
-// #define HEIGHT_OF_ZERO 0.2		///< Height of zero position above Leap Motion Controller.
+/** Constructor for Teleoperator.
+ *  @param primary_hand a std::string that determines the primary hand used during teleoperation. Unless specified as "right", primary hand will be left.
+ *  @param navigate enables teleoperation for navigation interface.
+ *  @param manipulate enables teleoperation for move interface.
+ */
+Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate)
+{
+  scale_by_ = 1;
+  using_natural_control_ = true;	// always start in natural control perspective
+  orientation_locked_ = false;
+  position_limited_ = true;
+  position_fwd_only_ = false;
+  secondary_hand_before_ = false;
+    
+  // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
+  if (manipulate && navigate)
+  {
+    control_state_ = 3;
+    navigate_to_goal_ = true;		// if navigation AND manipulation are enable, start out in navigation mode.
+    AMP_HAND_MOTION_ = 100;		// 100 for navigation
+  }
+  else if (navigate && !manipulate)
+  {
+    control_state_ = 2;
+    navigate_to_goal_ = true;		// if only navigation is enabled, navigate_to_goal_ is TRUE
+    AMP_HAND_MOTION_ = 100;		// 100 for navigation
+  }
+  else if (manipulate && !navigate)
+  {
+    control_state_ = 1;
+    navigate_to_goal_ = false;		// if only manipulation is enabled, navigate_to_goal_ is FALSE
+    AMP_HAND_MOTION_ = 10;		// 10 for manipulation
+  }
+  else
+  {
+    ROS_WARN("[start_teleop/Teleoperator] Control state not specified.");
+  }
+
+  // Set up primary hand
+  if (primary_hand == "right") {
+    primary_hand_is_left = false;
+  }
+  else
+  {
+    primary_hand_is_left = true;
+  }
+}
 
 /** Function that actually makes the service call to appropriate robot motion intefrace.
  *  Currently, there are MoveRobotInterface and NavigateRobotInterface.
@@ -556,7 +602,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     wayposes_.clear();					// Clear all wayposes
     wayposes_fixed_in_baselink_.clear();		// Clear wayposes defined in base_link
   }
-  else if (voice_command.cmd == 0x40)			// Switch over to manipulation (MoveIt!) mode
+  else if (voice_command.cmd == 0x40 && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
   { 
     ROS_INFO("Voice command received! Going into MANIPULATION mode  ...");
     AMP_HAND_MOTION_ = 10;
@@ -566,7 +612,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
   }
-  else if (voice_command.cmd == 0x41)			// Switch over to navigation mode
+  else if (voice_command.cmd == 0x41 && control_state_ != 1)	// Switch over to navigation mode
   { 
     ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
     AMP_HAND_MOTION_ = 100;
@@ -608,19 +654,32 @@ temoto::Status Teleoperator::getStatus()
 /** Main method. */
 int main(int argc, char **argv)
 {
-
-  // ROS
+  // ROS init
   ros::init(argc, argv, "start_teleop");
+
+  // NodeHandle for regular stuff
   ros::NodeHandle n;
-  ros::NodeHandle pn("~");	// NodeHandle for accessing private parameters
-  ros::Rate rate(1000);		// work at 1 kHz
+
+  // NodeHandle for accessing private parameters
+  ros::NodeHandle pn("~");
+
+  // Setting work rate to 1 kHz
+  ros::Rate rate(1000);
 
   // Getting user-specified primary hand from ROS parameter server
   std::string primary_hand_name;
   pn.param<std::string>("primary_hand", primary_hand_name, "left");
+
+  // Getting parameters that specify the types of teleoperation
+  // By default navigation is turned OFF
+  bool navigate;
+  pn.param<bool>("navigate", navigate, false);
+  // By default manipulation is turned ON
+  bool manipulate;
+  pn.param<bool>("manipulate", manipulate, true);
   
   // Instance of Teleoperator
-  Teleoperator temoto_teleop(primary_hand_name);
+  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate);
 
   // Setup Teleoperator ROS clients
   // ROS client for /temoto/move_robot_service
