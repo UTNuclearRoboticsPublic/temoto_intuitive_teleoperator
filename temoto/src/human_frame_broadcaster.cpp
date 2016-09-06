@@ -42,6 +42,8 @@
 #include "temoto_include.h"
 
 bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
+// TODO Since g_navigation_control is TRUE when the node is launched, the frames are off when start_teleop is brought online for 'manipulation only'.
+// Could be fixed my making navigate and manipulate public parameters and then reading them with this node as well.
 bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
 
 /** This method is executed when temoto/change_tf service is called.
@@ -80,7 +82,7 @@ int main(int argc, char **argv)
   ros::ServiceServer service = nh.advertiseService("temoto/change_tf", service_change_tf);
   ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_tf' up and going.");
   
-  // Create a tranform between leap_motion (child) and leap_motion_on_robot (parent). 
+  // Create a tranform between leap_motion (child) and leap_motion_on_robot (parent, on robot). 
   tf::Transform hand_frame_to_robot;
 
   while ( ros::ok() )
