@@ -42,7 +42,7 @@
 
 // temoto includes
 #include "temoto_include.h"
-#include "leap_motion_controller/LeapMotionOutput.h"
+#include "leap_motion_controller/Set.h"
 
 // Other includes
 #include <cstdlib>
@@ -79,9 +79,9 @@ public:
   
   //Callback functions
   
-  void processLeap(leap_motion_controller::LeapMotionOutput leap_data);		// TODO rename to more general case, e.g. processHumanInput
+  void processLeap(leap_motion_controller::Set leap_data);		// TODO rename to more general case, e.g. processHumanInput
   
-  void processPowermate(temoto::Dial powermate);				// TODO rename to more general case, e.g. processScaleFactor
+  void processPowermate(temoto::Dial powermate);			// TODO rename to more general case, e.g. processScaleFactor
   
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
   

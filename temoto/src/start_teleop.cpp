@@ -324,7 +324,7 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
  *  KEY_TAP gesture detection is currenly unimplemented.
  *  @param leap_data temoto::Leapmsg published by leap_motion node
  */
-void Teleoperator::processLeap(leap_motion_controller::LeapMotionOutput leap_data)
+void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
 {
   // First, set up primary and secondary hand.
   geometry_msgs::Pose primary_hand;
