@@ -185,10 +185,10 @@ void process_event(struct input_event *ev, ros::Publisher& pub) {
  */
 void watch_powermate(int fd) {
 
-  ros::NodeHandle nh;
+  ros::NodeHandle nh("~");
 
-  // Creates publisher that advertises Dial messages on rostopic /griffin_powermate
-  ros::Publisher pub_powermate_dial = nh.advertise<temoto::Dial>("griffin_powermate", 100);
+  // Creates publisher that advertises Dial messages on rostopic /griffin_powermate/events
+  ros::Publisher pub_powermate_events = nh.advertise<temoto::Dial>("events", 100);
 
   struct input_event ibuffer[BUFFER_SIZE];				// see: https://www.kernel.org/doc/Documentation/input/input.txt
   int r, events, i;
@@ -202,7 +202,7 @@ void watch_powermate(int fd) {
     if( r > 0 ) {
       events = r / sizeof(struct input_event);				// getting the number of events
       for(i=0; i<events; i++)						// going through all the read events
-	process_event(&ibuffer[i], pub_powermate_dial);			// call process_event() for every read event
+	process_event(&ibuffer[i], pub_powermate_events);			// call process_event() for every read event
     } else {
 	fprintf(stderr, "read() failed: %s\n", strerror(errno));	// let user know that read() failed
 	return;
@@ -216,7 +216,7 @@ void watch_powermate(int fd) {
 /** Main method. */
 int main(int argc, char *argv[]) {
   
-  ros::init(argc, argv, "powermate_dial");
+  ros::init(argc, argv, "griffin_powermate");
   ros::AsyncSpinner spinner(1);				// using async spinner
   spinner.start();					// starting async spinner
   

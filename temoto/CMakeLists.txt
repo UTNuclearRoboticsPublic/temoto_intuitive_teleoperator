@@ -143,9 +143,9 @@ target_link_libraries(temoto_include ${catkin_LIBRARIES})
 
 ## Declare a C++ executable
 
-add_executable(powermate_dial src/powermate_dial.cpp)
-target_link_libraries(powermate_dial ${catkin_LIBRARIES})
-add_dependencies(powermate_dial temoto_gencpp)
+add_executable(griffin_powermate src/griffin_powermate.cpp)
+target_link_libraries(griffin_powermate ${catkin_LIBRARIES})
+add_dependencies(griffin_powermate temoto_gencpp)
 
 add_executable(move_robot src/move_robot.cpp)
 target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_include)
