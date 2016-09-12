@@ -424,26 +424,26 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
   return;
 } // end processLeap
 
-/** Callback function for powermate subscriber.
- *  It either reacts to dial being pressed or it updates the scaling factor.
- *  @param powermate temoto::Dial message published by powermate_dial node.
+/** Callback function for Griffin Powermate events subscriber.
+ *  It either reacts to push button being pressed or it updates the scaling factor.
+ *  @param powermate temoto::Dial message published by griffin_powermate node.
  */
 void Teleoperator::processPowermate(temoto::Dial powermate)
 {
   if (powermate.push_ev_occured)		// if push event (i.e. press or depress) has occured_occured
   {
-    if (powermate.pressed == 1)			// if the dial has been pressed
+    if (powermate.pressed == 1)			// if the push button has been pressed
     {
-      ROS_INFO("Powermate Dial has been pressed");
+      ROS_INFO("[start_teleop] Griffin Powermate knob has been pressed");
       callRobotMotionInterface(0x03);		// makes the service request to move the robot; requests plan&execute
     }
-    else					// if the dial has been depressed
+    else					// if the push button has been depressed
     {
-      ROS_INFO("Powermate Dial has been depressed");
+      ROS_INFO("[start_teleop] Griffin Powermate knob has been depressed");
     }
     return;
   }
-  else						// if push event did not occur, it had to be dialing
+  else						// if push event did not occur, it had to be turning
   {
     // Calculate step size depening on the current scale_by_ value. Negating direction means that clock-wise is zoom-in/scale-down and ccw is zoom-out/scale-up
     // The smaller the scale_by_, the smaller the step. log10 gives the order of magnitude
@@ -681,6 +681,8 @@ int main(int argc, char **argv)
   // Instance of Teleoperator
   Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate);
 
+//   NavigateRobotInterface navigateRobot("move_base");
+  
   // Setup Teleoperator ROS clients
   // ROS client for /temoto/move_robot_service
   temoto_teleop.move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
@@ -691,7 +693,7 @@ int main(int argc, char **argv)
 
   // Setup ROS subscribers
   // ROS subscriber on /griffin_powermate
-  ros::Subscriber sub_scaling_factor = n.subscribe<temoto::Dial>("griffin_powermate", 10, &Teleoperator::processPowermate, &temoto_teleop);
+  ros::Subscriber sub_scaling_factor = n.subscribe<temoto::Dial>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
   // ROS subscriber on /leapmotion_general
   ros::Subscriber sub_operator_hand = n.subscribe("leap_motion_output", 10,  &Teleoperator::processLeap, &temoto_teleop);
   // ROS subscriber on /temoto/voice_commands

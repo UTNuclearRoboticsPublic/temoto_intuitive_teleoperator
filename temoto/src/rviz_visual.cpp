@@ -118,8 +118,8 @@ void updateStatus (temoto::Status status)
   return;
 }
 
-/** Callback function for /griffin_powermate.
- *  Sets adjust_camera flag if powermate dial was rotated, i.e., any turn knob rotation triggers re-adjustement of camera placement.
+/** Callback function for /griffin_powermate/events.
+ *  Sets adjust_camera flag if griffin powermate turn knob was rotated, i.e., any turn knob rotation triggers re-adjustement of camera placement.
  *  @param powermate temoto::Dial message from Griffin Powermate.
  */
 void dialEvent (temoto::Dial powermate)
@@ -392,7 +392,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, updateStatus);
 
   // ROS subscriber on /griffin_powermate. Detecting dial events.
-  ros::Subscriber sub_dial = n.subscribe("griffin_powermate", 1, dialEvent);
+  ros::Subscriber sub_dial = n.subscribe("/griffin_powermate/events", 1, dialEvent);
   
   // Set up service /temoto/adjust_rviz_camera; if there's a service request, executes adjustCameraPlacement() function
   ros::ServiceServer srv_visual = n.advertiseService("temoto/adjust_rviz_camera", adjustCameraPlacement);
