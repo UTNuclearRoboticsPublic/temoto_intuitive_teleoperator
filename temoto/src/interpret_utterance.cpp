@@ -119,6 +119,7 @@ int main(int argc, char **argv)
   interpreter.displayRecognizedVoiceCommands();
 
   // wait for for the sound_client server to come up
+  // TODO: change to something that actually checks if the server is online
   sleep(1);
 
   // Audible FYI
