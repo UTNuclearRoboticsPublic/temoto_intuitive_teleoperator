@@ -686,10 +686,21 @@ int main(int argc, char **argv)
   // Setup Teleoperator ROS clients
   // ROS client for /temoto/move_robot_service
   temoto_teleop.move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
-  // ROS client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
-  temoto_teleop.tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_tf");
   // ROS client for /temoto/navigate_robot_srv
   temoto_teleop.navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
+  // ROS client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
+  temoto_teleop.tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_human2robot_tf");
+
+  // Wait for human_frame_broadcaster to come on-line.
+  while( !temoto_teleop.tf_change_client_.waitForExistence(ros::Duration(1)) )
+  {
+      ROS_INFO("[start_teleop] Waiting for human_frame_broadcaster.");
+  }
+  // Make a request for initial human2robot TF set-up
+  temoto::ChangeTf initial_human2robot_tf;
+  initial_human2robot_tf.request.navigate = temoto_teleop.getStatus().in_navigation_mode;
+  initial_human2robot_tf.request.first_person_perspective = temoto_teleop.getStatus().in_natural_control_mode;
+  temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 
   // Setup ROS subscribers
   // ROS subscriber on /griffin_powermate

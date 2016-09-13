@@ -42,12 +42,10 @@
 #include "temoto_include.h"
 
 bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
-// TODO Since g_navigation_control is TRUE when the node is launched, the frames are off when start_teleop is brought online for 'manipulation only'.
-// Could be fixed my making navigate and manipulate public parameters and then reading them with this node as well.
 bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
 
-/** This method is executed when temoto/change_tf service is called.
- *  It updates leap_motion_frame_natural based on the client's request.
+/** This method is executed when change_human2robot_tf service is called.
+ *  It updates leap_motion frame based on the client's request.
  *  @param req temoto::ChangeTf service request.
  *  @param res temoto::ChangeTf service response.
  *  @return always true.
@@ -58,7 +56,7 @@ bool service_change_tf(	temoto::ChangeTf::Request  &req,
   // Get the value from the request
   g_natural_perspective = req.first_person_perspective;
   g_navigation_control = req.navigate;
-  ROS_INFO("[hand_frame_broadcaster] New service update requested. Now g_natural_perspective = %d; g_navigation_control = %d", g_natural_perspective, g_navigation_control);
+  ROS_INFO("[human_frame_broadcaster] New service update requested. Now g_natural_perspective = %d; g_navigation_control = %d", g_natural_perspective, g_navigation_control);
   
   return true;
 } // end service_change_tf
@@ -73,16 +71,14 @@ int main(int argc, char **argv)
   // Set ROS rate to 10 Hz
   ros::Rate r(10);
   
-  // TODO: Get human_frame_id as a global parameter
-  
   // Create a tranform broadcaster.
   static tf::TransformBroadcaster tf_broadcaster;
   
-  // Advertise a service for switchig between tranfrom rotations. TODO: should I change the service name to "temoto/change_human2robot_tf" or something?
-  ros::ServiceServer service = nh.advertiseService("temoto/change_tf", service_change_tf);
-  ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_tf' up and going.");
+  // Advertise a service for switchig between tranfrom rotations.
+  ros::ServiceServer service = nh.advertiseService("temoto/change_human2robot_tf", service_change_tf);
+  ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_human2robot_tf' up and going.");
   
-  // Create a tranform between leap_motion (child) and leap_motion_on_robot (parent, on robot). 
+  // A tranform between leap_motion (child) frame and parent robot frame. 
   tf::Transform hand_frame_to_robot;
 
   while ( ros::ok() )
