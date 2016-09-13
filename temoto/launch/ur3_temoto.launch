@@ -14,10 +14,10 @@
 
   <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
     
-  <node name="powermate_dial" pkg="temoto" type="powermate_dial" />
+  <node name="griffin_powermate" pkg="temoto" type="griffin_powermate" />
   <node name="move_robot" pkg="temoto" type="move_robot" args="ur3_stewie" />
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
-  <node name="listen_operator_talk" pkg="temoto" type="listen_operator_talk" />
+  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
 
 </launch>

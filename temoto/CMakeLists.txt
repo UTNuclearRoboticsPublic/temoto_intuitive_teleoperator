@@ -159,9 +159,9 @@ add_executable(rviz_visual src/rviz_visual.cpp)
 target_link_libraries(rviz_visual ${catkin_LIBRARIES} temoto_include)
 add_dependencies(rviz_visual temoto_gencpp)
 
-add_executable(listen_operator_talk src/listen_operator_talk.cpp)
-target_link_libraries(listen_operator_talk ${catkin_LIBRARIES})
-add_dependencies(listen_operator_talk temoto_gencpp)
+add_executable(interpret_utterance src/interpret_utterance.cpp)
+target_link_libraries(interpret_utterance ${catkin_LIBRARIES})
+add_dependencies(interpret_utterance temoto_gencpp)
 
 add_executable(robotiq src/robotiq.cpp)
 target_link_libraries(robotiq ${catkin_LIBRARIES})
