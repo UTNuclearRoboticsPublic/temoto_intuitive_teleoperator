@@ -33,6 +33,14 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
+// ROS includes
+#include "ros/ros.h"
+#include "std_srvs/Empty.h"
+#include "moveit/move_group_interface/move_group.h"
+
+// temoto includes
+#include "temoto_include.h"
+
 #ifndef MOVE_ROBOT_H
 #define MOVE_ROBOT_H
 
