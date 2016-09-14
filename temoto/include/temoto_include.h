@@ -1,9 +1,9 @@
 // All temoto includes
-#include "temoto/ChangeTf.h"
 #include "temoto/Command.h"
 #include "temoto/Dial.h"
-#include "temoto/Goal.h"
 #include "temoto/Status.h"
+#include "temoto/ChangeTf.h"
+#include "temoto/Goal.h"
 
 #ifndef TEMOTO_INCLUDE_H
 #define TEMOTO_INCLUDE_H
