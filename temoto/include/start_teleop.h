@@ -41,7 +41,7 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
-#include "temoto_include.h"
+#include "temoto_common.h"
 #include "navigate_robot.h"
 #include "leap_motion_controller/Set.h"
 

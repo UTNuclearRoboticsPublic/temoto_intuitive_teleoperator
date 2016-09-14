@@ -38,7 +38,7 @@
 #include "std_msgs/String.h"
 
 // temoto includes
-#include "temoto_include.h"
+#include "temoto_common.h"
 
 /*	This code is originally from http://sowerbutts.com/powermate/
  *	Comments added by karl.kruusamae(at)utexas.edu

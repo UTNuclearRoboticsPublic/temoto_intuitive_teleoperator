@@ -39,7 +39,7 @@
 #include "actionlib/client/simple_action_client.h"
 
 // temoto includes
-#include "temoto_include.h"
+#include "temoto_common.h"
 
 #ifndef NAVIGATE_ROBOT_H
 #define NAVIGATE_ROBOT_H

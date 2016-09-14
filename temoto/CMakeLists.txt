@@ -137,9 +137,9 @@ include_directories(
 
 ## Declare a C++ library
 
-add_library(temoto_include src/temoto_include.cpp)
-target_link_libraries(temoto_include ${catkin_LIBRARIES})
-add_dependencies(temoto_include temoto_generate_messages_cpp)
+add_library(temoto_common src/temoto_common.cpp)
+target_link_libraries(temoto_common ${catkin_LIBRARIES})
+add_dependencies(temoto_common temoto_generate_messages_cpp)
 
 ## Declare a C++ executable
 
@@ -148,31 +148,31 @@ target_link_libraries(griffin_powermate ${catkin_LIBRARIES})
 add_dependencies(griffin_powermate temoto_generate_messages_cpp)
 
 add_executable(move_robot src/move_robot.cpp)
-target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(move_robot temoto_generate_messages_cpp)
 
 add_executable(start_teleop src/start_teleop.cpp)
-target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common)
 add_dependencies(start_teleop temoto_generate_messages_cpp)
 
 add_executable(rviz_visual src/rviz_visual.cpp)
-target_link_libraries(rviz_visual ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(rviz_visual ${catkin_LIBRARIES} temoto_common)
 add_dependencies(rviz_visual temoto_generate_messages_cpp)
 
 add_executable(interpret_utterance src/interpret_utterance.cpp)
-target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)
 add_dependencies(interpret_utterance temoto_generate_messages_cpp)
 
 add_executable(robotiq src/robotiq.cpp)
-target_link_libraries(robotiq ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(robotiq ${catkin_LIBRARIES} temoto_common)
 add_dependencies(robotiq temoto_generate_messages_cpp)
 
 add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
-target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_common)
 add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
 
 add_executable(navigate_robot src/navigate_robot.cpp)
-target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_include)
+target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 #############

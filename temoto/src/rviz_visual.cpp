@@ -35,7 +35,7 @@
 #include "geometry_msgs/Pose.h"
 
 // temoto includes
-#include "temoto_include.h"
+#include "temoto_common.h"
 
 #define VIRTUAL_SCREEN_FRONT 0		///< A number that is used when some distance is required between robot and any marker or camera.
 #define VIRTUAL_SCREEN_TOP 0.2		///< A number that is used when some distance is required between robot and any marker or camera.

@@ -40,7 +40,7 @@
 #include "sound_play/sound_play.h"
 
 // temoto includes
-#include "temoto_include.h"
+#include "temoto_common.h"
 
 // Other includes
 #include "string.h"

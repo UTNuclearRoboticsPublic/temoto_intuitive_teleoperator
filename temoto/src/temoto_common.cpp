@@ -30,7 +30,7 @@
 #include "geometry_msgs/Quaternion.h"
 #include "tf/transform_datatypes.h"
 
-#include "temoto_include.h"
+#include "temoto_common.h"
 
 // This is the file where I put functions that more than one node might need.
 
