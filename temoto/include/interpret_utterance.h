@@ -34,11 +34,17 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
+// ROS includes
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "temoto/Command.h"
-#include "string.h"
 #include "sound_play/sound_play.h"
+
+// temoto includes
+#include "temoto_include.h"
+
+// Other includes
+#include "string.h"
+
 
 class Interpreter
 {

@@ -42,6 +42,7 @@
 
 // temoto includes
 #include "temoto_include.h"
+#include "navigate_robot.h"
 #include "leap_motion_controller/Set.h"
 
 // Other includes

@@ -26,8 +26,19 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include <move_base_msgs/MoveBaseAction.h>
-#include <actionlib/client/simple_action_client.h>
+/** @file navigate_robot.cpp
+ * 
+ *  @brief Interface for ROS navigation stack.
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
+// ROS includes
+#include "ros/ros.h"
+#include "move_base_msgs/MoveBaseAction.h"
+#include "actionlib/client/simple_action_client.h"
+
+// temoto includes
 #include "temoto_include.h"
 
 #ifndef NAVIGATE_ROBOT_H
@@ -36,28 +47,35 @@
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 class NavigateRobotInterface {
- public:
-   /** Constructor */
-   NavigateRobotInterface(std::string mbase_name) :	// I use something called initializer list here, Alex taught me that
-    move_base_aclient_(mbase_name, "true")		// Initialize the action client and tell it that we want to spin a thread by default
-   {
-     new_navgoal_requested_ = false;
-   };
+public:
+  /** Constructor */
+  NavigateRobotInterface(std::string mbase_name) :	// I use something called initializer list here, Alex taught me that
+	  move_base_aclient_(mbase_name, "true")	// Initialize the action client and tell it that we want to spin a thread by default
+  {
+    new_navgoal_requested_ = false;
+  };
    
-   /** Simple Action Client for move_base */
-   MoveBaseClient move_base_aclient_;
-   
-   /** Callback function for navigation service request */
-   bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
-   
-   /** Function that actually communicates with move_base action server */
-   void requestNavigation();
+  /** Simple Action Client for move_base */
+  MoveBaseClient move_base_aclient_;
+  
+  /** Callback function for navigation service request */
+  bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
+  
+  /** Function that actually communicates with move_base action server */
+  void requestNavigation();
+  
+  void sendNavigationGoal(geometry_msgs::PoseStamped goal);
 
-   /** Target navigation pose for the robot */
-   geometry_msgs::PoseStamped navigation_goal_stamped_;
+  void abortNavigation();
+
+  void checkNavigationStatus();
+
+
+  /** Target navigation pose for the robot */
+  geometry_msgs::PoseStamped navigation_goal_stamped_;
    
    // Public variables describing the state of MoveRobotInterface
-   bool new_navgoal_requested_; 		///< If new move has been requested by a client, it is set to 1; after calling requestNavigation(), it is set to 0.
+  bool new_navgoal_requested_; 		///< If new move has been requested by a client, it is set to 1; after calling requestNavigation(), it is set to 0.
 };
 
 #endif

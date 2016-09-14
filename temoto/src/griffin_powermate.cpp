@@ -36,7 +36,9 @@
 
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-#include "temoto/Dial.h"
+
+// temoto includes
+#include "temoto_include.h"
 
 /*	This code is originally from http://sowerbutts.com/powermate/
  *	Comments added by karl.kruusamae(at)utexas.edu
