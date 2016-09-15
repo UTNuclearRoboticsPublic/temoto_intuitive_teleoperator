@@ -26,6 +26,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/** @file temoto_common.cpp
+ * 
+ *  @brief Library for common functions in temoto.
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
 #include "geometry_msgs/Point.h"
 #include "geometry_msgs/Quaternion.h"
 #include "tf/transform_datatypes.h"
