@@ -77,7 +77,9 @@ public:
     {"remove last", 0x36},		// removes the last waypoint
     {"cancel cartesian", 0x37},		// clears all the cartesian waypoints
     {"manipulation", 0x40},		// operator controls robot manipulator (MoveIt!)
-    {"navigation", 0x41}		// operator navigates the robot base (ROS_navigation)
+    {"navigation", 0x41},		// operator navigates the robot base (ROS_navigation)
+    
+    {"okay robot execute", 0x66}	// demo testing: placeholder command for some subtask
   };
   
   /** Publisher for recognized voice commands. */

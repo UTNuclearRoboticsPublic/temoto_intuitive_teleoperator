@@ -9,5 +9,5 @@ uint8 ABORT=255
 # Namespace
 string ns
 
-# Published command
-uint8 cmd
+# Command code
+uint8 code

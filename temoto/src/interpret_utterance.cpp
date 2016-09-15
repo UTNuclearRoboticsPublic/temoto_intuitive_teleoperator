@@ -60,7 +60,7 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   {
     found = utterance.data.find(it->first);	// look for a valid voice command key in utterance
     if (found!=std::string::npos) {		// if valid voice command key was found in utterance
-      latest_command.cmd = it->second;		// take the corresponding command value
+      latest_command.code = it->second;		// take the command code that corresponds to this key
       valid_command = true;			// set valid_command_ TRUE
     } // end if
   } // end for
