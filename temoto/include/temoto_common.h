@@ -1,6 +1,5 @@
 // Include all temoto messages
 #include "temoto/Command.h"
-#include "temoto/Dial.h"
 #include "temoto/Status.h"
 #include "temoto/ChangeTf.h"
 #include "temoto/Goal.h"

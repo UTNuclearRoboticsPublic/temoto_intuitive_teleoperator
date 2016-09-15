@@ -37,6 +37,7 @@
 #include "ros/ros.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "std_msgs/Bool.h"
 #include "tf/tf.h"
 #include "tf/transform_listener.h"
 
@@ -44,6 +45,7 @@
 #include "temoto_common.h"
 #include "navigate_robot.h"
 #include "leap_motion_controller/Set.h"
+#include "griffin_powermate/PowermateEvent.h"
 
 // Other includes
 #include <cstdlib>
@@ -82,7 +84,7 @@ public:
   
   void processLeap(leap_motion_controller::Set leap_data);		// TODO rename to more general case, e.g. processHumanInput
   
-  void processPowermate(temoto::Dial powermate);			// TODO rename to more general case, e.g. processScaleFactor
+  void processPowermate(griffin_powermate::PowermateEvent powermate);			// TODO rename to more general case, e.g. processScaleFactor
   
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
   
@@ -91,7 +93,10 @@ public:
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
-  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame. 
+  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame.
+  
+  // Temporary flags
+  std_msgs::Bool okay_robot_execute;
 
 private:
   /// Local TransformListener for transforming poses

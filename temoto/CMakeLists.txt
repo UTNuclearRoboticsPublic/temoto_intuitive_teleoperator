@@ -143,10 +143,6 @@ add_dependencies(temoto_common temoto_generate_messages_cpp)
 
 ## Declare a C++ executable
 
-add_executable(griffin_powermate src/griffin_powermate.cpp)
-target_link_libraries(griffin_powermate ${catkin_LIBRARIES})
-add_dependencies(griffin_powermate temoto_generate_messages_cpp)
-
 add_executable(move_robot src/move_robot.cpp)
 target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(move_robot temoto_generate_messages_cpp)

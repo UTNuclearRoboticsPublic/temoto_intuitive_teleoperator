@@ -26,6 +26,23 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+/** @file griffin_powermate.cpp
+ *  On /powermate_griffin topic it publishes PowermateEvent messages that contain
+ *  direction and integral of the turn wheel as well as the information about push
+ *  button being pressed or depressed.
+ * 
+ *  If you get permission denied when starting this node, use "ls -l /dev/input/event*"
+ *  to learn which group can access the events. Then add your username to this group with
+ *  "sudo usermod -a -G group_name user_name"
+ * 
+ *  @author karl.kruusamae(at)utexas.edu
+ */
+
+/*	This code is originally from http://sowerbutts.com/powermate/
+ *	Comments added by karl.kruusamae(at)utexas.edu
+ *	Modifications to make it into a ROS publisher and other changes made by karl.kruusamae(at)utexas.edu
+ */
+
 #include <linux/input.h>
 #include <string.h>
 #include <errno.h>
@@ -37,16 +54,7 @@
 #include "ros/ros.h"
 #include "std_msgs/String.h"
 
-// temoto includes
-#include "temoto_common.h"
-
-/*	This code is originally from http://sowerbutts.com/powermate/
- *	Comments added by karl.kruusamae(at)utexas.edu
- *	Modifications to make it into a ROS publisher and other changes made by karl.kruusamae(at)utexas.edu
- * 
- *	If you get permission denied when starting this node. Use ' ls -l /dev/input/event* ' to learn which group can access the events.
- *	Then add your username to this group with ' sudo usermod -a -G group_name user_name '
- */
+#include "griffin_powermate/PowermateEvent.h"
 
 #define NUM_VALID_PREFIXES 2
 #define BUFFER_SIZE 32
@@ -127,7 +135,7 @@ void process_event(struct input_event *ev, ros::Publisher& pub) {
 	  ev->type, ev->code, (int)ev->value);
 #endif
 
-  temoto::Dial msg;				// msg will be published by ROS publisher
+  griffin_powermate::PowermateEvent msg;			// msg will be published by ROS publisher
 
 // Event information about Griffin PowerMate from evtest
 //
@@ -156,8 +164,8 @@ void process_event(struct input_event *ev, ros::Publisher& pub) {
 	total_shift += (long long)dir;		// integrates consecutive dir values to find total shift
 	msg.direction = dir;			// putting msg together
 	msg.integral = total_shift;
-	msg.pressed = pressed;
-	msg.push_ev_occured = false;
+	msg.is_pressed = pressed;
+	msg.push_state_changed = false;
 	pub.publish(msg);			// publish msg
 	//printf("Button was rotated %d units; Shift from start is now %d units\n", (int)ev->value, total_shift);
       }
@@ -170,8 +178,8 @@ void process_event(struct input_event *ev, ros::Publisher& pub) {
 	pressed = (signed char)ev->value;	// reads EV_KEY value
 	msg.direction = 0;			// putting msg together; in the case of KEY EVENT, direction is 0
 	msg.integral = total_shift;
-	msg.pressed = pressed;
-	msg.push_ev_occured = true;
+	msg.is_pressed = pressed;
+	msg.push_state_changed = true;
 	pub.publish(msg);			// publish msg
       }
       break;
@@ -190,7 +198,7 @@ void watch_powermate(int fd) {
   ros::NodeHandle nh("~");
 
   // Creates publisher that advertises Dial messages on rostopic /griffin_powermate/events
-  ros::Publisher pub_powermate_events = nh.advertise<temoto::Dial>("events", 100);
+  ros::Publisher pub_powermate_events = nh.advertise<griffin_powermate::PowermateEvent>("events", 100);
 
   struct input_event ibuffer[BUFFER_SIZE];				// see: https://www.kernel.org/doc/Documentation/input/input.txt
   int r, events, i;
@@ -216,7 +224,8 @@ void watch_powermate(int fd) {
 } // end watch_powermate
 
 /** Main method. */
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
   
   ros::init(argc, argv, "griffin_powermate");
   ros::AsyncSpinner spinner(1);				// using async spinner

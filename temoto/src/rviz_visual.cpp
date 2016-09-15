@@ -36,6 +36,7 @@
 
 // temoto includes
 #include "temoto_common.h"
+#include "griffin_powermate/PowermateEvent.h"
 
 #define VIRTUAL_SCREEN_FRONT 0		///< A number that is used when some distance is required between robot and any marker or camera.
 #define VIRTUAL_SCREEN_TOP 0.2		///< A number that is used when some distance is required between robot and any marker or camera.
@@ -120,9 +121,9 @@ void updateStatus (temoto::Status status)
 
 /** Callback function for /griffin_powermate/events.
  *  Sets adjust_camera flag if griffin powermate turn knob was rotated, i.e., any turn knob rotation triggers re-adjustement of camera placement.
- *  @param powermate temoto::Dial message from Griffin Powermate.
+ *  @param powermate griffin_powermate::PowermateEvent message from Griffin Powermate.
  */
-void dialEvent (temoto::Dial powermate)
+void powermateWheelEvent (griffin_powermate::PowermateEvent powermate)
 {
   if (abs(powermate.direction)) adjust_camera = true;
   return;
@@ -391,8 +392,8 @@ int main(int argc, char **argv)
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, updateStatus);
 
-  // ROS subscriber on /griffin_powermate. Detecting dial events.
-  ros::Subscriber sub_dial = n.subscribe("/griffin_powermate/events", 1, dialEvent);
+  // ROS subscriber on /griffin_powermate. Detecting griffin powermate events.
+  ros::Subscriber sub_dial = n.subscribe("/griffin_powermate/events", 1, powermateWheelEvent);
   
   // Set up service /temoto/adjust_rviz_camera; if there's a service request, executes adjustCameraPlacement() function
   ros::ServiceServer srv_visual = n.advertiseService("temoto/adjust_rviz_camera", adjustCameraPlacement);

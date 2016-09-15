@@ -81,6 +81,8 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   {
     primary_hand_is_left_ = true;
   }
+  
+  okay_robot_execute.data = false;
 }
 
 /** Function that actually makes the service call to appropriate robot motion intefrace.
@@ -428,11 +430,11 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
  *  It either reacts to push button being pressed or it updates the scaling factor.
  *  @param powermate temoto::Dial message published by griffin_powermate node.
  */
-void Teleoperator::processPowermate(temoto::Dial powermate)
+void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 {
-  if (powermate.push_ev_occured)		// if push event (i.e. press or depress) has occured_occured
+  if (powermate.push_state_changed)		// if push event (i.e. press or depress) has occured_occured
   {
-    if (powermate.pressed == 1)			// if the push button has been pressed
+    if (powermate.is_pressed)			// if the push button has been pressed
     {
       ROS_INFO("[start_teleop] Griffin Powermate knob has been pressed");
       callRobotMotionInterface(0x03);		// makes the service request to move the robot; requests plan&execute
@@ -502,6 +504,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   {
     ROS_INFO("Voice command received! Stopping ...");
     // TODO
+    okay_robot_execute.data = false;
   }
   else if (voice_command.cmd == 0x01)
   {
@@ -622,6 +625,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
   }
+  else if (voice_command.cmd == 0x66)			// placeholder command for some subtask
+  {
+    ROS_INFO("Executing subtask. Setting okay_robot_execute to TRUE.");
+    okay_robot_execute.data = true;
+  }
   
   else
   {
@@ -704,7 +712,7 @@ int main(int argc, char **argv)
 
   // Setup ROS subscribers
   // ROS subscriber on /griffin_powermate
-  ros::Subscriber sub_scaling_factor = n.subscribe<temoto::Dial>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
+  ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
   // ROS subscriber on /leapmotion_general
   ros::Subscriber sub_operator_hand = n.subscribe("leap_motion_output", 10,  &Teleoperator::processLeap, &temoto_teleop);
   // ROS subscriber on /temoto/voice_commands
@@ -714,12 +722,17 @@ int main(int argc, char **argv)
   
   // Setup ROS publisher for Teleoperator::getStatus()
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
+  // ROS publisher for triggering compliant contact task demo. TODO: Remove this and related code before merging with master 
+  ros::Publisher pub_cc_demo_trigger = n.advertise<std_msgs::Bool>("enable_compliance", 1);
   
   ROS_INFO("Starting teleoperation ...");
   while (ros::ok())
   {
     // publish status current
     pub_status.publish( temoto_teleop.getStatus() );
+    
+    // publish the current value for okay_robot_execute
+    pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
     
     // spins once to update subscribers or something like that
     ros::spinOnce();
