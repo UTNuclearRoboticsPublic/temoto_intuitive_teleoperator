@@ -13,7 +13,9 @@
   <include file="$(find temoto)/launch/pocketsphinx.launch" />
 
   <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />  
-  <node name="griffin_powermate" pkg="temoto" type="griffin_powermate" />
+  
+  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
+  
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
