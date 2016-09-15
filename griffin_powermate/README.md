@@ -1,7 +1,7 @@
 # griffin_powermate
-### ROS driver for Griffin Powermate turn knob.
+### ROS driver for Griffin Powermate turn knob
 
-On `/powermate_griffin` topic it publishes `PowermateEvent` messages that contain direction and integral of the turn wheel as well as the information about push button being pressed or depressed.
+On `/griffin_powermate/events` topic it publishes `griffin_powermate::PowermateEvent` messages that contain direction and integral of the turn wheel as well as the information about push button being pressed or depressed.
 
 #### Instructions
 Run:
