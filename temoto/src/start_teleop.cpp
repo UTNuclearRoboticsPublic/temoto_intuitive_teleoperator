@@ -724,15 +724,22 @@ int main(int argc, char **argv)
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
   // ROS publisher for triggering compliant contact task demo. TODO: Remove this and related code before merging with master 
   ros::Publisher pub_cc_demo_trigger = n.advertise<std_msgs::Bool>("enable_compliance", 1);
+  bool compliance_is_on = false;
   
   ROS_INFO("Starting teleoperation ...");
+  
+  
   while (ros::ok())
   {
     // publish status current
     pub_status.publish( temoto_teleop.getStatus() );
     
-    // publish the current value for okay_robot_execute
-    pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
+    if (compliance_is_on != temoto_teleop.okay_robot_execute.data)
+    {
+      // publish the current value for okay_robot_execute
+      pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
+      compliance_is_on = temoto_teleop.okay_robot_execute.data;
+    }
     
     // spins once to update subscribers or something like that
     ros::spinOnce();
