@@ -384,10 +384,12 @@ visualization_msgs::Marker initCartesianWaypoints()
 /** Main method. */
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "rviz_visual");		// ROS init
-  ros::NodeHandle n;				// ROS node handle
-  ros::AsyncSpinner spinner(1);			// Using AsyncSpinner
-  spinner.start();				// Start the spinner
+  // ROS init
+  ros::init(argc, argv, "rviz_visual");
+  // ROS node handle
+  ros::NodeHandle n;
+  // Setting the node rate at 1 kHz
+  ros::Rate node_rate(1000);
   
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, updateStatus);
@@ -405,8 +407,8 @@ int main(int argc, char **argv)
   // Instantiate a POWCamera that holds the initial CameraPlacement message.
   POWCamera pow_cam;
 
-  // The following is related to getting visual markers to represent target pose in rviz
-  // publish on /visualization_marker to depict the hand psse with several rviz markers (this is picked up by rviz)
+  // The following is related to getting visual markers to represent target pose in RViz
+  // publish on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
   visualization_msgs::Marker shift_arrow = initShiftArrow();
   visualization_msgs::Marker display_distance = initDisplayDistance();
@@ -707,6 +709,9 @@ int main(int argc, char **argv)
     if (latest_known_camera_mode!=2 && !latest_status.in_natural_control_mode) adjust_camera = 1;
     // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pow camera.
     if (latest_known_camera_mode!=11 && latest_status.in_navigation_mode) adjust_camera = 1;
+    
+    ros::spinOnce();
+    node_rate.sleep();
     
   } // end while()
 } // end main()
