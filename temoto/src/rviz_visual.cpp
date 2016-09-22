@@ -646,7 +646,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
   if (latest_known_camera_mode_ != 11 && latest_status_.in_navigation_mode) adjust_camera_ = 1;
 } // end Visuals::crunch()
 
-
 /** Main method. */
 int main(int argc, char **argv)
 {
@@ -677,26 +676,29 @@ int main(int argc, char **argv)
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
 
-  // ROS subscriber on /griffin_powermate. Detecting griffin powermate events.
+  // ROS subscriber on /griffin_powermate/events.
   ros::Subscriber sub_powermate = n.subscribe("/griffin_powermate/events", 1, &Visuals::powermateWheelEvent, &rviz_visuals); 
   
   // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
   // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
-  ros::Publisher pub_cam = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
+  ros::Publisher pub_pow_camera = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
 
   // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
  
   // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
-  pub_cam.publish( rviz_visuals.point_of_view_ );
+  pub_pow_camera.publish( rviz_visuals.point_of_view_ );
   
   while ( ros::ok() )
   {
-    rviz_visuals.crunch(pub_marker, pub_cam);
+    // Update point-of-view camera pose and all the visualization markers
+    rviz_visuals.crunch(pub_marker, pub_pow_camera);
     
+    // Spin
     ros::spinOnce();
     
+    // Sleep to meet the node_rate
     node_rate.sleep();
-  } // end while()
+  }
   
 } // end main()
