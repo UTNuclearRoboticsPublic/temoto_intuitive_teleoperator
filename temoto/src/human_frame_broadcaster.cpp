@@ -71,6 +71,22 @@ int main(int argc, char **argv)
   // Set ROS rate to 10 Hz
   ros::Rate r(10);
   
+  // Human input frame.
+  std::string human_frame;
+  // Motion-planning control frame.
+//   std::string eef_frame;
+  // Navigation control frame.
+  std::string mobile_frame;
+  
+  // Get proper frame names from parameter servers
+  ROS_INFO("[human_frame_broadcaster] Getting frame names from parameter server.");
+  nh.param<std::string>("/temoto_frames/human_input", human_frame, "leap_motion");
+  ROS_INFO("[human_frame_broadcaster] Human frame is: %s", human_frame.c_str());
+//   nh.param<std::string>("/temoto_frames/end_effector", eef_frame, "temoto_end_effector");
+//   ROS_INFO("[human_frame_broadcaster] End-effector frame is: %s", eef_frame.c_str());
+  nh.param<std::string>("/temoto_frames/mobile_base", mobile_frame, "base_link");
+  ROS_INFO("[human_frame_broadcaster] Mobile base frame is: %s", mobile_frame.c_str());
+  
   // Create a tranform broadcaster.
   static tf::TransformBroadcaster tf_broadcaster;
   
@@ -91,7 +107,7 @@ int main(int argc, char **argv)
       hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set leap_motion about base_link
       
       // Broadcast a transform that attaches leap_motion to base_link using the hand_frame_to_robot transform.
-      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "base_link", "leap_motion") );
+      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), mobile_frame, human_frame) );
     }
     // ELSE: human input is used for moving end effector
     else
@@ -108,8 +124,8 @@ int main(int argc, char **argv)
 	hand_frame_to_robot.setRotation( tf::Quaternion(0, 1, 0, 0) );	// 180 around y-axis
       }
 
-      // Broadcast a transform that attaches leap_motion to leap_motion_on_robot using the hand_frame_to_robot tranform.
-      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "leap_motion_on_robot", "leap_motion") );
+      // Broadcast a transform that attaches leap_motion to leap_motion_on_robot using the hand_frame_to_robot tranform. TODO: "leap_motion_on_robot" should not be hard-coded
+      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "leap_motion_on_robot", human_frame) );
     }
 
     ros::spinOnce();
