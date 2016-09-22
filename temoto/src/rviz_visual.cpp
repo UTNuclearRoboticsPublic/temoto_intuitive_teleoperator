@@ -120,39 +120,6 @@ void Visuals::powermateWheelEvent (griffin_powermate::PowermateEvent powermate)
   return;
 }
 
-/** Calculates the distance between two points in meters or millimeters and returns it as a string.
- *  @param twoPointVector vector containing two points.
- *  @return string containing the distance between two points in meters or millimeters followed by ' m' or ' mm', respectively.
- */
-std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector)
-{
-  std::string  distance_as_text;
-  std::string  units;
-  int precision = 2;
-  // Calculate the distance between the first two points in the input vector of points
-//  double distance = sqrt( pow(twoPointVector[1].x-twoPointVector[0].x, 2) + pow(twoPointVector[1].y-twoPointVector[0].y, 2) + pow(twoPointVector[1].z-twoPointVector[0].z, 2));
-  double distance = calculateDistance(twoPointVector);
-  if (distance < 1)	// if distance is less than 1 m, use mm instead
-  {
-    // Covnvert the distance m -> mm
-    distance = distance*1000;
-    units = " mm";
-    if (distance >= 10) precision = 1;
-  }
-  else			// otherwise, use meters as units
-  {
-    units = " m";
-  }
-  // use the number of fractional digits specified by presion to put distance into stringstream and add units.
-  std::ostringstream sstream;
-  sstream << std::fixed << std::setprecision(precision) << distance << units;
-
-  // stringstream to string
-  distance_as_text = sstream.str();
-  return distance_as_text;
-}
-
-
 /** Creates the initial CameraPlacment message that is used for positioning point-of-view (POW) camera in RViz.
  */
 void Visuals::initPOWCamera(std::string frame_id)
@@ -180,17 +147,6 @@ void Visuals::initPOWCamera(std::string frame_id)
   point_of_view_.up.vector.z = 1;
   
 }
-
-/** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id.
- */
-void Visuals::changePOWCameraFrameTo(std::string frame_id)
-{
-  point_of_view_.target_frame = frame_id;
-  point_of_view_.eye.header.frame_id = frame_id;
-  point_of_view_.focus.header.frame_id = frame_id;
-  point_of_view_.up.header.frame_id = frame_id;
-}
-
 
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
 void Visuals::initDisplacementArrow()
@@ -335,6 +291,49 @@ void Visuals::initCartesianPath()
   
   return;
 } // end Visuals::initCartesianPath()
+
+/** Calculates the distance between two points in meters or millimeters and returns it as a string.
+ *  @param twoPointVector vector containing two points.
+ *  @return string containing the distance between two points in meters or millimeters followed by ' m' or ' mm', respectively.
+ */
+std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector)
+{
+  std::string  distance_as_text;
+  std::string  units;
+  int precision = 2;
+  // Calculate the distance between the first two points in the input vector of points
+//  double distance = sqrt( pow(twoPointVector[1].x-twoPointVector[0].x, 2) + pow(twoPointVector[1].y-twoPointVector[0].y, 2) + pow(twoPointVector[1].z-twoPointVector[0].z, 2));
+  double distance = calculateDistance(twoPointVector);
+  if (distance < 1)	// if distance is less than 1 m, use mm instead
+  {
+    // Covnvert the distance m -> mm
+    distance = distance*1000;
+    units = " mm";
+    if (distance >= 10) precision = 1;
+  }
+  else			// otherwise, use meters as units
+  {
+    units = " m";
+  }
+  // use the number of fractional digits specified by presion to put distance into stringstream and add units.
+  std::ostringstream sstream;
+  sstream << std::fixed << std::setprecision(precision) << distance << units;
+
+  // stringstream to string
+  distance_as_text = sstream.str();
+  return distance_as_text;
+}
+
+/** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id.
+ *  @param frame_id frmae name to change 
+ */
+void Visuals::changePOWCameraFrameTo(std::string frame_id)
+{
+  point_of_view_.target_frame = frame_id;
+  point_of_view_.eye.header.frame_id = frame_id;
+  point_of_view_.focus.header.frame_id = frame_id;
+  point_of_view_.up.header.frame_id = frame_id;
+}
 
 void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher)
 {
@@ -678,7 +677,7 @@ int main(int argc, char **argv)
   // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
  
-  // publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
+  // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
   pub_cam.publish( rviz_visuals.point_of_view_ );
   
   while ( ros::ok() )

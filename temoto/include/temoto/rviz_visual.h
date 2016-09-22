@@ -67,41 +67,49 @@ public:
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
   };
-  
-  // ___ ROS CALLBACK FUNCTIONS ___
-  
+   
+  /** Server function for temoto/adjust_rviz_camera. Sets adjust_camera_ TRUE. */
   bool adjustPOWCameraPlacement (std_srvs::Empty::Request  &req, std_srvs::Empty::Response &res);
   
+  /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
   void updateStatus (temoto::Status status);
   
+  /** Callback function for /griffin_powermate/events. Sets adjust_camera_ TRUE. */
   void powermateWheelEvent (griffin_powermate::PowermateEvent powermate);
- 
+  
+  /** Updates RViz point-of-view and visualization markers as needed. */
   void crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher);
   
-  // ros camera placement message that defines placement of our POWCamera instance
+  /** ROS camera placement message that defines user's point-of-view in RViz. */
   view_controller_msgs::CameraPlacement point_of_view_;
 
 private:
   // ___ INITIALIZERS ___
   
-  // initialized camera placement to a preset pose in frame specified by frame_id
+  /** Initializes camera placement to a preset pose in frame specified by frame_id */
   void initPOWCamera(std::string frame_id);
   
+  /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
   void initDisplacementArrow();
   
+  /** Creates the initial marker that displays front-facing text. */
   void initDistanceAsText();
 
+  /** Creates the initial marker that visualizes hand pose as a flattened box. */
   void initHandPoseMarker();
   
+  /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
   void initActiveRangeBox();
   
+  /** Creates the initial marker that visualizes cartesian path by connecting wayposes with lines. */
   void initCartesianPath();
   
   // ___ HELPER FUNCTIONS ___
   
+  /** Calculates the distance between two points in meters or millimeters and returns it as a string. */
   std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
-  // changes the frame_id of target_frame and every pose in CameraPlacement message 
+  /** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id. */
   void changePOWCameraFrameTo(std::string frame_id); 
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
@@ -112,25 +120,32 @@ private:
   /** Camera is algined with end effector (i.e., TRUE) as opposed to being in top-down point-of-view (i.e., FALSE).*/
   bool camera_is_aligned_;
   
-  // This is where rviz_visual thinks the camera is.
+  /** A state variable for keeping track of where rviz_visual node thinks the camera is. */
   uint8_t latest_known_camera_mode_; 	// 0-unknown, 1-natural, 2-inverted, 11-navigation natural, 12-navigation inverted
 
   /** Latest recieved full system status published by start_teleop node. */
   temoto::Status latest_status_;
   
+  /** Arrow-shaped marker that visualizes target displacement of the robot. */
   visualization_msgs::Marker displacement_arrow_;
   
+  /** Text marker for displaying the length of displacement represented by displacement_arrow_. */
   visualization_msgs::Marker distance_as_text_;
   
+  /** Flattened-box-shaped marker that represents the position and orientation of the operator's primary hand. */
   visualization_msgs::Marker hand_pose_marker_;
   
+  /** Translucent box or area that is centered around the starting pose while displacement_arrow_ always points to one of its corners. */
   visualization_msgs::Marker active_range_box_;
   
+  /** Line strip marker that interconnects all the wayposes requested for a cartesian motion. */
   visualization_msgs::Marker cartesian_path_;
 
-  const double VIRTUAL_SCREEN_FRONT_ = 0;		///< A number that is used when some distance is required between robot and any marker or camera.
+  /** A number that is used when some distance is required between robot and any marker or camera. */
+  const double VIRTUAL_SCREEN_FRONT_ = 0;
 
-  const double VIRTUAL_SCREEN_TOP_ = 0.2;		///< A number that is used when some distance is required between robot and any marker or camera.
+  /** A number that is used when some distance is required between robot and any marker or camera. */
+  const double VIRTUAL_SCREEN_TOP_ = 0.2;
 };
 
 #endif
