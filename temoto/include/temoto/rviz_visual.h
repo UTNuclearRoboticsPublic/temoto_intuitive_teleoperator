@@ -52,10 +52,13 @@ class Visuals
 {
 public:
   // ___ CONSTRUCTOR ___
-  Visuals()
+  Visuals(std::string human, std::string end_effector, std::string mobile_base)
   {
+    human_frame_ = human;
+    eef_frame_ = end_effector;
+    mobile_frame_ = mobile_base;
     // Initialize point-of-view camera placement and all the required markers
-    initPOWCamera("temoto_end_effector");
+    initPOWCamera(/*"temoto_end_effector"*/);
     initDisplacementArrow();
     initDistanceAsText();
     initHandPoseMarker();
@@ -87,7 +90,7 @@ private:
   // ___ INITIALIZERS ___
   
   /** Initializes camera placement to a preset pose in frame specified by frame_id */
-  void initPOWCamera(std::string frame_id);
+  void initPOWCamera();
   
   /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
   void initDisplacementArrow();
@@ -113,6 +116,15 @@ private:
   void changePOWCameraFrameTo(std::string frame_id); 
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
+  
+  /** Human input frame. */
+  std::string human_frame_;
+  
+  /** Motion-planning control frame. */
+  std::string eef_frame_;
+  
+  /** Navigation control frame. */
+  std::string mobile_frame_;
 
   /** This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.*/
   bool adjust_camera_;

@@ -1,4 +1,7 @@
 <launch>
+
+  <!-- Load temoto frames for vaultbot -->
+  <rosparam command="load" file="$(find temoto)/config/vaultbot.yaml" />
  
   <!-- Bring up speech-to-text and text-to-speech -->
   <include file="$(find temoto)/launch/pocketsphinx.launch" />

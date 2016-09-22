@@ -122,26 +122,26 @@ void Visuals::powermateWheelEvent (griffin_powermate::PowermateEvent powermate)
 
 /** Creates the initial CameraPlacment message that is used for positioning point-of-view (POW) camera in RViz.
  */
-void Visuals::initPOWCamera(std::string frame_id)
+void Visuals::initPOWCamera(/*std::string frame_id*/)
 {
   // Set target frame and animation time
-  point_of_view_.target_frame = frame_id;
+  point_of_view_.target_frame = eef_frame_;
   point_of_view_.time_from_start = ros::Duration(0.5);
 
   // Position of the camera relative to target_frame
-  point_of_view_.eye.header.frame_id = frame_id;
+  point_of_view_.eye.header.frame_id = eef_frame_;
   point_of_view_.eye.point.x = -2;
   point_of_view_.eye.point.y = 0;
   point_of_view_.eye.point.z = 0;
 
   // Target_frame-relative point for the focus
-  point_of_view_.focus.header.frame_id = frame_id;
+  point_of_view_.focus.header.frame_id = eef_frame_;
   point_of_view_.focus.point.x = 0;
   point_of_view_.focus.point.y = 0;
   point_of_view_.focus.point.z = 0;
 
   // Target_frame-relative vector that maps to "up" in the view plane.
-  point_of_view_.up.header.frame_id = frame_id;
+  point_of_view_.up.header.frame_id = eef_frame_;
   point_of_view_.up.vector.x = 0;
   point_of_view_.up.vector.y = 0;
   point_of_view_.up.vector.z = 1;
@@ -151,7 +151,7 @@ void Visuals::initPOWCamera(std::string frame_id)
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
 void Visuals::initDisplacementArrow()
 {
-  displacement_arrow_.header.frame_id = "leap_motion"; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"; // x is forward, y is horizontal, z is vertical //
+  displacement_arrow_.header.frame_id = human_frame_; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"; // x is forward, y is horizontal, z is vertical //
   displacement_arrow_.header.stamp = ros::Time();
   displacement_arrow_.ns = "displacement_arrow";
   displacement_arrow_.id = 0;
@@ -189,7 +189,7 @@ void Visuals::initDisplacementArrow()
 /** Creates the initial marker that displays front-facing text. */
 void Visuals::initDistanceAsText()
 {
-  distance_as_text_.header.frame_id = "leap_motion";
+  distance_as_text_.header.frame_id = human_frame_;
   distance_as_text_.header.stamp = ros::Time();
   distance_as_text_.id = 0;
   distance_as_text_.ns = "distance_as_text";
@@ -215,7 +215,7 @@ void Visuals::initDistanceAsText()
 /** Creates the initial marker that visualizes hand pose as a flattened box. */
 void Visuals::initHandPoseMarker()
 {
-  hand_pose_marker_.header.frame_id = "leap_motion";
+  hand_pose_marker_.header.frame_id = human_frame_;
   hand_pose_marker_.header.stamp = ros::Time();
   hand_pose_marker_.ns = "hand_pose_marker";
   hand_pose_marker_.id = 0;
@@ -244,7 +244,7 @@ void Visuals::initHandPoseMarker()
 /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
 void Visuals::initActiveRangeBox()
 {
-  active_range_box_.header.frame_id = "leap_motion";
+  active_range_box_.header.frame_id = human_frame_;
   active_range_box_.header.stamp = ros::Time();
   active_range_box_.ns = "active_range_box";
   active_range_box_.id = 0;
@@ -273,7 +273,7 @@ void Visuals::initActiveRangeBox()
 /** Creates the initial marker that visualizes cartesian path by connecting wayposes with lines. */
 void Visuals::initCartesianPath()
 {
-  cartesian_path_.header.frame_id = "base_link"/*"leap_motion"*/;
+  cartesian_path_.header.frame_id = "base_link"/*"leap_motion"*/;	//TODO figure out a general frame type we need here
   cartesian_path_.header.stamp = ros::Time();
   cartesian_path_.ns = "cartesian_path";
   cartesian_path_.id = 0;
@@ -524,7 +524,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
     // During NAVIGATION camera moves relative to 'base_link' frame.
-    changePOWCameraFrameTo("base_link");
+    changePOWCameraFrameTo( mobile_frame_ );
 
     ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
 
@@ -548,7 +548,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
     // During MANIPULATION camera akways moves relative to 'temoto_end_effector' frame.
-    changePOWCameraFrameTo("temoto_end_effector");
+    changePOWCameraFrameTo( eef_frame_ );
 
     // Adjust camera for NATURAL CONTROL MODE
     if (latest_status_.in_natural_control_mode)
@@ -659,7 +659,17 @@ int main(int argc, char **argv)
   // Setting the node rate at 1 kHz
   ros::Rate node_rate(1000);
   
-  Visuals rviz_visuals;
+  // Get all the relevant frame names from parameter server
+  std::string human, end_effector, mobile_base;
+  ROS_INFO("[rviz_visual] Getting frame names from parameter server.");
+  n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
+  ROS_INFO("[rviz_visual] Human frame is: %s", human.c_str());
+  n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
+  ROS_INFO("[rviz_visual] End-effector frame is: %s", end_effector.c_str());
+  n.param<std::string>("/temoto_frames/mobile_base", mobile_base, "base_link");
+  ROS_INFO("[rviz_visual] Mobile base frame is: %s", mobile_base.c_str());
+  
+  Visuals rviz_visuals(human, end_effector, mobile_base);
 
   // Set up service /temoto/adjust_rviz_camera; if there's a service request, executes adjustCameraPlacement() function
   ros::ServiceServer srv_visuals = n.advertiseService("temoto/adjust_rviz_camera", &Visuals::adjustPOWCameraPlacement, &rviz_visuals);
