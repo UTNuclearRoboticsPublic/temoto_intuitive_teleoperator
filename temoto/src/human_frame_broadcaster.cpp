@@ -39,7 +39,7 @@
 #include "tf/transform_datatypes.h"
 
 // temoto includes
-#include "temoto_common.h"
+#include "temoto/temoto_common.h"
 
 bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
 bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.

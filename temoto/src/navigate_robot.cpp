@@ -37,7 +37,7 @@
 // Remove servive part, and instead simply access it as a library. Have goal, cancel and get feedback functions.
 // Perhaps some class variables that are updated based on local callbacks.
 
-#include "navigate_robot.h"
+#include "temoto/navigate_robot.h"
 
 /** This method is executed when temoto/navigate_robot_service service is called.
  *  It updates target_pose_stamped based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.

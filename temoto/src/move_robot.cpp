@@ -33,7 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "move_robot.h"
+#include "temoto/move_robot.h"
 
 /** This method is executed when temoto/move_robot_service service is called.
  *  It updates target_pose_stamped based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.

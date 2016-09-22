@@ -42,7 +42,7 @@
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
-#include "temoto_common.h"
+#include "temoto/temoto_common.h"
 #include "griffin_powermate/PowermateEvent.h"
 
 #ifndef RVIZ_VISUAL_H

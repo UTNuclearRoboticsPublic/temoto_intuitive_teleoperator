@@ -33,7 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "start_teleop.h"
+#include "temoto/start_teleop.h"
 
 /** Constructor for Teleoperator.
  *  @param primary_hand a std::string that determines the primary hand used during teleoperation. Unless specified as "right", primary hand will be left.

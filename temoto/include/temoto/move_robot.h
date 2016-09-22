@@ -39,7 +39,7 @@
 #include "moveit/move_group_interface/move_group.h"
 
 // temoto includes
-#include "temoto_common.h"
+#include "temoto/temoto_common.h"
 
 #ifndef MOVE_ROBOT_H
 #define MOVE_ROBOT_H

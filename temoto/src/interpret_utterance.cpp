@@ -34,7 +34,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "interpret_utterance.h"
+#include "temoto/interpret_utterance.h"
 
 /** Callback function for pocketsphinx_recognizer/output topic.
  *  It searches the pocketsphinx_recognizer output string for any of the strings specified in valid_voice_commands.
