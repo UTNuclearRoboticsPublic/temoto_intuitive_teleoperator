@@ -535,7 +535,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
     // Camera is positioned directly above the origin of base_link
     point_of_view_.eye.point.x = 0;
     point_of_view_.eye.point.y = 0;
-    point_of_view_.eye.point.z = 2 + 8*latest_status_.scale_by;	// Never closer than 2 m, max distance at 10 m
+    point_of_view_.eye.point.z = 2 + 10*latest_status_.scale_by;	// Never closer than 2 m, max distance at 12 m
 
     // Focus camera at the origin of base_link
     point_of_view_.focus.point.x = 0;
