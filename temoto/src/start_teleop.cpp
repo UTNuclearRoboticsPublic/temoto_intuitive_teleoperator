@@ -170,13 +170,18 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
     // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
     if ( !using_natural_control_)						// fix orientation for inverted view only
     {
-      tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
-      tf::Quaternion palm_orientation;						// incoming palm orientation
-      tf::quaternionMsgToTF(motion.request.goal.pose.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
-      tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
-      final_rotation.normalize();						// normalize quaternion
-      tf::quaternionTFToMsg(final_rotation, motion.request.goal.pose.orientation);// convert tf quaternion to quaternion msg
+//       tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
+//       tf::Quaternion palm_orientation;						// incoming palm orientation
+//       tf::quaternionMsgToTF(motion.request.goal.pose.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
+//       tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
+//       final_rotation.normalize();						// normalize quaternion
+//       tf::quaternionTFToMsg(final_rotation, motion.request.goal.pose.orientation);// convert tf quaternion to quaternion msg
+      
+      motion.request.goal.pose.orientation = oneEightyAroundOperatorUp( motion.request.goal.pose.orientation ) ;
     }
+    
+    // Convert goal pose into end effector frame NOTE: tried something here but for some reason did not work
+//     motion.request.goal = poseInEndEffectorFrame( motion.request.goal );
     
     // Call temoto/move_robot_service
     if ( move_robot_client_.call( motion ) )
@@ -265,6 +270,28 @@ void Teleoperator::computeCartesian(std::string frame_id)
   
   return;
 }
+
+// NOTE: tried something here but for some reason did not work
+// geometry_msgs::PoseStamped Teleoperator::poseInEndEffectorFrame(geometry_msgs::PoseStamped pose)
+// {
+//   // output pose message, described in eef frame
+//   geometry_msgs::PoseStamped stamped_pose_msg_eef;
+//   // tf equivalent of PoseStamped for incoming pose
+//   tf::Stamped<tf::Pose> tf_pose;
+//   // tf equivalent of PoseStamped for pose in eef frame
+//   tf::Stamped<tf::Pose> tf_pose_eef;
+//   // Convert geometry_msgs/PoseStamped to TF Stamped<Pose>
+//   tf::poseStampedMsgToTF(pose, tf_pose);
+//   // tranform pose to eef frame
+//   transform_listener_.transformPose("temoto_end_effector", tf_pose, tf_pose_eef);
+//   // convert TF Stamped<Pose> to geometry_msgs/PoseStamped
+//   tf::poseStampedTFToMsg(tf_pose_eef, stamped_pose_msg_eef);
+//   
+//   // simply overwrite quaternion
+//   stamped_pose_msg_eef.pose.orientation = pose.pose.orientation;
+//   
+//   return stamped_pose_msg_eef;
+// }
 
 /** Returns a vector of wayposes that have been tranformed from "leap_motion" frame to "base_link".
  * 

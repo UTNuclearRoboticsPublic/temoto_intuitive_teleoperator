@@ -72,6 +72,8 @@ public:
 
   // Helper functions
   
+//   geometry_msgs::PoseStamped poseInEndEffectorFrame(geometry_msgs::PoseStamped pose);
+  
   std::vector<geometry_msgs::Pose> wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion);
   
   geometry_msgs::Quaternion extractOnlyPitch(geometry_msgs::Quaternion msg);
