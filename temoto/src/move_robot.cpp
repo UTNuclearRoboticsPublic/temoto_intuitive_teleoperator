@@ -116,10 +116,10 @@ void MoveRobotInterface::requestMove()
   } // end if (use_named_target_)
   else
   {
-//     robot.setEndEffectorLink("leap_motion_on_robot");
+//     movegroup_.setEndEffectorLink( "temoto_end_effector" );
     ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
-    bool set_target_ok = movegroup_.setPoseTarget(target_pose_stamped_/*, "leap_motion_inv"*/);
+    bool set_target_ok = movegroup_.setPoseTarget(target_pose_stamped_ /*, "temoto_end_effector"*/);
     if (!set_target_ok)							// check if set target pose failed
     {
       ROS_INFO("[move_robot/requestMove] Failed to set pose target. Please retry.");
