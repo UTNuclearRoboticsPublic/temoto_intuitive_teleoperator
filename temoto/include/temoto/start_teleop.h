@@ -71,9 +71,7 @@ public:
   void computeCartesian(std::string frame_id);
 
   // Helper functions
-  
-//   geometry_msgs::PoseStamped poseInEndEffectorFrame(geometry_msgs::PoseStamped pose);
-  
+   
   std::vector<geometry_msgs::Pose> wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion);
   
   geometry_msgs::Quaternion extractOnlyPitch(geometry_msgs::Quaternion msg);
@@ -84,9 +82,9 @@ public:
   
   //Callback functions
   
-  void processLeap(leap_motion_controller::Set leap_data);		// TODO rename to more general case, e.g. processHumanInput
+  void processLeap(leap_motion_controller::Set leap_data);			// TODO rename to more general case, e.g. processHumanInput
   
-  void processPowermate(griffin_powermate::PowermateEvent powermate);			// TODO rename to more general case, e.g. processScaleFactor
+  void processPowermate(griffin_powermate::PowermateEvent powermate);		// TODO rename to more general case, e.g. processScaleFactor
   
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
   

@@ -145,12 +145,6 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
     // Set goal_in_baselink as the target goal
     motion.request.goal = goal_in_baselink;
     
-    // for the time being, ignore rotation, so setting the quaternion to identity
-//     move.request.goal.pose.orientation.w = 1;
-//     move.request.goal.pose.orientation.x = 0;
-//     move.request.goal.pose.orientation.y = 0;
-//     move.request.goal.pose.orientation.z = 0;
-    
     // make a service request to navigate_robot_srv
     if ( navigate_robot_client_.call( motion ) )
     {
@@ -168,21 +162,12 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
   else if ( !navigate_to_goal_ )						// If Teleoperator is in MANIPULATION (MoveIt!) mode
   {  
     // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
-    if ( !using_natural_control_)						// fix orientation for inverted view only
+    if ( !using_natural_control_)
     {
-//       tf::Quaternion invert_palm_rotation(0, 1, 0, 0);				// 180° turn around Y axis
-//       tf::Quaternion palm_orientation;						// incoming palm orientation
-//       tf::quaternionMsgToTF(motion.request.goal.pose.orientation, palm_orientation);// convert incoming quaternion msg to tf qauternion
-//       tf::Quaternion final_rotation = palm_orientation * invert_palm_rotation;	// apply invert_palm_rotation to incoming palm rotation
-//       final_rotation.normalize();						// normalize quaternion
-//       tf::quaternionTFToMsg(final_rotation, motion.request.goal.pose.orientation);// convert tf quaternion to quaternion msg
-      
+      // rotate orientation 180 around UP-vector
       motion.request.goal.pose.orientation = oneEightyAroundOperatorUp( motion.request.goal.pose.orientation ) ;
     }
-    
-    // Convert goal pose into end effector frame NOTE: tried something here but for some reason did not work
-//     motion.request.goal = poseInEndEffectorFrame( motion.request.goal );
-    
+       
     // Call temoto/move_robot_service
     if ( move_robot_client_.call( motion ) )
     {
@@ -270,28 +255,6 @@ void Teleoperator::computeCartesian(std::string frame_id)
   
   return;
 }
-
-// NOTE: tried something here but for some reason did not work
-// geometry_msgs::PoseStamped Teleoperator::poseInEndEffectorFrame(geometry_msgs::PoseStamped pose)
-// {
-//   // output pose message, described in eef frame
-//   geometry_msgs::PoseStamped stamped_pose_msg_eef;
-//   // tf equivalent of PoseStamped for incoming pose
-//   tf::Stamped<tf::Pose> tf_pose;
-//   // tf equivalent of PoseStamped for pose in eef frame
-//   tf::Stamped<tf::Pose> tf_pose_eef;
-//   // Convert geometry_msgs/PoseStamped to TF Stamped<Pose>
-//   tf::poseStampedMsgToTF(pose, tf_pose);
-//   // tranform pose to eef frame
-//   transform_listener_.transformPose("temoto_end_effector", tf_pose, tf_pose_eef);
-//   // convert TF Stamped<Pose> to geometry_msgs/PoseStamped
-//   tf::poseStampedTFToMsg(tf_pose_eef, stamped_pose_msg_eef);
-//   
-//   // simply overwrite quaternion
-//   stamped_pose_msg_eef.pose.orientation = pose.pose.orientation;
-//   
-//   return stamped_pose_msg_eef;
-// }
 
 /** Returns a vector of wayposes that have been tranformed from "leap_motion" frame to "base_link".
  * 
@@ -531,6 +494,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   {
     ROS_INFO("Voice command received! Stopping ...");
     // TODO
+    
+    // stop the test task
     okay_robot_execute.data = false;
   }
   else if (voice_command.code == 0x01)
@@ -652,7 +617,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
   }
-  else if (voice_command.code == 0x66)			// placeholder command for some subtask
+  else if (voice_command.code == 0x66)			// test command for some subtask
   {
     ROS_INFO("Executing subtask. Setting okay_robot_execute to TRUE.");
     okay_robot_execute.data = true;
@@ -749,24 +714,29 @@ int main(int argc, char **argv)
   
   // Setup ROS publisher for Teleoperator::getStatus()
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
-  // ROS publisher for triggering compliant contact task demo. TODO: Remove this and related code before merging with master 
-  ros::Publisher pub_cc_demo_trigger = n.advertise<std_msgs::Bool>("enable_compliance", 1);
-  bool compliance_is_on = false;
+  
+//   // ==== This code is required to trigger contact task demo. ==============================
+//   // ROS publisher for triggering compliant contact task demo.
+//   ros::Publisher pub_cc_demo_trigger = n.advertise<std_msgs::Bool>("enable_compliance", 1);
+//   bool compliance_is_on = false;
+//   // =======================================================================================
   
   ROS_INFO("Starting teleoperation ...");
   
   
-  while (ros::ok())
+  while ( ros::ok() )
   {
     // publish status current
     pub_status.publish( temoto_teleop.getStatus() );
     
-    if (compliance_is_on != temoto_teleop.okay_robot_execute.data)
-    {
-      // publish the current value for okay_robot_execute
-      pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
-      compliance_is_on = temoto_teleop.okay_robot_execute.data;
-    }
+//     // ==== This code is required to trigger contact task demo. ==============================
+//     if (compliance_is_on != temoto_teleop.okay_robot_execute.data)
+//     {
+//       // publish the current value for okay_robot_execute
+//       pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
+//       compliance_is_on = temoto_teleop.okay_robot_execute.data;
+//     }
+//     // =======================================================================================
     
     // spins once to update subscribers or something like that
     ros::spinOnce();
