@@ -53,6 +53,7 @@ public:
 	  move_base_aclient_(mbase_name, "true")	// Initialize the action client and tell it that we want to spin a thread by default
   {
     new_navgoal_requested_ = false;
+    stop_navigation_ = false;
   };
    
   /** Simple Action Client for move_base */
@@ -61,21 +62,31 @@ public:
   /** Callback function for navigation service request */
   bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
   
-  /** Function that actually communicates with move_base action server */
+  // Functions that actually communicates with move_base action server
+  
+  /** Plans and executes the navigation of the robot to the pose stored in navigation_goal_stamped_. This function is blocking. */
   void requestNavigation();
   
-  void sendNavigationGoal(geometry_msgs::PoseStamped goal);
+  /** Sends navigation_goal_stamped_ to move_base action server. Non-blocking. */
+  void sendNavigationGoal();
 
+  /** Sends a action request to cancel goal. */
   void abortNavigation();
 
+  /** Asks for status from action server. */
   void checkNavigationStatus();
 
 
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;
    
-   // Public variables describing the state of MoveRobotInterface
-  bool new_navgoal_requested_; 		///< If new move has been requested by a client, it is set to 1; after calling requestNavigation(), it is set to 0.
+  // Public variables describing the state of MoveRobotInterface
+  
+  /** If new move has been requested by a client, it is set to TRUE; after calling sendNavigationGoal(), it is set to FALSE. */
+  bool new_navgoal_requested_;
+  
+  /** TRUE when 'cancel goal' has been requested; FALSE otherwise */
+  bool stop_navigation_;
 };
 
 #endif

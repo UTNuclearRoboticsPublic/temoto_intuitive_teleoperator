@@ -43,7 +43,6 @@
 
 // temoto includes
 #include "temoto/temoto_common.h"
-#include "temoto/navigate_robot.h"
 #include "leap_motion_controller/Set.h"
 #include "griffin_powermate/PowermateEvent.h"
 
@@ -94,6 +93,8 @@ public:
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame.
+  
+//   NavigateRobotInterface navigate_robot_ifclient_;
   
   // Temporary flags
   std_msgs::Bool okay_robot_execute;
