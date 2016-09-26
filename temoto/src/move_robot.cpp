@@ -188,6 +188,8 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   // ROS NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
+  
+//   ros::Rate node_rate(1000);
 
   // Using an async spinner
   ros::AsyncSpinner spinner(1);
@@ -246,6 +248,9 @@ int main(int argc, char **argv)
       client_visual.call(empty_srv);
       moveIF.new_end_effector_pose_ = false;	// set new_end_effector_pose to zero
     } // end if
+    
+//     ros::spinOnce();
+//     node_rate.sleep();
     
   } // end while
 
