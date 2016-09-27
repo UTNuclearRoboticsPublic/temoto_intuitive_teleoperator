@@ -38,6 +38,8 @@
 #include "std_srvs/Empty.h"
 #include "moveit/move_group_interface/move_group.h"
 
+#include "ros/callback_queue.h"
+
 // temoto includes
 #include "temoto/temoto_common.h"
 

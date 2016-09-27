@@ -189,10 +189,11 @@ int main(int argc, char **argv)
   // ROS NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
   
-//   ros::Rate node_rate(1000);
+  // Rate used for this node. If I only use the following async spinenr, the node also works but takes over 130%CPU.
+  ros::Rate node_rate(200);
 
-  // Using an async spinner
-  ros::AsyncSpinner spinner(1);
+  // Using an async spinner. It is needed for moveit's MoveGroup::plan(), which would get stuck otherwise. Might be a bug.
+  ros::AsyncSpinner spinner(0);
   spinner.start();
   
   // get user-specified name for the movegroup as a private parameter
@@ -249,8 +250,9 @@ int main(int argc, char **argv)
       moveIF.new_end_effector_pose_ = false;	// set new_end_effector_pose to zero
     } // end if
     
-//     ros::spinOnce();
-//     node_rate.sleep();
+    ros::spinOnce();
+    // sleep to meet the node_rate frequency
+    node_rate.sleep();
     
   } // end while
 
