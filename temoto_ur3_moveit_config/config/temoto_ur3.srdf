@@ -29,31 +29,68 @@
     <disable_collisions link1="base_link" link2="crib_al_base" reason="Never" />
     <disable_collisions link1="base_link" link2="crib_al_wall" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="crib_steel_base" reason="Never" />
+    <disable_collisions link1="base_link" link2="cup_fixture" reason="Never" />
     <disable_collisions link1="base_link" link2="shoulder_link" reason="Adjacent" />
+    <disable_collisions link1="base_link" link2="tray_fixture_link" reason="Never" />
+    <disable_collisions link1="camera_mount_link" link2="crib_steel_base" reason="Default" />
+    <disable_collisions link1="camera_mount_link" link2="ee_link" reason="Default" />
+    <disable_collisions link1="camera_mount_link" link2="f200_link" reason="Adjacent" />
+    <disable_collisions link1="camera_mount_link" link2="vacuum_link" reason="Default" />
+    <disable_collisions link1="camera_mount_link" link2="vacuum_nib" reason="Never" />
+    <disable_collisions link1="camera_mount_link" link2="wrist_1_link" reason="Never" />
+    <disable_collisions link1="camera_mount_link" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="camera_mount_link" link2="wrist_3_link" reason="Adjacent" />
     <disable_collisions link1="crib_al_base" link2="crib_al_wall" reason="Default" />
     <disable_collisions link1="crib_al_base" link2="crib_steel_base" reason="Adjacent" />
+    <disable_collisions link1="crib_al_base" link2="cup_fixture" reason="Never" />
     <disable_collisions link1="crib_al_base" link2="forearm_link" reason="Default" />
     <disable_collisions link1="crib_al_base" link2="shoulder_link" reason="Never" />
+    <disable_collisions link1="crib_al_base" link2="tray_fixture_link" reason="Adjacent" />
     <disable_collisions link1="crib_al_base" link2="upper_arm_link" reason="Never" />
     <disable_collisions link1="crib_al_base" link2="wrist_1_link" reason="Default" />
     <disable_collisions link1="crib_al_base" link2="wrist_2_link" reason="Default" />
     <disable_collisions link1="crib_al_wall" link2="crib_steel_base" reason="Adjacent" />
+    <disable_collisions link1="crib_al_wall" link2="cup_fixture" reason="Never" />
     <disable_collisions link1="crib_al_wall" link2="shoulder_link" reason="Never" />
+    <disable_collisions link1="crib_al_wall" link2="tray_fixture_link" reason="Never" />
+    <disable_collisions link1="crib_steel_base" link2="cup_fixture" reason="Adjacent" />
+    <disable_collisions link1="crib_steel_base" link2="f200_link" reason="Default" />
     <disable_collisions link1="crib_steel_base" link2="forearm_link" reason="Default" />
     <disable_collisions link1="crib_steel_base" link2="shoulder_link" reason="Never" />
+    <disable_collisions link1="crib_steel_base" link2="tray_fixture_link" reason="Never" />
     <disable_collisions link1="crib_steel_base" link2="upper_arm_link" reason="Never" />
     <disable_collisions link1="crib_steel_base" link2="wrist_1_link" reason="Default" />
     <disable_collisions link1="crib_steel_base" link2="wrist_2_link" reason="Default" />
     <disable_collisions link1="crib_steel_base" link2="wrist_3_link" reason="Default" />
+    <disable_collisions link1="cup_fixture" link2="shoulder_link" reason="Never" />
+    <disable_collisions link1="cup_fixture" link2="tray_fixture_link" reason="Never" />
+    <disable_collisions link1="cup_fixture" link2="upper_arm_link" reason="Never" />
+    <disable_collisions link1="ee_link" link2="f200_link" reason="Never" />
+    <disable_collisions link1="ee_link" link2="vacuum_link" reason="Never" />
+    <disable_collisions link1="ee_link" link2="vacuum_nib" reason="Never" />
     <disable_collisions link1="ee_link" link2="wrist_1_link" reason="Never" />
     <disable_collisions link1="ee_link" link2="wrist_2_link" reason="Never" />
     <disable_collisions link1="ee_link" link2="wrist_3_link" reason="Adjacent" />
+    <disable_collisions link1="f200_link" link2="vacuum_link" reason="Adjacent" />
+    <disable_collisions link1="f200_link" link2="vacuum_nib" reason="Never" />
+    <disable_collisions link1="f200_link" link2="wrist_1_link" reason="Never" />
+    <disable_collisions link1="f200_link" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="f200_link" link2="wrist_3_link" reason="Default" />
     <disable_collisions link1="forearm_link" link2="upper_arm_link" reason="Adjacent" />
     <disable_collisions link1="forearm_link" link2="wrist_1_link" reason="Adjacent" />
     <disable_collisions link1="forearm_link" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="shoulder_link" link2="tray_fixture_link" reason="Never" />
     <disable_collisions link1="shoulder_link" link2="upper_arm_link" reason="Adjacent" />
     <disable_collisions link1="shoulder_link" link2="wrist_1_link" reason="Never" />
     <disable_collisions link1="shoulder_link" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="tray_fixture_link" link2="upper_arm_link" reason="Never" />
+    <disable_collisions link1="vacuum_link" link2="vacuum_nib" reason="Adjacent" />
+    <disable_collisions link1="vacuum_link" link2="wrist_1_link" reason="Never" />
+    <disable_collisions link1="vacuum_link" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="vacuum_link" link2="wrist_3_link" reason="Never" />
+    <disable_collisions link1="vacuum_nib" link2="wrist_1_link" reason="Never" />
+    <disable_collisions link1="vacuum_nib" link2="wrist_2_link" reason="Never" />
+    <disable_collisions link1="vacuum_nib" link2="wrist_3_link" reason="Never" />
     <disable_collisions link1="wrist_1_link" link2="wrist_2_link" reason="Adjacent" />
     <disable_collisions link1="wrist_1_link" link2="wrist_3_link" reason="Never" />
     <disable_collisions link1="wrist_2_link" link2="wrist_3_link" reason="Adjacent" />
