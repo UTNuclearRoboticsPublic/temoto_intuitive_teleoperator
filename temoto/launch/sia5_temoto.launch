@@ -32,5 +32,14 @@
     <node name="robotiqSModel" pkg="robotiq_s_model_control" type="SModelTcpNode.py" args="192.168.1.12" />
   </group>
   
+  
+  <!-- Start temoto teleoperation -->
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
+    <param name="primary_hand" type="str" value="left" />
+    <param name="navigate" type="bool" value="false" />
+    <param name="manipulate" type="bool" value="true" />
+  </node>
+
+  
 </launch>
 
