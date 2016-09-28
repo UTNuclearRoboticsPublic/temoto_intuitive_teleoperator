@@ -22,10 +22,17 @@
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
   
+  <!-- Start temoto teleoperation -->
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
+    <param name="primary_hand" type="str" value="left" />
+    <param name="navigate" type="bool" value="false" />
+    <param name="manipulate" type="bool" value="true" />
+  </node>
+  
   <!-- MoveIt interface for ur3_stewie -->
   <node name="move_robot" pkg="temoto" type="move_robot">
     <param name="movegroup" value="ur3_stewie" />
   </node>
-
+  
 </launch>
 
