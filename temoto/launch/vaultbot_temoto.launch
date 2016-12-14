@@ -36,5 +36,8 @@
   <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">
     <arg name="config" value="true"/>
   </include>
+
+  <!-- Open an rqt window for camera feeds -->
+  <node name="rqt_image_panel" pkg="vaultbot_irp" type="rqt_image_panel.py" />
   
 </launch>
