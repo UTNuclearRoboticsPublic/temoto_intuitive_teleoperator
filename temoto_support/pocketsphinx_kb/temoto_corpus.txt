@@ -1,3 +1,4 @@
+end
 hello
 stop stop
 robot
@@ -22,11 +23,9 @@ temoto please execute
 temoto please go
 temoto please plan home
 temoto please go home
-plan
 execute
 go
 move
-echo
 please
 home
 reset
@@ -34,7 +33,6 @@ abort
 okay
 yes
 no
-cancel
 natural control mode
 inverted control mode
 free directions
@@ -45,7 +43,6 @@ camera front
 camera top
 camera behind
 new
-add
 remove
 remove last
 delete
