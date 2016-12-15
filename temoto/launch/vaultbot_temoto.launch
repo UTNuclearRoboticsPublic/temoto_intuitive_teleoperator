@@ -39,8 +39,5 @@
 
   <!-- Open an rqt window for camera feeds -->
   <node name="rqt_image_panel" pkg="vaultbot_irp" type="rqt_image_panel.py" />
-
-  <!-- Listen to PocketSphinx for camera switches -->
-  <node name="sphinx_switch_cam" pkg="vaultbot_irp" type="sphinx_switch_cam.py" />
   
 </launch>
