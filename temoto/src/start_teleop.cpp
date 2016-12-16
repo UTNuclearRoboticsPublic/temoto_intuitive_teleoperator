@@ -683,8 +683,7 @@ int main(int argc, char **argv)
   // NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
 
-  // Setting work rate to 1 kHz
-  ros::Rate node_rate(500);
+  ros::Rate node_rate(50);
 
   // Getting user-specified primary hand from ROS parameter server
   std::string primary_hand_name;
