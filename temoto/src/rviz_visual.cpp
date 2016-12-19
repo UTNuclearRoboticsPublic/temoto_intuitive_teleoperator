@@ -655,8 +655,8 @@ int main(int argc, char **argv)
   // ROS node handle
   ros::NodeHandle n;
   
-  // Setting the node rate at 1 kHz
-  ros::Rate node_rate(1000);
+  // Setting the node rate (Hz)
+  ros::Rate node_rate(100);
   
   // Get all the relevant frame names from parameter server
   std::string human, end_effector, mobile_base;

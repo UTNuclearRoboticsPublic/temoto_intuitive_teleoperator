@@ -114,7 +114,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "navigate_robot");
   ros::NodeHandle n;
-  ros::Rate node_rate(1000);
+  ros::Rate node_rate(100);
 //   ros::AsyncSpinner spinner(1);
 //   spinner.start();
 
