@@ -105,8 +105,7 @@ void MoveRobotInterface::requestMove()
   // Use either named or pose target (named target takes the priority over regular pose target).
   if (use_named_target_)						// if use_named_target is true
   {
-    bool set_target_ok = movegroup_.setNamedTarget(named_target_);	// set target pose as a named target
-    if (!set_target_ok)							// check if setting named target was successful
+    if ( movegroup_.setNamedTarget(named_target_) )		// check if setting named target was successful
     {
       ROS_INFO("[move_robot/requestMove] Failed to set named target. Please retry.");
       return;								// return if setNamedTarget failed
@@ -119,8 +118,7 @@ void MoveRobotInterface::requestMove()
 //     movegroup_.setEndEffectorLink( "temoto_end_effector" );
     ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
-    bool set_target_ok = movegroup_.setPoseTarget(target_pose_stamped_ /*, "temoto_end_effector"*/);
-    if (!set_target_ok)							// check if set target pose failed
+    if ( !movegroup_.setPoseTarget(target_pose_stamped_ /*, "temoto_end_effector"*/) )	// check if set target pose failed
     {
       ROS_INFO("[move_robot/requestMove] Failed to set pose target. Please retry.");
       return;								// return if setPoseTarget failed
