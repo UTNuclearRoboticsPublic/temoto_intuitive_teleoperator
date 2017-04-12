@@ -36,7 +36,7 @@
 // ROS includes
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
-#include "moveit/move_group_interface/move_group.h"
+#include "moveit/move_group_interface/move_group_interface.h"
 
 #include "ros/callback_queue.h"
 
@@ -58,7 +58,7 @@ class MoveRobotInterface {
      new_end_effector_pose_ = true;
    };
    
-   moveit::planning_interface::MoveGroup movegroup_;
+   moveit::planning_interface::MoveGroupInterface movegroup_;
    
    /** Callback function */
    bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
@@ -69,7 +69,7 @@ class MoveRobotInterface {
 
    geometry_msgs::PoseStamped target_pose_stamped_;		///< Target pose for the robot.
    std::string named_target_;					///< Named target for the robot.
-   moveit::planning_interface::MoveGroup::Plan latest_plan_;	///< Latest motion plan.
+   moveit::planning_interface::MoveGroupInterface::Plan latest_plan_;	///< Latest motion plan.
    uint8_t req_action_type_;					///< Action type associated with target request, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03).
    
    // Public variables describing the state of MoveRobotInterface

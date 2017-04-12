@@ -17,7 +17,10 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   move_base_msgs
   actionlib
-#   leap_motion_controller
+  view_controller_msgs
+  griffin_powermate
+  leap_motion_controller
+  robotiq_s_model_control
 #   cv_bridge
 #   roslib
 #   rospeex_if
@@ -61,8 +64,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  Status.msg
   Command.msg
+  Status.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -152,7 +155,7 @@ add_dependencies(start_teleop temoto_generate_messages_cpp)
 
 add_executable(rviz_visual src/rviz_visual.cpp)
 target_link_libraries(rviz_visual ${catkin_LIBRARIES} temoto_common)
-add_dependencies(rviz_visual temoto_generate_messages_cpp)
+add_dependencies(rviz_visual temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(interpret_utterance src/interpret_utterance.cpp)
 target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)
