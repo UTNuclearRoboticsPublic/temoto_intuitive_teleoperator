@@ -60,8 +60,8 @@ public:
     {"stop stop", 0x00},		// stop or abort command
     {"robot please plan", 0x01},	// command PLAN
     {"robot please execute", 0x02},	// command EXECUTE plan
-    {"robot please go", 0x03},		// command PLAN&EXECUTE
-    {"robot please plan home", 0xf1},	// command PLAN to a saved home pose
+    {"robot plan and go", 0x03},		// command PLAN&EXECUTE
+    {"robot plan home", 0xf1},	// command PLAN to a saved home pose
     {"robot please go home", 0xf3},	// command PLAN&EXECUTE the home pose
     {"natural control mode", 0x10},	// control mode determines whether operator has natural or inverted view
     {"inverted control mode", 0x11},	// control mode determines whether operator has natural or inverted view
