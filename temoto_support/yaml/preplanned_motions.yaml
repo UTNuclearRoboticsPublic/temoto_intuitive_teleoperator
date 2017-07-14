@@ -1,0 +1,4 @@
+# A list of small, preplanned Cartesian motions for the end effector
+temoto_preplanned_motions:
+  turn_handle_clockwise:
+    delta1:    [ 0, 0, 0, 0.01, 0, 0 ]

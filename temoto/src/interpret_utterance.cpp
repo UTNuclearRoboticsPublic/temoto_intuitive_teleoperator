@@ -69,14 +69,14 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   if (valid_command)
   {
     // give operator auditory confirmation
-    sound_client_.say(/*"okay"*/ "affirmative");
+    sound_client_.say("affirmative");
     // publish the voice command
     pub_voice_commands_.publish( latest_command );
   }
   else
   {
     // tell operator that no valid command was recgonized in utterance string
-    sound_client_.say(/*"not okay"*/ "i beg your pardon");
+    sound_client_.say("i beg your pardon");
   }
   
   return;

@@ -69,9 +69,6 @@ public:
     {"limit directions", 0x21},		// some directions may be limited
     {"consider rotation", 0x22},	// factors in hand orientation
     {"ignore rotation", 0x23},		// hand orientation is ignored, i.e. using hand position only
-    {"compute cartesian", 0x31},	// computes cartesian path based on waypoints
-    {"execute cartesian", 0x32},	// executes the cartesian path
-    {"cartesian go", 0x33},		// computes and executes cartesian path
     {"new", 0x34},			// first point in waypoints
     {"add", 0x35},			// adds a point into waypoints
     {"remove last", 0x36},		// removes the last waypoint
