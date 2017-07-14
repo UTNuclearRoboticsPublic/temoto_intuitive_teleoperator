@@ -1,6 +1,6 @@
 [submodule "pocketsphinx"]
 	path = pocketsphinx
-	url = https://github.com/mikeferguson/pocketsphinx.git
+	url = https://github.com/UTNuclearRoboticsPublic/pocketsphinx.git
 [submodule "leap_motion_controller"]
 	path = leap_motion_controller
 	url = https://github.com/UTNuclearRoboticsPublic/leap_motion_controller.git
