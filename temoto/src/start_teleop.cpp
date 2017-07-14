@@ -33,6 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
+#include "temoto/motion_actions.h"
 #include "temoto/start_teleop.h"
 
 /** Constructor for Teleoperator.
@@ -85,12 +86,11 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   okay_robot_execute.data = false;
 }
 
-/** Function that actually makes the service call to appropriate robot motion intefrace.
+/** Function that actually makes the service call to appropriate robot motion interface.
  *  Currently, there are MoveRobotInterface and NavigateRobotInterface.
- *  @param action_type determines what is requested from MoveGroup, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03). 
+ *  @param action_type determines what is requested from MoveGroup, i.e. PLAN, EXECUTE PLAN, or GO (aka plan and execute). 
  */
-// void Teleoperator::callPlanAndMove(uint8_t action_type)
-void Teleoperator::callRobotMotionInterface(uint8_t action_type)
+void Teleoperator::callRobotMotionInterface(std::string action_type)
 {
   // Create a service request
   temoto::Goal motion;	
@@ -103,7 +103,7 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
   if (navigate_to_goal_) // if in NAVIGATION mode
   {
     // If operator requested ABORT
-    if (action_type == temoto::GoalRequest::ABORT)
+    if (action_type == motion_actions::ABORT)
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to stop navigation.");
       // make a service request to stop the robot
@@ -116,9 +116,9 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 	ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
       return;
-    } // if (action_type == temoto::GoalRequest::ABORT)
+    } // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
-    else if (action_type == temoto::GoalRequest::GO)
+    else if (action_type == motion_actions::GO)
     {  
       // ------------------------- DEBUG START {
       double lm_roll, lm_pitch, lm_yaw;
@@ -173,7 +173,7 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 	ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
       return;
-    } // else if (action_type == temoto::GoalRequest::GO)
+    } // else if (action_type == "go")
   } // if (navigate_to_goal_)
   // =================================================
   // === Calling MoveRobotInterface ==================
@@ -209,11 +209,11 @@ void Teleoperator::callRobotMotionInterface(uint8_t action_type)
 } // end callRobotMotionInterface
 
 /** Function that actually makes the service call to /temoto/move_robot_service.
- *  @param action_type determines what is requested from MoveGroup, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03).
+ *  @param action_type determines what is requested from MoveGroup, i.e. PLAN, EXECUTE PLAN, or GO (aka plan and execute).
  *  @param named_target uses this named target for target pose.
  */
 // void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target)
-void Teleoperator::callRobotMotionInterfaceWithNamedTarget(uint8_t action_type, std::string named_target)
+void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target)
 {
   if ( !navigate_to_goal_ )			// currenly implemented for only MoveRobotInterface
   {
@@ -237,43 +237,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(uint8_t action_type, 
   }
   return;
 } // end callRobotMotionInterfaceWithNamedTarget
-
-/** Function that makes the service call to /temoto/move_robot service.
- *  It requests computation/planning of cartesian path based on existing waypoints.
- *  If a complete path cannot be calculated, it removes the last waypose and replans the cartesian path.
- * 
- */
-void Teleoperator::computeCartesian(std::string frame_id)
-{
-  if (!navigate_to_goal_)			// currenly implemented for only MoveRobotInterface
-  {
-    temoto::Goal move;				// create a service request
-    move.request.action_type = 0x04;		// set action_type
-    move.request.cartesian_wayposes = wayposes_;
-    move.request.cartesian_frame = frame_id;
-    if (move_robot_client_.call(move))		// call for the service to move robot group
-    {
-      ROS_INFO("[start_teleop] Successfully called temoto/move_robot_service for Cartesian move. Fraction of computed path is %f", move.response.cartesian_fraction);
-      if (move.response.cartesian_fraction < 1 && !wayposes_.empty())
-      {
-	ROS_INFO("[start_teleop] Failed to compute the entire Cartesian path. Removing the last waypose and retrying...");
-	wayposes_.pop_back();
-	computeCartesian(frame_id);		// going recursive
-      }
-      wayposes_fixed_in_baselink_ = wayposesInFixedFrame(wayposes_);
-    }
-    else
-    {
-      ROS_ERROR("[start_teleop] Failed to call temoto/move_robot_service for Cartesian move.");
-    }
-  }
-  else
-  {
-    ROS_INFO("[start_teleop/computeCartesian] Not available for NavigateRobotInterface.");
-  }
-  
-  return;
-}
 
 /** Returns a vector of wayposes that have been tranformed from "leap_motion" frame to "base_link".
  * 
@@ -446,7 +409,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     if (powermate.is_pressed)			// if the push button has been pressed
     {
       ROS_INFO("[start_teleop] Griffin Powermate knob has been pressed");
-      callRobotMotionInterface(0x03);		// makes the service request to move the robot; requests plan&execute
+      callRobotMotionInterface("ROBOT PLAN AND GO");		// makes the service request to move the robot; requests plan&execute
     }
     else					// if the push button has been depressed
     {
@@ -503,47 +466,42 @@ geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs:
  */
 void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 {
-  // TODO check for namespace
-  if (voice_command.code == 0xff)
-  {
-    ROS_INFO("Voice command received! Aborting ...");
-    // TODO
-  }
-  else if (voice_command.code == 0x00)
+  if (voice_command.cmd_string == motion_actions::ABORT)
   {
     ROS_INFO("Voice command received! Stopping ...");
     // Request abort motion
-    callRobotMotionInterface(0xff);
+    callRobotMotionInterface(motion_actions::ABORT);
     
     // stop the test task
     okay_robot_execute.data = false;
   }
-  else if (voice_command.code == 0x01)
+  else if (voice_command.cmd_string == "robot please plan")
   {
     ROS_INFO("Voice command received! Planning ...");
-    callRobotMotionInterface(0x01);
+    ROS_INFO_STREAM("The argument was: " << motion_actions::PLAN);
+    callRobotMotionInterface(motion_actions::PLAN);
   }
-  else if (voice_command.code == 0x02)
+  else if (voice_command.cmd_string == "robot please execute")
   {
     ROS_INFO("Voice command received! Executing last plan ...");
-    callRobotMotionInterface(0x02);
+    callRobotMotionInterface(motion_actions::EXECUTE);
   }
-  else if (voice_command.code == 0x03)
+  else if (voice_command.cmd_string == "robot plan and go")
   {
     ROS_INFO("Voice command received! Planning and moving ...");
-    callRobotMotionInterface(0x03);
+    callRobotMotionInterface(motion_actions::GO);
   }
-  else if (voice_command.code == 0xf1)
+  else if (voice_command.cmd_string == "robot plan home")
   {
     ROS_INFO("Voice command received! Planning to home ...");
-    callRobotMotionInterfaceWithNamedTarget(0x01, "home_pose");
+    callRobotMotionInterfaceWithNamedTarget(motion_actions::PLAN, "home_pose");
   }
-  else if (voice_command.code == 0xf3)
+  else if (voice_command.cmd_string == "robot please go home")
   {
     ROS_INFO("Voice command received! Planning and moving to home ...");
-    callRobotMotionInterfaceWithNamedTarget(0x03, "home_pose");
+    callRobotMotionInterfaceWithNamedTarget(motion_actions::GO, "home_pose");
   }
-  else if (voice_command.code == 0x10)
+  else if (voice_command.cmd_string == "natural control mode")
   {
     ROS_INFO("Voice command received! Using natural control perspective ...");
     temoto::ChangeTf switch_human2robot_tf;
@@ -552,7 +510,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control perspective in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = true;
   }
-  else if (voice_command.code == 0x11)
+  else if (voice_command.cmd_string == "inverted control mode")
   {
     ROS_INFO("Voice command received! Using inverted control perspective ...");
     temoto::ChangeTf switch_human2robot_tf;
@@ -561,63 +519,28 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control perspective in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = false;
   }
-  else if (voice_command.code == 0x20)
+  else if (voice_command.cmd_string == "free directions")
   {
     ROS_INFO("Voice command received! Acknowledging 'Free directions' ...");
     position_limited_ = false;
     position_fwd_only_ = false;				// once input position is not limited, there cannot be "forward only" mode
   }
-  else if (voice_command.code == 0x21)
+  else if (voice_command.cmd_string == "limit directions")
   {
     ROS_INFO("Voice command received! Acknowledging 'Limit directions' ...");
     position_limited_ = true;
   }
-  else if (voice_command.code == 0x22)
+  else if (voice_command.cmd_string == "consider rotation")
   {
     ROS_INFO("Voice command received! Considering hand rotation/orientation ...");
     orientation_locked_ = false;
   }
-  else if (voice_command.code == 0x23)
+  else if (voice_command.cmd_string == "ignore rotation")
   {
     ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
     orientation_locked_ = true;
   }
-  else if (voice_command.code == 0x34)			// Restart (delete all and add new) Cartesian wayposes
-  {
-    ROS_INFO("Voice command received! Started defining new Cartesian path ...");
-    wayposes_.clear();					// Clear existing wayposes
-    geometry_msgs::Pose new_waypose = live_pose_.pose;	// Set live_pose_ as a new waypose
-    if (!using_natural_control_)			// Fix orientation if in inverted control perspective
-    {
-      new_waypose.orientation = oneEightyAroundOperatorUp(new_waypose.orientation);
-    }
-    wayposes_.push_back(new_waypose);			// Add a waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
-  }
-  else if (voice_command.code == 0x35)			// Add a Cartesian waypose to the end existing Cartesian path
-  {
-    ROS_INFO("Voice command received! Adding a pose to Cartesian path ...");
-    geometry_msgs::Pose new_waypose = live_pose_.pose;	// Set live_pose_ as a new waypose
-    if (!using_natural_control_)			// Fix orientation if in inverted control perspective
-    {
-      new_waypose.orientation = oneEightyAroundOperatorUp(new_waypose.orientation);
-    }
-    wayposes_.push_back(new_waypose);			// Add a waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
-  }
-  else if (voice_command.code == 0x36)			// Remove the last Cartesian waypose
-  {
-    ROS_INFO("Voice command received! Removing the last Cartesian waypose  ...");
-    wayposes_.pop_back();				// Remove last waypose
-    computeCartesian(live_pose_.header.frame_id.c_str());// Try to compute Cartesian path
-  }
-  else if (voice_command.code == 0x37)			// Remove the last Cartesian waypose
-  { 
-    ROS_INFO("Voice command received! Removing all Cartesian wayposes  ...");
-    wayposes_.clear();					// Clear all wayposes
-    wayposes_fixed_in_baselink_.clear();		// Clear wayposes defined in base_link
-  }
-  else if (voice_command.code == 0x40 && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
+  else if (voice_command.cmd_string == "manipulation" && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
   { 
     ROS_INFO("Voice command received! Going into MANIPULATION mode  ...");
     AMP_HAND_MOTION_ = 10;
@@ -627,7 +550,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
   }
-  else if (voice_command.code == 0x41 && control_state_ != 1)	// Switch over to navigation mode
+  else if (voice_command.cmd_string == "navigation" && control_state_ != 1)	// Switch over to navigation mode
   { 
     ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
     AMP_HAND_MOTION_ = 100;
@@ -637,7 +560,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
   }
-  else if (voice_command.code == 0x66)			// test command for some subtask
+  else if (voice_command.cmd_string == "okay robot execute")			// test command for some subtask
   {
     ROS_INFO("Executing subtask. Setting okay_robot_execute to TRUE.");
     okay_robot_execute.data = true;

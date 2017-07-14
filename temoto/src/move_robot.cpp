@@ -33,6 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
+#include "temoto/motion_actions.h"
 #include "temoto/move_robot.h"
 
 /** This method is executed when temoto/move_robot_service service is called.
@@ -44,45 +45,24 @@
 bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 				       temoto::Goal::Response &res)
 {
-//  ROS_INFO("New service update requested.");
-  if (req.action_type == temoto::GoalRequest::CARTESIAN_COMPUTE)
-  {
-    // Set current state as the start state for planner. For some reason the actual built-in function doesn't do that.
-    movegroup_.setStartState( *(movegroup_.getCurrentState()) );
-    
-    // waypoints are interpreted in the "leap_motion" ref.frame
-    movegroup_.setPoseReferenceFrame(req.cartesian_frame);
-    
-    // Computed Cartesian trajectory.
-    moveit_msgs::RobotTrajectory trajectory;
-    res.cartesian_fraction = movegroup_.computeCartesianPath(req.cartesian_wayposes,
-                                             0.01,  // eef_step
-                                             0.0,   // jump_threshold
-                                             trajectory);
-    ROS_INFO("[MoveRobotInterface::serviceUpdate] Cartesian path %.2f%% acheived", res.cartesian_fraction * 100.0);
+  //  ROS_INFO("New service update requested.");
+  // sets the action associated to target pose
+  req_action_type_ = req.action_type;
   
-    latest_plan_.trajectory_ = trajectory;
-    new_plan_available_ = true;
-  }
-  else
-  {
-    // sets the action associated to target pose
-    req_action_type_ = req.action_type;
+  // sets target requested pose
+  target_pose_stamped_ = req.goal;
     
-    // sets target requested pose
-    target_pose_stamped_ = req.goal;
+  // check for named target
+  use_named_target_ = false;					// by default do not use named_target.
+  named_target_ = req.named_target;				// get named_target from the service request.
+  ROS_INFO("[MoveRobotInterface::serviceUpdate] named_target_='%s'", named_target_.c_str());
+  if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
+  if (use_named_target_) ROS_INFO("[MoveRobotInterface::serviceUpdate] use_named_target is set TRUE");
     
-    // check for named target
-    use_named_target_ = false;					// by default do not use named_target.
-    named_target_ = req.named_target;				// get named_target from the service request.
-    ROS_INFO("[MoveRobotInterface::serviceUpdate] named_target_='%s'", named_target_.c_str());
-    if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
-    if (use_named_target_) ROS_INFO("[MoveRobotInterface::serviceUpdate] use_named_target is set TRUE");
-    
-    // Set new_move_requested_ TRUE for main() to see it
-    new_move_requested_ = true;
-    ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ is set TRUE");
-  }
+  // Set new_move_requested_ TRUE for main() to see it
+  new_move_requested_ = true;
+  ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ is set TRUE");
+  
   return true;
 } // end serviceUpdate
 
@@ -128,7 +108,7 @@ void MoveRobotInterface::requestMove()
   }
 
   // TODO
-//   // Set goal tolerance based on the actual shift from current positio to target position
+//   // Set goal tolerance based on the actual shift from current position to target position
 //   std::vector <geometry_msgs::Point> current_and_target;		// Vector that contains current and target points
 //   current_and_target.push_back(current_pose.pose.position);		// Add current position
 //   current_and_target.push_back(target_pose.position);			// Add target position
@@ -143,8 +123,8 @@ void MoveRobotInterface::requestMove()
   ROS_INFO("[move_robot/requestMove] Target pose (posit x, y, z): (%f, %f, %f)", current_target.pose.position.x, current_target.pose.position.y, current_target.pose.position.z);
   ROS_INFO("[move_robot/requestMove] Target pose (orien x, y, z, w): (%f, %f, %f, %f)", current_target.pose.orientation.x, current_target.pose.orientation.y, current_target.pose.orientation.z, current_target.pose.orientation.w);
 
-  // Based on action type: PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03)
-  if ( req_action_type_ == temoto::GoalRequest::PLAN )
+  // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
+  if ( req_action_type_ == motion_actions::PLAN )
   {
     ROS_INFO("[move_robot/requestMove] Starting to plan ...");
     ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
@@ -152,7 +132,7 @@ void MoveRobotInterface::requestMove()
     new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
     ROS_INFO("[move_robot/requestMove] DONE planning.");
   }
-  else if ( req_action_type_ == temoto::GoalRequest::EXECUTE )
+  else if ( req_action_type_ == motion_actions::EXECUTE )
   {
     ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
     if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );	// If there is a new plan, execute latest_plan_.
@@ -160,7 +140,7 @@ void MoveRobotInterface::requestMove()
     new_plan_available_ = false;					// Either case, set new_plan_available_ to FALSE.
     ROS_INFO("[move_robot/requestMove] DONE executing the plan");
   }
-  else if ( req_action_type_ == temoto::GoalRequest::GO )
+  else if ( req_action_type_ == motion_actions::GO )
   {
     ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
 //     robot.move();						// Plan and execute.
@@ -231,7 +211,7 @@ int main(int argc, char **argv)
   while ( ros::ok() )
   {
     // check if there has been a service request for a new move
-    if ( moveIF.new_move_requested_ && moveIF.req_action_type_ < 0x04 )
+    if ( moveIF.new_move_requested_ )
     {
       moveIF.requestMove();			// plan and execute move using move_group
       moveIF.new_move_requested_ = false;	// set request flag to false

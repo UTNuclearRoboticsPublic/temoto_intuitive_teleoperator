@@ -37,11 +37,13 @@
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
 #include "moveit/move_group_interface/move_group_interface.h"
-
 #include "ros/callback_queue.h"
 
 // temoto includes
 #include "temoto/temoto_common.h"
+
+// other includes
+#include "string.h"
 
 #ifndef MOVE_ROBOT_H
 #define MOVE_ROBOT_H
@@ -49,11 +51,11 @@
 class MoveRobotInterface {
  public:
    MoveRobotInterface(std::string mg_name) :
-    movegroup_(mg_name)			// I use something called initializer list here, Alex taught me that
+    movegroup_(mg_name)
    {
      use_named_target_ = false;
      new_plan_available_ = false;
-     req_action_type_ = 0xff;
+     req_action_type_ = "";
      new_move_requested_ = false;
      new_end_effector_pose_ = true;
    };
@@ -70,7 +72,7 @@ class MoveRobotInterface {
    geometry_msgs::PoseStamped target_pose_stamped_;		///< Target pose for the robot.
    std::string named_target_;					///< Named target for the robot.
    moveit::planning_interface::MoveGroupInterface::Plan latest_plan_;	///< Latest motion plan.
-   uint8_t req_action_type_;					///< Action type associated with target request, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03).
+   std::string req_action_type_;					///< Action type associated with target request, i.e. PLAN (0x01), EXECUTE PLAN (0x02), or PLAN&EXECUTE (0x03).
    
    // Public variables describing the state of MoveRobotInterface
    bool use_named_target_;		///< When named target is requested, use_named_target is set to true.

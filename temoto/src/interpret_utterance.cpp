@@ -48,20 +48,21 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   // Set namespace for voice command messages
   temoto::Command latest_command;
   latest_command.ns = "temoto_voice_command";
+
+  // The utterance from pocketsphinx has a trailing space. Delete it.
+  std::string s(utterance.data.c_str());  // Convert char array to string 
+  s = s.substr(0, s.size()-1);  // Subtract last char
   
   // Print the output of pocketsphinx_recognizer
-  ROS_INFO("[interpret_utterance] I think you just said: '%s'", utterance.data.c_str());
-  
-  // Position of the valid voice command string in the input string
-  std::size_t found;
+  ROS_INFO_STREAM("[interpret_utterance] I think you just said: " << s);
  
-  // Compare the input utterance string to every key in command_map.
-  for(std::map<std::string, uint8_t>::iterator it = command_map_.begin(); it != command_map_.end(); ++it)
+  // Compare the input utterance string to every string in command_list_.
+  for(int it=0; it<command_list_.size(); ++it)
   {
-    found = utterance.data.find(it->first);	// look for a valid voice command key in utterance
-    if (found!=std::string::npos) {		// if valid voice command key was found in utterance
-      latest_command.code = it->second;		// take the command code that corresponds to this key
-      valid_command = true;			// set valid_command_ TRUE
+    if ( s == command_list_.at(it)) {		// if valid voice command was found in utterance
+      latest_command.cmd_string = command_list_.at(it);		// take the command
+      valid_command = true;
+      ROS_INFO_STREAM("Matched command: " << latest_command.cmd_string );
     } // end if
   } // end for
   
@@ -86,9 +87,9 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
 void Interpreter::displayRecognizedVoiceCommands()
 {
   ROS_INFO("All the accepted utterances are:");
-  for(std::map<std::string, uint8_t>::iterator it = command_map_.begin(); it != command_map_.end(); ++it)
+  for(int it=0; it<command_list_.size(); ++it)
   {
-    std::cout << " == " << it->first << "\n";
+    std::cout << " == " << command_list_.at(it) << "\n";
   }
   
   return;

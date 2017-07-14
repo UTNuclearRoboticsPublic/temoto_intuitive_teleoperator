@@ -49,7 +49,8 @@
 // Other includes
 #include <cstdlib>
 #include <iostream>
-#include <algorithm>    // std::reverse
+#include <algorithm>
+#include <string>
 
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
@@ -63,9 +64,9 @@ public:
   
   // Callout functions
   
-  void callRobotMotionInterface(uint8_t action_type);
+  void callRobotMotionInterface(std::string action_type);
   
-  void callRobotMotionInterfaceWithNamedTarget(uint8_t action_type, std::string named_target);
+  void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
   
   void computeCartesian(std::string frame_id);
 

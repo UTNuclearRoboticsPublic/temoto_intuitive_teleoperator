@@ -44,6 +44,7 @@
 
 // Other includes
 #include "string.h"
+#include <vector>
 
 
 class Interpreter
@@ -55,28 +56,24 @@ public:
   };
   
   /** Maps verbal instructions to specific command code. */
-  std::map<std::string, uint8_t> command_map_ =
+  std::vector<std::string> command_list_ =
   {
-    {"stop stop", 0x00},		// stop or abort command
-    {"robot please plan", 0x01},	// command PLAN
-    {"robot please execute", 0x02},	// command EXECUTE plan
-    {"robot plan and go", 0x03},		// command PLAN&EXECUTE
-    {"robot plan home", 0xf1},	// command PLAN to a saved home pose
-    {"robot please go home", 0xf3},	// command PLAN&EXECUTE the home pose
-    {"natural control mode", 0x10},	// control mode determines whether operator has natural or inverted view
-    {"inverted control mode", 0x11},	// control mode determines whether operator has natural or inverted view
-    {"free directions", 0x20},		// complete position of hand is used
-    {"limit directions", 0x21},		// some directions may be limited
-    {"consider rotation", 0x22},	// factors in hand orientation
-    {"ignore rotation", 0x23},		// hand orientation is ignored, i.e. using hand position only
-    {"new", 0x34},			// first point in waypoints
-    {"add", 0x35},			// adds a point into waypoints
-    {"remove last", 0x36},		// removes the last waypoint
-    {"cancel cartesian", 0x37},		// clears all the cartesian waypoints
-    {"manipulation", 0x40},		// operator controls robot manipulator (MoveIt!)
-    {"navigation", 0x41},		// operator navigates the robot base (ROS_navigation)
+    {"stop stop"},		// stop or abort command
+    {"robot please plan"},	// command PLAN
+    {"robot please execute"},	// command EXECUTE plan
+    {"robot plan and go"},		// command PLAN&EXECUTE
+    {"robot plan home"},	// command PLAN to a saved home pose
+    {"robot please go home"},	// command PLAN&EXECUTE the home pose
+    {"natural control mode"},	// control mode determines whether operator has natural or inverted view
+    {"inverted control mode"},	// control mode determines whether operator has natural or inverted view
+    {"free directions"},		// complete position of hand is used
+    {"limit directions"},		// some directions may be limited
+    {"consider rotation"},	// factors in hand orientation
+    {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
+    {"manipulation"},		// operator controls robot manipulator (MoveIt!)
+    {"navigation"},		// operator navigates the robot base (ROS_navigation)
     
-    {"okay robot execute", 0x66}	// demo testing: placeholder command for some subtask
+    {"okay robot execute"}	// demo testing: placeholder command for some subtask
   };
   
   /** Publisher for recognized voice commands. */
@@ -91,6 +88,6 @@ public:
   /** Callback for subscribed utterances. */
   void utteranceToRecognizedCommand (std_msgs::String utterance);
   
-  /** Prints out all the keys in command_map_. */
+  /** Prints out all the keys in command_list_. */
   void displayRecognizedVoiceCommands();
 };

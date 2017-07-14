@@ -33,6 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
+#include "temoto/motion_actions.h"
 #include "temoto/navigate_robot.h"
 
 /** This method is executed when temoto/navigate_robot_service service is called.
@@ -48,7 +49,7 @@ bool NavigateRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 //  ROS_INFO("[temoto/navigate_robot] New service update requested.");
   
   // check first if abort navigation has been requested.
-  if (req.action_type == temoto::GoalRequest::ABORT)
+  if (req.action_type == motion_actions::ABORT )
   {
     stop_navigation_ = true;
     return true;
