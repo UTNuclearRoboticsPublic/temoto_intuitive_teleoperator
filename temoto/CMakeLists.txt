@@ -21,11 +21,6 @@ find_package(catkin REQUIRED COMPONENTS
   griffin_powermate
   leap_motion_controller
   robotiq_s_model_control
-  keyboard_reader
-#   cv_bridge
-#   roslib
-#   rospeex_if
-#   rospeex_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -173,10 +168,6 @@ add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
 add_executable(navigate_robot src/navigate_robot.cpp)
 target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
-
-add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)
-target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)
-add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 
 #############
 ## Install ##
