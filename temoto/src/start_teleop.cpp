@@ -41,7 +41,7 @@
  *  @param manipulate enables teleoperation for move interface.
  */
 Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, ros::NodeHandle& n)
-/* : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread */
+ : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
 {
   scale_by_ = 1;
   using_natural_control_ = true;	// always start in natural control perspective
@@ -491,106 +491,110 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     pub_abort_.publish(s);
   }
   
-  if (voice_command.cmd_string == "robot please plan")
+  if (executing_preplanned_sequence_==false)  // Normal temoto motions are OK if a preplanned sequence isn't running
   {
-    ROS_INFO("Voice command received! Planning ...");
-    callRobotMotionInterface(low_level_cmds::PLAN);
-  }
-  else if (voice_command.cmd_string == "robot please execute")
-  {
-    ROS_INFO("Voice command received! Executing last plan ...");
-    callRobotMotionInterface(low_level_cmds::EXECUTE);
-  }
-  else if (voice_command.cmd_string == "robot plan and go")
-  {
-    ROS_INFO("Voice command received! Planning and moving ...");
-    callRobotMotionInterface(low_level_cmds::GO);
-  }
-  else if (voice_command.cmd_string == "robot plan home")
-  {
-    ROS_INFO("Voice command received! Planning to home ...");
-    callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
-  }
-  else if (voice_command.cmd_string == "robot please go home")
-  {
-    ROS_INFO("Voice command received! Planning and moving to home ...");
-    callRobotMotionInterfaceWithNamedTarget(low_level_cmds::GO, "home_pose");
-  }
-  else if (voice_command.cmd_string == "natural control mode")
-  {
-    ROS_INFO("Voice command received! Using natural control perspective ...");
-    temoto::ChangeTf switch_human2robot_tf;
-    switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
-    switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
-    // if service request successful, change the value of control perspective in this node
-    if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = true;
-  }
-  else if (voice_command.cmd_string == "inverted control mode")
-  {
-    ROS_INFO("Voice command received! Using inverted control perspective ...");
-    temoto::ChangeTf switch_human2robot_tf;
-    switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
-    switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
-    // if service request successful, change the value of control perspective in this node
-    if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = false;
-  }
-  else if (voice_command.cmd_string == "free directions")
-  {
-    ROS_INFO("Voice command received! Acknowledging 'Free directions' ...");
-    position_limited_ = false;
-    position_fwd_only_ = false;				// once input position is not limited, there cannot be "forward only" mode
-  }
-  else if (voice_command.cmd_string == "limit directions")
-  {
-    ROS_INFO("Voice command received! Acknowledging 'Limit directions' ...");
-    position_limited_ = true;
-  }
-  else if (voice_command.cmd_string == "consider rotation")
-  {
-    ROS_INFO("Voice command received! Considering hand rotation/orientation ...");
-    orientation_locked_ = false;
-  }
-  else if (voice_command.cmd_string == "ignore rotation")
-  {
-    ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
-    orientation_locked_ = true;
-  }
-  else if (voice_command.cmd_string == "manipulation" && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
-  { 
-    ROS_INFO("Voice command received! Going into MANIPULATION mode  ...");
-    AMP_HAND_MOTION_ = 10;
-    temoto::ChangeTf switch_human2robot_tf;
-    switch_human2robot_tf.request.navigate = false;	// request a change of control mode
-    switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
-    // if service request successful, change the value of control mode in this node
-    if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
-  }
-  else if (voice_command.cmd_string == "navigation" && control_state_ != 1)	// Switch over to navigation mode
-  { 
-    ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
-    AMP_HAND_MOTION_ = 100;
-    temoto::ChangeTf switch_human2robot_tf;
-    switch_human2robot_tf.request.navigate = true;	// request a change of control mode
-    switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
-    // if service request successful, change the value of control mode in this node
-    if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
-  }
-  else if (voice_command.cmd_string == "turn handle clockwise")			// Start this pre-planned motion
-  {
-    ROS_INFO("Voice command received! Turning the handle clockwise ...");
+    if (voice_command.cmd_string == "robot please plan")
+    {
+      ROS_INFO("Voice command received! Planning ...");
+      callRobotMotionInterface(low_level_cmds::PLAN);
+    }
+    else if (voice_command.cmd_string == "robot please execute")
+    {
+      ROS_INFO("Voice command received! Executing last plan ...");
+      callRobotMotionInterface(low_level_cmds::EXECUTE);
+    }
+    else if (voice_command.cmd_string == "robot plan and go")
+    {
+      ROS_INFO("Voice command received! Planning and moving ...");
+      callRobotMotionInterface(low_level_cmds::GO);
+    }
+    else if (voice_command.cmd_string == "robot plan home")
+    {
+      ROS_INFO("Voice command received! Planning to home ...");
+      callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
+    }
+    else if (voice_command.cmd_string == "robot please go home")
+    {
+      ROS_INFO("Voice command received! Planning and moving to home ...");
+      callRobotMotionInterfaceWithNamedTarget(low_level_cmds::GO, "home_pose");
+    }
+    else if (voice_command.cmd_string == "natural control mode")
+    {
+      ROS_INFO("Voice command received! Using natural control perspective ...");
+      temoto::ChangeTf switch_human2robot_tf;
+      switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
+      switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+      // if service request successful, change the value of control perspective in this node
+      if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = true;
+    }
+    else if (voice_command.cmd_string == "inverted control mode")
+    {
+      ROS_INFO("Voice command received! Using inverted control perspective ...");
+      temoto::ChangeTf switch_human2robot_tf;
+      switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
+      switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+      // if service request successful, change the value of control perspective in this node
+      if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = false;
+    }
+    else if (voice_command.cmd_string == "free directions")
+    {
+      ROS_INFO("Voice command received! Acknowledging 'Free directions' ...");
+      position_limited_ = false;
+      position_fwd_only_ = false;				// once input position is not limited, there cannot be "forward only" mode
+    }
+    else if (voice_command.cmd_string == "limit directions")
+    {
+      ROS_INFO("Voice command received! Acknowledging 'Limit directions' ...");
+      position_limited_ = true;
+    }
+    else if (voice_command.cmd_string == "consider rotation")
+    {
+      ROS_INFO("Voice command received! Considering hand rotation/orientation ...");
+      orientation_locked_ = false;
+    }
+    else if (voice_command.cmd_string == "ignore rotation")
+    {
+      ROS_INFO("Voice command received! Ignoring hand rotation/orientation ...");
+      orientation_locked_ = true;
+    }
+    else if (voice_command.cmd_string == "manipulation" && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
+    { 
+      ROS_INFO("Voice command received! Going into MANIPULATION mode  ...");
+      AMP_HAND_MOTION_ = 10;
+      temoto::ChangeTf switch_human2robot_tf;
+      switch_human2robot_tf.request.navigate = false;	// request a change of control mode
+      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
+      // if service request successful, change the value of control mode in this node
+      if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
+    }
+    else if (voice_command.cmd_string == "navigation" && control_state_ != 1)	// Switch over to navigation mode
+    { 
+      ROS_INFO("Voice command received! Going into NAVIGATION mode  ...");
+      AMP_HAND_MOTION_ = 100;
+      temoto::ChangeTf switch_human2robot_tf;
+      switch_human2robot_tf.request.navigate = true;	// request a change of control mode
+      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
+      // if service request successful, change the value of control mode in this node
+      if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
+    }
+    else if (voice_command.cmd_string == "turn handle clockwise")			// Start this pre-planned motion
+    {
+      ROS_INFO("Voice command received! Turning the handle clockwise ...");
 
-/*
-    // Trigger the service and wait for it to complete
-    std_msgs::String sequence_name;
-    sequence_name.data = "turn_handle_clockwise";
-    preplanned_sequence_client_.waitForServer();
-    preplanned_sequence_client_.sendGoal(sequence_name);
-*/
-  }
+      // Trigger the service and wait for it to complete
+      temoto::PreplannedSequenceGoal goal;
+      goal.sequence_name = 1;
+      //preplanned_sequence_client_.waitForServer();
+      preplanned_sequence_client_.sendGoal(goal);
+
+      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
+      executing_preplanned_sequence_ = true;
+    }
   
-  else
-  {
-    ROS_INFO("Voice command received! Unknown voice command.");
+    else
+    {
+      ROS_INFO("Voice command received! Unknown voice command.");
+    }
   }
   return;
 }

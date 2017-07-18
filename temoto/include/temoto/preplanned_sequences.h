@@ -13,22 +13,18 @@
 class preplanned_sequence {
   public:
     preplanned_sequence();
-
-  private:
     ros::NodeHandle n_;
 
+  private:
     // Set a flag that the "abort" command was heard
     ros::Subscriber abort_sub_;
     void abort_cb_(const std_msgs::String::ConstPtr& msg);
 
     // Listen for a new "preplanned sequence goal", which is a string
-    // TO DO: this is not being initialized correctly
-    //actionlib::SimpleActionServer<temoto::PreplannedSequenceAction> sequence_server_;
+    actionlib::SimpleActionServer<temoto::PreplannedSequenceAction> sequence_server_;
 
-/*
     // Callback. Gets called by an incoming action server goal
-    void initiate_sequence_(const temoto::PreplannedSequenceActionGoalConstPtr& goal, actionlib::SimpleActionServer<temoto::PreplannedSequenceAction>* as)
-*/
-  
+    static void initiate_sequence_(const temoto::PreplannedSequenceGoalConstPtr& goal, actionlib::SimpleActionServer<temoto::PreplannedSequenceAction>* as);
+
    bool abort_ = false;
 };

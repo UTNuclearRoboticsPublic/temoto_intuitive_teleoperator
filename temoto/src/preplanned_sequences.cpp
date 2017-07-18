@@ -35,18 +35,18 @@
 
 #include "temoto/preplanned_sequences.h"
 
+
 // Action server CB: launch a preplanned sequence, as selected by the incoming command.
 // It's an action server to be interruptible.
-/*
-void initiate_sequence_(const temoto::PreplannedSequenceActionGoalConstPtr& goal, actionlib::SimpleActionServer<temoto::PreplannedSequenceAction>* as)
+void preplanned_sequence::initiate_sequence_(const temoto::PreplannedSequenceGoalConstPtr& goal, actionlib::SimpleActionServer<temoto::PreplannedSequenceAction>* as)
 {
-  //ROS_INFO_STREAM("[preplanned_sequences] Starting " << goal.sequence_name.data );
+  ROS_INFO_STREAM("[preplanned_sequences] Starting " << goal->sequence_name );
 
   // TO DO: Actually run whatever sequence here...
 
   as->setSucceeded();
 }
-*/
+
 
 // CB: Listen for an ABORT, and set a flag when it's heard
 void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
@@ -58,10 +58,11 @@ void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
 
 // Constructor
 preplanned_sequence::preplanned_sequence()
-  /*: sequence_server_(n_, "temoto/preplanned_sequence", boost::bind(&initiate_sequence_, _1, &sequence_server_), false)*/
+  : sequence_server_(n_, "temoto/preplanned_sequence", boost::bind(&initiate_sequence_, _1, &sequence_server_), false)
 {
   // Listen for abort commands
   abort_sub_ = n_.subscribe("temoto/abort", 1, &preplanned_sequence::abort_cb_, this);
+
 }
 
 
@@ -72,11 +73,6 @@ int main(int argc, char** argv)
   preplanned_sequence sequence;  // An object to process incoming commands
   ros::AsyncSpinner spinner(2);  // 2 threads: execute the given task, and listen for ABORT
   spinner.start();
-
-/*
-  ros::NodeHandle nh;
-  actionlib::SimpleActionServer<temoto::PreplannedSequenceAction> sequence_server_(nh, "temoto/preplanned_sequence", boost::bind(&initiate_sequence_, _1, &sequence_server_), false);
-*/
 
   ros::waitForShutdown();
   return 0;

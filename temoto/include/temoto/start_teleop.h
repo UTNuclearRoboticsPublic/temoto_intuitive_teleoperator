@@ -137,11 +137,12 @@ private:
   bool navigate_to_goal_;		///< TRUE: interpret live_pose_ as 2D navigation goal; FALSE: live_pose_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
   uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
+  bool executing_preplanned_sequence_ = false;
 
   // ROS publishers
   ros::Publisher pub_abort_;
 
   // ROS services/actions
-  //actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence
+  actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence
 };
 #endif
