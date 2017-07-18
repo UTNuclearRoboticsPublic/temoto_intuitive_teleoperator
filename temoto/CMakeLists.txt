@@ -6,21 +6,23 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS
+find_package(catkin REQUIRED
+  actionlib
+  actionlib_msgs
+  genmsg
+  geometry_msgs
+  griffin_powermate
+  leap_motion_controller
+  message_generation
+  move_base_msgs
+  moveit_core
+  moveit_ros_planning_interface
+  robotiq_s_model_control
   roscpp
   rospy
   std_msgs
-  geometry_msgs
-  message_generation
-  moveit_core
-  moveit_ros_planning_interface
   tf
-  move_base_msgs
-  actionlib
   view_controller_msgs
-  griffin_powermate
-  leap_motion_controller
-  robotiq_s_model_control
 )
 
 ## System dependencies are found with CMake's conventions
@@ -72,17 +74,17 @@ add_service_files(
 )
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(DIRECTORY action
+   FILES
+   PreplannedSequenceAction.action
+)
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs
+  actionlib_msgs
   geometry_msgs
+  std_msgs
 )
 
 ################################################
@@ -129,6 +131,7 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
+  action
   include
   ${catkin_INCLUDE_DIRS}
 )
@@ -168,6 +171,10 @@ add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
 add_executable(navigate_robot src/navigate_robot.cpp)
 target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
+
+add_executable(preplanned_sequences src/preplanned_sequences.cpp)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES})
+add_dependencies(preplanned_sequences temoto_generate_messages_cpp)
 
 #############
 ## Install ##

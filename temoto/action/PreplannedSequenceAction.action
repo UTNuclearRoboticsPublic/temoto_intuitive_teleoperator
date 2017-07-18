@@ -1,0 +1,8 @@
+# Define the goal
+uint32 sequence_name  # Name the sequence to run, e.g. "turn handle clockwise"
+---
+# Define the result (typically an incremental result, but just boolean in this case)
+uint32 in_progress
+---
+# Define a feedback message
+uint32 success

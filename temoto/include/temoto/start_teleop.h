@@ -34,14 +34,18 @@
  */
 
 // ROS includes
-#include "ros/ros.h"
+#include <actionlib/client/simple_action_client.h>
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "ros/ros.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/String.h"
 #include "tf/tf.h"
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
+#include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
 #include "leap_motion_controller/Set.h"
 #include "griffin_powermate/PowermateEvent.h"
@@ -60,7 +64,7 @@ class Teleoperator
 public:
   // Constructor
   
-  Teleoperator(std::string primary_hand, bool navigate, bool manipulate);
+  Teleoperator(std::string primary_hand, bool navigate, bool manipulate, ros::NodeHandle& n);
   
   // Callout functions
   
@@ -94,11 +98,6 @@ public:
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame.
-  
-//   NavigateRobotInterface navigate_robot_ifclient_;
-  
-  // Temporary flags
-  std_msgs::Bool okay_robot_execute;
 
 private:
   /// Local TransformListener for transforming poses
@@ -138,5 +137,11 @@ private:
   bool navigate_to_goal_;		///< TRUE: interpret live_pose_ as 2D navigation goal; FALSE: live_pose_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
   uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
+
+  // ROS publishers
+  ros::Publisher pub_abort_;
+
+  // ROS services/actions
+  //actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence
 };
 #endif

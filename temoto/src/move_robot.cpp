@@ -33,7 +33,7 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "temoto/motion_actions.h"
+#include "temoto/low_level_cmds.h"
 #include "temoto/move_robot.h"
 
 /** This method is executed when temoto/move_robot_service service is called.
@@ -124,7 +124,7 @@ void MoveRobotInterface::requestMove()
   ROS_INFO("[move_robot/requestMove] Target pose (orien x, y, z, w): (%f, %f, %f, %f)", current_target.pose.orientation.x, current_target.pose.orientation.y, current_target.pose.orientation.z, current_target.pose.orientation.w);
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
-  if ( req_action_type_ == motion_actions::PLAN )
+  if ( req_action_type_ == low_level_cmds::PLAN )
   {
     ROS_INFO("[move_robot/requestMove] Starting to plan ...");
     ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
@@ -132,7 +132,7 @@ void MoveRobotInterface::requestMove()
     new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
     ROS_INFO("[move_robot/requestMove] DONE planning.");
   }
-  else if ( req_action_type_ == motion_actions::EXECUTE )
+  else if ( req_action_type_ == low_level_cmds::EXECUTE )
   {
     ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
     if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );	// If there is a new plan, execute latest_plan_.
@@ -140,7 +140,7 @@ void MoveRobotInterface::requestMove()
     new_plan_available_ = false;					// Either case, set new_plan_available_ to FALSE.
     ROS_INFO("[move_robot/requestMove] DONE executing the plan");
   }
-  else if ( req_action_type_ == motion_actions::GO )
+  else if ( req_action_type_ == low_level_cmds::GO )
   {
     ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
 //     robot.move();						// Plan and execute.

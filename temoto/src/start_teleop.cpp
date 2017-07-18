@@ -33,7 +33,6 @@
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "temoto/motion_actions.h"
 #include "temoto/start_teleop.h"
 
 /** Constructor for Teleoperator.
@@ -41,7 +40,8 @@
  *  @param navigate enables teleoperation for navigation interface.
  *  @param manipulate enables teleoperation for move interface.
  */
-Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate)
+Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, ros::NodeHandle& n)
+/* : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread */
 {
   scale_by_ = 1;
   using_natural_control_ = true;	// always start in natural control perspective
@@ -49,12 +49,21 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   position_limited_ = true;
   position_fwd_only_ = false;
   secondary_hand_before_ = false;
-    
+  pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
+
+  // client for /temoto/move_robot_service
+  move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
+  // client for /temoto/navigate_robot_srv
+  navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
+  // client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
+  tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_human2robot_tf");
+  // client for starting and waiting on a preplanned sequence
+
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate && navigate)
   {
     control_state_ = 3;
-    navigate_to_goal_ = true;		// if navigation AND manipulation are enable, start out in navigation mode.
+    navigate_to_goal_ = true;		// if navigation AND manipulation are enabled, start out in navigation mode.
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (navigate && !manipulate)
@@ -82,8 +91,6 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   {
     primary_hand_is_left_ = true;
   }
-  
-  okay_robot_execute.data = false;
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.
@@ -103,7 +110,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   if (navigate_to_goal_) // if in NAVIGATION mode
   {
     // If operator requested ABORT
-    if (action_type == motion_actions::ABORT)
+    if (action_type == low_level_cmds::ABORT)
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to stop navigation.");
       // make a service request to stop the robot
@@ -118,7 +125,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       return;
     } // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
-    else if (action_type == motion_actions::GO)
+    else if (action_type == low_level_cmds::GO)
     {  
       // ------------------------- DEBUG START {
       double lm_roll, lm_pitch, lm_yaw;
@@ -466,40 +473,48 @@ geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs:
  */
 void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 {
-  if (voice_command.cmd_string == motion_actions::ABORT)
+  if (voice_command.cmd_string == "stop stop")
   {
     ROS_INFO("Voice command received! Stopping ...");
-    // Request abort motion
-    callRobotMotionInterface(motion_actions::ABORT);
-    
-    // stop the test task
-    okay_robot_execute.data = false;
+    // Stop motions within temoto
+    callRobotMotionInterface(low_level_cmds::ABORT);
+
+    // Publish to tell non-Temoto actions to abort
+    std_msgs::String s;
+    s.data = low_level_cmds::ABORT;
+    pub_abort_.publish(s);
   }
-  else if (voice_command.cmd_string == "robot please plan")
+  else  // No need to abort
+  {
+    std_msgs::String s;
+    s.data = low_level_cmds::NO_ABORT;
+    pub_abort_.publish(s);
+  }
+  
+  if (voice_command.cmd_string == "robot please plan")
   {
     ROS_INFO("Voice command received! Planning ...");
-    ROS_INFO_STREAM("The argument was: " << motion_actions::PLAN);
-    callRobotMotionInterface(motion_actions::PLAN);
+    callRobotMotionInterface(low_level_cmds::PLAN);
   }
   else if (voice_command.cmd_string == "robot please execute")
   {
     ROS_INFO("Voice command received! Executing last plan ...");
-    callRobotMotionInterface(motion_actions::EXECUTE);
+    callRobotMotionInterface(low_level_cmds::EXECUTE);
   }
   else if (voice_command.cmd_string == "robot plan and go")
   {
     ROS_INFO("Voice command received! Planning and moving ...");
-    callRobotMotionInterface(motion_actions::GO);
+    callRobotMotionInterface(low_level_cmds::GO);
   }
   else if (voice_command.cmd_string == "robot plan home")
   {
     ROS_INFO("Voice command received! Planning to home ...");
-    callRobotMotionInterfaceWithNamedTarget(motion_actions::PLAN, "home_pose");
+    callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
   }
   else if (voice_command.cmd_string == "robot please go home")
   {
     ROS_INFO("Voice command received! Planning and moving to home ...");
-    callRobotMotionInterfaceWithNamedTarget(motion_actions::GO, "home_pose");
+    callRobotMotionInterfaceWithNamedTarget(low_level_cmds::GO, "home_pose");
   }
   else if (voice_command.cmd_string == "natural control mode")
   {
@@ -560,10 +575,17 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     // if service request successful, change the value of control mode in this node
     if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
   }
-  else if (voice_command.cmd_string == "okay robot execute")			// test command for some subtask
+  else if (voice_command.cmd_string == "turn handle clockwise")			// Start this pre-planned motion
   {
-    ROS_INFO("Executing subtask. Setting okay_robot_execute to TRUE.");
-    okay_robot_execute.data = true;
+    ROS_INFO("Voice command received! Turning the handle clockwise ...");
+
+/*
+    // Trigger the service and wait for it to complete
+    std_msgs::String sequence_name;
+    sequence_name.data = "turn_handle_clockwise";
+    preplanned_sequence_client_.waitForServer();
+    preplanned_sequence_client_.sendGoal(sequence_name);
+*/
   }
   
   else
@@ -594,7 +616,7 @@ temoto::Status Teleoperator::getStatus()
   return status;
 } // end getStatus()
 
-/** Main method. */
+/** MAIN */
 int main(int argc, char **argv)
 {
   // ROS init
@@ -621,15 +643,7 @@ int main(int argc, char **argv)
   pn.param<bool>("manipulate", manipulate, true);
   
   // Instance of Teleoperator
-  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate);
- 
-  // Setup Teleoperator ROS clients
-  // ROS client for /temoto/move_robot_service
-  temoto_teleop.move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
-  // ROS client for /temoto/navigate_robot_srv
-  temoto_teleop.navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
-  // ROS client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
-  temoto_teleop.tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_human2robot_tf");
+  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate, n);
 
   // Wait for human_frame_broadcaster to come on-line.
   while( !temoto_teleop.tf_change_client_.waitForExistence(ros::Duration(1)) )
@@ -652,36 +666,17 @@ int main(int argc, char **argv)
   // ROS subscriber on /temoto/end_effector_pose
   ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, &temoto_teleop);
   
-  // Setup ROS publisher for Teleoperator::getStatus()
+  // Publisher for Teleoperator::getStatus()
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
   
-//   // ==== This code is required to trigger contact task demo. ==============================
-//   // ROS publisher for triggering compliant contact task demo.
-//   ros::Publisher pub_cc_demo_trigger = n.advertise<std_msgs::Bool>("enable_compliance", 1);
-//   bool compliance_is_on = false;
-//   // =======================================================================================
-  
   ROS_INFO("Starting teleoperation ...");
-  
   
   while ( ros::ok() )
   {
     // publish status current
     pub_status.publish( temoto_teleop.getStatus() );
     
-//     // ==== This code is required to trigger contact task demo. ==============================
-//     if (compliance_is_on != temoto_teleop.okay_robot_execute.data)
-//     {
-//       // publish the current value for okay_robot_execute
-//       pub_cc_demo_trigger.publish( temoto_teleop.okay_robot_execute );
-//       compliance_is_on = temoto_teleop.okay_robot_execute.data;
-//     }
-//     // =======================================================================================
-    
-    // spins once to update subscribers or something like that
     ros::spinOnce();
-    
-    // sleep to meet rate
     node_rate.sleep();
   } // end while
   

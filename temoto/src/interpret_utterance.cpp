@@ -54,7 +54,7 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   s = s.substr(0, s.size()-1);  // Subtract last char
   
   // Print the output of pocketsphinx_recognizer
-  ROS_INFO_STREAM("[interpret_utterance] I think you just said: " << s);
+  //ROS_INFO_STREAM("[interpret_utterance] I think you just said: " << s);
  
   // Compare the input utterance string to every string in command_list_.
   for(int it=0; it<command_list_.size(); ++it)
@@ -62,7 +62,6 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
     if ( s == command_list_.at(it)) {		// if valid voice command was found in utterance
       latest_command.cmd_string = command_list_.at(it);		// take the command
       valid_command = true;
-      ROS_INFO_STREAM("Matched command: " << latest_command.cmd_string );
     } // end if
   } // end for
   

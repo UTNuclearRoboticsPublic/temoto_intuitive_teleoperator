@@ -3,9 +3,10 @@
 
 #include <string>
 
-namespace motion_actions
+namespace low_level_cmds
 {
   const std::string ABORT = "abort";
+  const std::string NO_ABORT = "no_abort";
   const std::string GO = "go";
   const std::string EXECUTE = "execute";
   const std::string PLAN = "plan"; 
