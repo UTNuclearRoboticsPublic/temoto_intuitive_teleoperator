@@ -25,6 +25,8 @@ find_package(catkin REQUIRED
   view_controller_msgs
 )
 
+find_package (ur_script_compliance REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(
 # Boost REQUIRED COMPONENTS system
@@ -119,7 +121,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs roscpp rospy std_msgs geometry_msgs
+ CATKIN_DEPENDS actionlib_msgs roscpp rospy std_msgs geometry_msgs ur_script_compliance
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )
@@ -133,6 +135,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${ur_script_compliance_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -140,6 +143,9 @@ include_directories(
 add_library(temoto_common src/temoto_common.cpp)
 target_link_libraries(temoto_common ${catkin_LIBRARIES})
 add_dependencies(temoto_common temoto_generate_messages_cpp)
+
+add_library(turn_handle_clockwise src/preplanned_sequences/turn_handle_clockwise.cpp)
+target_link_libraries(turn_handle_clockwise ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
 
 ## Declare a C++ executable
 
@@ -172,8 +178,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES})
-add_dependencies(preplanned_sequences temoto_generate_messages_cpp)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} turn_handle_clockwise)
 
 #############
 ## Install ##

@@ -43,7 +43,7 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
   ROS_INFO_STREAM("[preplanned_sequences] Starting \"" << goal->sequence_name << "\"" );
   result_.success = false;
 
-  // TO DO: Actually run whatever sequence here...
+  turn_handle_clockwise();
   ros::Duration(5).sleep();
 
   // Action server: return the successful completion
@@ -52,7 +52,8 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
 }
 
 
-// Topic CB: Listen for an ABORT, and set a flag when it's heard
+// Topic CB: Listen for an ABORT, and set a flag when it's heard.
+// This provides a method of halting preplanned sequences.
 void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
 {
   if ( msg-> data.c_str() == low_level_cmds::ABORT)

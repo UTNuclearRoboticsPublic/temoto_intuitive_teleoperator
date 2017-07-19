@@ -1,3 +1,6 @@
+#ifndef PREPLANNED_SEQUENCES_H
+#define PREPLANNED_SEQUENCES_H
+
 // ROS includes
 #include <actionlib/server/simple_action_server.h>
 #include "std_msgs/Bool.h"
@@ -5,8 +8,9 @@
 #include "ros/ros.h"
 
 // temoto includes
+#include "temoto/preplanned_sequences/turn_handle_clockwise.h"
 #include "temoto/low_level_cmds.h"
-#include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how the sequence gets triggered
+#include "temoto/PreplannedSequenceAction.h"  // ROS Action. This is how the preplanned sequence gets triggered
 
 // Other includes
 
@@ -43,3 +47,5 @@ class preplanned_sequence {
     void abort_cb_(const std_msgs::String::ConstPtr& msg);
     bool abort_ = false;
 };
+
+#endif
