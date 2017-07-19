@@ -399,11 +399,12 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
   live_pose_.header.stamp = ros::Time(0);//ros::Time::now();
 
   // Print position info to terminal
-  printf("Scale motion by %f; move robot end-effector by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
-	   AMP_HAND_MOTION_*scale_by_, live_pose_.pose.position.x*1000, live_pose_.pose.position.y*1000, live_pose_.pose.position.z*1000, position_fwd_only_);
+  /*printf("Scale motion by %f; move robot end-effector by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
+	   AMP_HAND_MOTION_*scale_by_, live_pose_.pose.position.x*1000, live_pose_.pose.position.y*1000, live_pose_.pose.position.z*1000, position_fwd_only_); */
 
   return;
 } // end processLeap
+
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
@@ -433,8 +434,8 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     scale_by_ = scale_by_ + step;		// increase/decrease scale_by
     if (scale_by_ > 1) scale_by_ = 1;		// to ensure that scale_by is never larger than 1
     // Print position info to terminal
-    printf("Scale motion by %f; move SIA5 by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
-	    AMP_HAND_MOTION_*scale_by_, live_pose_.pose.position.x*1000, live_pose_.pose.position.y*1000, live_pose_.pose.position.z*1000, position_fwd_only_);
+    /*printf("Scale motion by %f; move SIA5 by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
+	    AMP_HAND_MOTION_*scale_by_, live_pose_.pose.position.x*1000, live_pose_.pose.position.y*1000, live_pose_.pose.position.z*1000, position_fwd_only_);*/
     return;
   } // else
 } // end processPowermate()
@@ -448,6 +449,19 @@ void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector
   current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
   return;
 } // end processEndeffector()
+
+
+/** Callback function for /temoto/preplanned_sequence/result
+ *  Sets the "executing_preplanned_sequence_" flag. If true, other Temoto commands are blocked.
+ * @param sequence_result true indicates a preplanned sequence has completed
+*/
+void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result)
+{
+  // Successfully completed the preplanned sequence ==> false for blocking other temoto commands
+  executing_preplanned_sequence_ = !sequence_result.result.success;
+  if ( !executing_preplanned_sequence_ )
+    ROS_INFO_STREAM("The preplanned sequence is complete.");
+}
 
 
 /** This function fixes the quaternion of a pose input in 'inverted control mode'.
@@ -467,12 +481,16 @@ geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs:
   return quaternion_msg_out;
 }
 
+
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
  */
 void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 {
+  /////////////////////////
+  //  Handle ABORT commands
+  /////////////////////////
   if (voice_command.cmd_string == "stop stop")
   {
     ROS_INFO("Voice command received! Stopping ...");
@@ -490,8 +508,14 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     s.data = low_level_cmds::NO_ABORT;
     pub_abort_.publish(s);
   }
-  
-  if (executing_preplanned_sequence_==false)  // Normal temoto motions are OK if a preplanned sequence isn't running
+
+
+  ////////////////////////////////////
+  //  Handle all commands except ABORT
+  ////////////////////////////////////
+  if (executing_preplanned_sequence_==true)
+    ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
+  else  // Normal temoto motions are OK if a preplanned sequence isn't running
   {
     if (voice_command.cmd_string == "robot please plan")
     {
@@ -581,10 +605,10 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       ROS_INFO("Voice command received! Turning the handle clockwise ...");
 
-      // Trigger the service and wait for it to complete
+      // Trigger the Action
       temoto::PreplannedSequenceGoal goal;
-      goal.sequence_name = 1;
-      //preplanned_sequence_client_.waitForServer();
+      goal.sequence_name = "turn handle clockwise";
+      preplanned_sequence_client_.waitForServer();
       preplanned_sequence_client_.sendGoal(goal);
 
       // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
@@ -595,9 +619,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       ROS_INFO("Voice command received! Unknown voice command.");
     }
-  }
+  }  // End of handling non-Abort commands
+
   return;
 }
+
 
 /** Puts all the latest private variable values into temoto/status message.
  *  @return temoto::Status message.
@@ -619,6 +645,7 @@ temoto::Status Teleoperator::getStatus()
 
   return status;
 } // end getStatus()
+
 
 /** MAIN */
 int main(int argc, char **argv)
@@ -661,14 +688,15 @@ int main(int argc, char **argv)
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 
   // Setup ROS subscribers
-  // ROS subscriber on /griffin_powermate
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
-  // ROS subscriber on /leapmotion_general
+
   ros::Subscriber sub_operator_hand = n.subscribe("leap_motion_output", 10,  &Teleoperator::processLeap, &temoto_teleop);
-  // ROS subscriber on /temoto/voice_commands
+
   ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
-  // ROS subscriber on /temoto/end_effector_pose
+
   ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, &temoto_teleop);
+
+  ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
   
   // Publisher for Teleoperator::getStatus()
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);

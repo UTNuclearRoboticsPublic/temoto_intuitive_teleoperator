@@ -59,6 +59,6 @@
 
 
   <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen"/> 
+  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences"/> 
   
 </launch>

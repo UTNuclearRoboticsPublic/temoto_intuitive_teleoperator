@@ -91,6 +91,8 @@ public:
   void processPowermate(griffin_powermate::PowermateEvent powermate);		// TODO rename to more general case, e.g. processScaleFactor
   
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
+
+  void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
   
   void processVoiceCommand(temoto::Command voice_command);
   

@@ -10,21 +10,36 @@
 
 // Other includes
 
+
 class preplanned_sequence {
-  public:
-    preplanned_sequence();
+  protected:
     ros::NodeHandle n_;
+
+    // Listen for a new "preplanned sequence goal", which is a string
+    actionlib::SimpleActionServer<temoto::PreplannedSequenceAction> sequence_server_;
+
+    // create messages that are used to published feedback/result
+    temoto::PreplannedSequenceResult result_;
+
+  public:
+    // Constructor
+    preplanned_sequence()
+     : sequence_server_(n_, "temoto/preplanned_sequence", boost::bind(&preplanned_sequence::execute_CB_, this, _1), false)
+    {
+      // Listen for abort commands
+      abort_sub_ = n_.subscribe("temoto/abort", 1, &preplanned_sequence::abort_cb_, this);
+
+      sequence_server_.start();
+
+    }
+
+    // Action server CB: launch the preplanned sequence, as specified by the incoming command.
+    // Action server allows interruption.
+    void execute_CB_(const temoto::PreplannedSequenceGoalConstPtr& goal);
 
   private:
     // Set a flag that the "abort" command was heard
     ros::Subscriber abort_sub_;
     void abort_cb_(const std_msgs::String::ConstPtr& msg);
-
-    // Listen for a new "preplanned sequence goal", which is a string
-    actionlib::SimpleActionServer<temoto::PreplannedSequenceAction> sequence_server_;
-
-    // Callback. Gets called by an incoming action server goal
-    static void initiate_sequence_(const temoto::PreplannedSequenceGoalConstPtr& goal, actionlib::SimpleActionServer<temoto::PreplannedSequenceAction>* as);
-
-   bool abort_ = false;
+    bool abort_ = false;
 };
