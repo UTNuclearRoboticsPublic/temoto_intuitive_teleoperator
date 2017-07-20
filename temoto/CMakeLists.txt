@@ -147,6 +147,9 @@ add_dependencies(temoto_common temoto_generate_messages_cpp)
 add_library(turn_handle_clockwise src/preplanned_sequences/turn_handle_clockwise.cpp)
 target_link_libraries(turn_handle_clockwise ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
 
+add_library(turn_handle_counterclockwise src/preplanned_sequences/turn_handle_counterclockwise.cpp)
+target_link_libraries(turn_handle_counterclockwise ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
+
 ## Declare a C++ executable
 
 add_executable(move_robot src/move_robot.cpp)
@@ -178,7 +181,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} turn_handle_clockwise)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} turn_handle_clockwise turn_handle_counterclockwise)
 
 #############
 ## Install ##

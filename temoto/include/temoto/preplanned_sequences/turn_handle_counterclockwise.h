@@ -1,5 +1,5 @@
-#ifndef TURN_HANDLE_CLOCKWISE_H
-#define TURN_HANDLE_CLOCKWISE_H
+#ifndef TURN_HANDLE_COUNTERCLOCKWISE_H
+#define TURN_HANDLE_COUNTERCLOCKWISE_H
 
 #include "geometry_msgs/PoseStamped.h"
 #include "geometry_msgs/Quaternion.h"
@@ -10,12 +10,13 @@
 #include <tf/transform_datatypes.h>
 #include "ur_script_compliance.h"
 
-namespace turn_handle_clockwise
+namespace turn_handle_counterclockwise
 {
-  int turn_handle_clockwise();
+  int turn_handle_counterclockwise();
 
   void enable_compliance(ur_script_compliance& right);
 
   int rotate(ros::NodeHandle* nhPtr);
 }
+
 #endif

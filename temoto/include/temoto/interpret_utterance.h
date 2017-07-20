@@ -72,7 +72,8 @@ public:
     {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
-    {"turn handle clockwise"}	// demo testing: placeholder command for some subtask
+    {"turn handle clockwise"},	// a preplanned sequence
+    {"turn handle counterclockwise"}	// a preplanned sequence
   };
   
   /** Publisher for recognized voice commands. */

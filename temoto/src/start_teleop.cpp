@@ -607,7 +607,20 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
       // Trigger the Action
       temoto::PreplannedSequenceGoal goal;
-      goal.sequence_name = "turn handle clockwise";
+      goal.sequence_name = voice_command.cmd_string;
+      preplanned_sequence_client_.waitForServer();
+      preplanned_sequence_client_.sendGoal(goal);
+
+      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
+      executing_preplanned_sequence_ = true;
+    }
+    else if (voice_command.cmd_string == "turn handle counterclockwise")			// Start this pre-planned motion
+    {
+      ROS_INFO("Voice command received! Turning the handle counterclockwise ...");
+
+      // Trigger the Action
+      temoto::PreplannedSequenceGoal goal;
+      goal.sequence_name = voice_command.cmd_string;
       preplanned_sequence_client_.waitForServer();
       preplanned_sequence_client_.sendGoal(goal);
 

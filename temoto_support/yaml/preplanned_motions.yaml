@@ -1,4 +1,6 @@
 # A list of preplanned Cartesian motions for the end effector
 temoto_preplanned_motions:
   turn_handle_clockwise:
-    delta1:    [ 0, 0, 0, 0, 0, -1.57 ] # 90 deg. clockwise (about Z of leap_motion_on_robot)
+    delta1:    [ 0, 0, 0, 1.57, 0, 0 ] # 90 deg. clockwise
+  turn_handle_counterclockwise:
+    delta1:    [ 0, 0, 0, -1.57, 0, 0 ] # 90 deg. counterclockwise

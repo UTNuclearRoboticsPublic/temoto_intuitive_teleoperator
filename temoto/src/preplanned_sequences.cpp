@@ -43,10 +43,12 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
   ROS_INFO_STREAM("[preplanned_sequences] Starting \"" << goal->sequence_name << "\"" );
   result_.success = false;
 
-  turn_handle_clockwise();
-  ros::Duration(5).sleep();
+  if (goal->sequence_name == "turn handle clockwise")
+    turn_handle_clockwise::turn_handle_clockwise();
+  else if (goal->sequence_name == "turn handle counterclockwise")
+    turn_handle_counterclockwise::turn_handle_counterclockwise();
 
-  // Action server: return the successful completion
+  // Action server: signal that the sequence is done
   result_.success = true;
   sequence_server_.setSucceeded(result_);
 }
