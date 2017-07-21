@@ -39,13 +39,25 @@ int turn_handle_clockwise::rotate(ros::NodeHandle* nhPtr)
   moveit::planning_interface::MoveGroupInterface move_group("right_ur5");
   moveit::planning_interface::MoveGroupInterface::Plan move_plan;
   move_group.setPlannerId("RRTConnectkConfigDefault");
-  move_group.setMaxVelocityScalingFactor( 0.1 );
+  move_group.setMaxVelocityScalingFactor( 0.005 );
   move_group.setGoalPositionTolerance(0.02);
   move_group.setGoalOrientationTolerance(0.05);
 
   // Get the robot's current position
+  // Sometimes getCurrentPose is incorrect, so check it.
+  // May need a sleep after creating the MoveGroup
   geometry_msgs::PoseStamped pose;
+  geometry_msgs::PoseStamped secondPose;
+
+CHECK_POSE:
   pose = move_group.getCurrentPose();
+  secondPose = move_group.getCurrentPose();
+  if ( 
+    ( fabs(pose.pose.position.x-secondPose.pose.position.x) > 0.001 ) ||
+    ( fabs(pose.pose.position.y-secondPose.pose.position.y) > 0.001 ) ||
+    ( fabs(pose.pose.position.z-secondPose.pose.position.z) > 0.001 )
+    )
+    goto CHECK_POSE;
 
   std::vector<double> rpy = move_group.getCurrentRPY();
 
