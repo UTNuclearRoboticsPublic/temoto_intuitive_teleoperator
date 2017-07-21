@@ -8,6 +8,8 @@
 #include "ros/ros.h"
 
 // temoto includes
+#include "temoto/preplanned_sequences/close_hand.h"
+#include "temoto/preplanned_sequences/open_hand.h"
 #include "temoto/preplanned_sequences/turn_handle_clockwise.h"
 #include "temoto/preplanned_sequences/turn_handle_counterclockwise.h"
 #include "temoto/low_level_cmds.h"

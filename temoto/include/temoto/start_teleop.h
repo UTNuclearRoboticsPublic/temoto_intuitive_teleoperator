@@ -86,15 +86,17 @@ public:
   
   //Callback functions
   
-  void processLeap(leap_motion_controller::Set leap_data);			// TODO rename to more general case, e.g. processHumanInput
+  void processLeap(leap_motion_controller::Set leap_data);  // TODO rename to more general case, e.g. processHumanInput
   
-  void processPowermate(griffin_powermate::PowermateEvent powermate);		// TODO rename to more general case, e.g. processScaleFactor
+  void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
   
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
 
   void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
   
   void processVoiceCommand(temoto::Command voice_command);
+
+  void triggerROSAction(temoto::Command& voice_command);
   
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.

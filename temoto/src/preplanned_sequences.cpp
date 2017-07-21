@@ -43,7 +43,11 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
   ROS_INFO_STREAM("[preplanned_sequences] Starting \"" << goal->sequence_name << "\"" );
   result_.success = false;
 
-  if (goal->sequence_name == "turn handle clockwise")
+  if (goal->sequence_name == "close hand")
+    close_hand::close_hand();
+  else if (goal->sequence_name == "open hand")
+    open_hand::open_hand();
+  else if (goal->sequence_name == "turn handle clockwise")
     turn_handle_clockwise::turn_handle_clockwise();
   else if (goal->sequence_name == "turn handle counterclockwise")
     turn_handle_counterclockwise::turn_handle_counterclockwise();

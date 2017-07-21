@@ -11,13 +11,13 @@ find_package(catkin REQUIRED
   actionlib_msgs
   genmsg
   geometry_msgs
+  grasp_interface
   griffin_powermate
   leap_motion_controller
   message_generation
   move_base_msgs
   moveit_core
   moveit_ros_planning_interface
-  robotiq_s_model_control
   roscpp
   rospy
   std_msgs
@@ -144,6 +144,12 @@ add_library(temoto_common src/temoto_common.cpp)
 target_link_libraries(temoto_common ${catkin_LIBRARIES})
 add_dependencies(temoto_common temoto_generate_messages_cpp)
 
+add_library(close_hand src/preplanned_sequences/close_hand.cpp)
+target_link_libraries(close_hand ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
+
+add_library(open_hand src/preplanned_sequences/open_hand.cpp)
+target_link_libraries(open_hand ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
+
 add_library(turn_handle_clockwise src/preplanned_sequences/turn_handle_clockwise.cpp)
 target_link_libraries(turn_handle_clockwise ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
 
@@ -168,10 +174,6 @@ add_executable(interpret_utterance src/interpret_utterance.cpp)
 target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)
 add_dependencies(interpret_utterance temoto_generate_messages_cpp)
 
-add_executable(robotiq src/robotiq.cpp)
-target_link_libraries(robotiq ${catkin_LIBRARIES} temoto_common)
-add_dependencies(robotiq temoto_generate_messages_cpp)
-
 add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
 target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_common)
 add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
@@ -181,7 +183,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} turn_handle_clockwise turn_handle_counterclockwise)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand turn_handle_clockwise turn_handle_counterclockwise)
 
 #############
 ## Install ##

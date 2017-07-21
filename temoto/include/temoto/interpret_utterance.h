@@ -58,6 +58,7 @@ public:
   /** Maps verbal instructions to specific command code. */
   std::vector<std::string> command_list_ =
   {
+    // Commands for basic Temoto functionality: moving and navigating
     {"stop stop"},		// stop or abort command
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
@@ -72,6 +73,11 @@ public:
     {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
+
+    // Preplanned sequences: these will interrupt other Temoto commands (except abort)
+    // They can be generally any C++ file
+    {"close hand"},		// close gripper, a preplanned sequence
+    {"open hand"},		// open gripper, a preplanned sequence
     {"turn handle clockwise"},	// a preplanned sequence
     {"turn handle counterclockwise"}	// a preplanned sequence
   };

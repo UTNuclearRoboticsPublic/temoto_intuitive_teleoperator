@@ -1,7 +1,6 @@
 <launch>
   <arg name="sim" default="true" />
   <arg name="robot_ip" unless="$(arg sim)" />
-  <arg name="robotiq" default="false" />
 
   <!-- BRING THE ROBOT ONLINE -->
   <include file="$(find temoto_sia5_moveit_config)/launch/moveit_planning_execution.launch">
@@ -24,14 +23,6 @@
   <node name="move_robot" pkg="temoto" type="move_robot">
     <param name="movegroup" value="sia5" />
   </node>
-  
-  <group if="$(arg robotiq)">
-    <node name="s_model_joint_states" pkg="robotiq_joint_state_publisher" type="s_model_joint_states">
-      <param name="prefix" value="robotiq_" />
-    </node>
-    <node name="robotiqSModel" pkg="robotiq_s_model_control" type="SModelTcpNode.py" args="192.168.1.12" />
-  </group>
-  
   
   <!-- Start temoto teleoperation -->
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
