@@ -41,6 +41,7 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "tf/tf.h"
+#include "tf/transform_datatypes.h"
 #include "tf/transform_listener.h"
 
 // temoto includes

@@ -116,11 +116,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // make a service request to stop the robot
       if ( navigate_robot_client_.call( motion ) )
       {
-	ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
+	      ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
       }
       else
       {
-	ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
+	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
       return;
     } // end: if (action_type == "abort")
@@ -173,11 +173,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // make a service request to navigate_robot_srv
       if ( navigate_robot_client_.call( motion ) )
       {
-	ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
+	      ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
       }
       else
       {
-	ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
+	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
       return;
     } // else if (action_type == "go")
@@ -360,7 +360,7 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
   scaled_pose.pose.orientation = primary_hand.orientation;
   
   // Applying relevant limitations to direction and/or orientation
-  if (navigate_to_goal_)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
+  if (navigate_to_goal_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
   {
     scaled_pose.pose.position.y = 0;
     // preserve only pitch (rotation around UP vector) of hand orientation
@@ -379,10 +379,10 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
   if (orientation_locked_)				// if palm orientation is to be ignored 
   {
     // Overwrite orientation with identity quaternion.
-    scaled_pose.pose.orientation.w = 1;
     scaled_pose.pose.orientation.x = 0;
     scaled_pose.pose.orientation.y = 0;
     scaled_pose.pose.orientation.z = 0;
+    scaled_pose.pose.orientation.w = 1;
   }
   
     // == Additional explanation of the above coordinates and origins ==
