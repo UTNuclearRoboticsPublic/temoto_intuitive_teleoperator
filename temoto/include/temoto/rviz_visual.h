@@ -58,12 +58,11 @@ public:
     eef_frame_ = end_effector;
     mobile_frame_ = mobile_base;
     // Initialize point-of-view camera placement and all the required markers
-    initPOWCamera(/*"temoto_end_effector"*/);
+    initPOVCamera();
     initDisplacementArrow();
     initDistanceAsText();
     initHandPoseMarker();
     initActiveRangeBox();
-    initCartesianPath();
     
     // Initial state setup
     adjust_camera_ = true;
@@ -72,7 +71,7 @@ public:
   };
    
   /** Server function for temoto/adjust_rviz_camera. Sets adjust_camera_ TRUE. */
-  bool adjustPOWCameraPlacement (std_srvs::Empty::Request  &req, std_srvs::Empty::Response &res);
+  bool adjustPOVCameraPlacement (std_srvs::Empty::Request  &req, std_srvs::Empty::Response &res);
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
   void updateStatus (temoto::Status status);
@@ -90,7 +89,7 @@ private:
   // ___ INITIALIZERS ___
   
   /** Initializes camera placement to a preset pose in frame specified by frame_id */
-  void initPOWCamera();
+  void initPOVCamera();
   
   /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
   void initDisplacementArrow();
@@ -104,16 +103,13 @@ private:
   /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
   void initActiveRangeBox();
   
-  /** Creates the initial marker that visualizes cartesian path by connecting wayposes with lines. */
-  void initCartesianPath();
-  
   // ___ HELPER FUNCTIONS ___
   
   /** Calculates the distance between two points in meters or millimeters and returns it as a string. */
   std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
   /** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id. */
-  void changePOWCameraFrameTo(std::string frame_id); 
+  void changePOVCameraFrameTo(std::string frame_id); 
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
   

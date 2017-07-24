@@ -14,8 +14,15 @@ namespace turn_handle_clockwise
 {
   int turn_handle_clockwise();
 
-  void enable_compliance(ur_script_compliance& right);
+  void enable_compliance();
 
-  int rotate(ros::NodeHandle* nhPtr);
+  int rotate();
+
+  ros::NodeHandle nh;
+
+  // arm compliance object. Sends ur commands on this topic
+  ur_script_compliance right("/right_ur5_controller/right_ur5_URScript");
+
+  moveit::planning_interface::MoveGroupInterface move_group("right_ur5");
 }
 #endif

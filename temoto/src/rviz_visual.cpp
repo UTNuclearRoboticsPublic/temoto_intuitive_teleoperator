@@ -41,10 +41,10 @@
  *  @param res empty service response.
  *  @return always true.
  */
-bool Visuals::adjustPOWCameraPlacement (std_srvs::Empty::Request  &req,
+bool Visuals::adjustPOVCameraPlacement (std_srvs::Empty::Request  &req,
 				     std_srvs::Empty::Response &res)
 {
-  ROS_INFO("[rviz_visual/adjust_rviz_camera] adjust_camera is set 'true' due to service request.");
+  //ROS_INFO("[rviz_visual/adjust_rviz_camera] adjust_camera is set 'true' due to service request.");
   // Set adjust_camera to TRUE.
   adjust_camera_ = true;
   return true;
@@ -61,12 +61,12 @@ void Visuals::updateStatus (temoto::Status status)
   if (status.in_navigation_mode && !latest_status_.in_navigation_mode)
   {
     adjust_camera_ = true;
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION.");
   }
   else if (!status.in_navigation_mode && latest_status_.in_navigation_mode)
   {
     adjust_camera_ = true;
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from NAVIGATION to MANIPULATION.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from NAVIGATION to MANIPULATION.");
   }
 
   // Before overwriting previous status, checks if switch between camera views is necesassry due to limited directions.
@@ -74,25 +74,25 @@ void Visuals::updateStatus (temoto::Status status)
   {
     adjust_camera_ = true;
     camera_is_aligned_ = false;	// Change to top-view as operator has switched to forward only motion pattern
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'not fwd only' to 'fwd only'.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'not fwd only' to 'fwd only'.");
   }
   else if (!status.position_forward_only && latest_status_.position_forward_only)
   {
     adjust_camera_ = true;
     camera_is_aligned_ = true;	// Change to the so-called aligned view because operator has stopped using forward only
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'fwd only' to 'not fwd only'.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'fwd only' to 'not fwd only'.");
   }
   
   // Checks if switch between camera views is necesassry due to change in control mode.
   if (status.in_natural_control_mode && !latest_status_.in_natural_control_mode)
   {
     adjust_camera_ = true;
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'natural control mode'.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'natural control mode'.");
   }
   else if (!status.in_natural_control_mode && latest_status_.in_natural_control_mode)
   {
     adjust_camera_ = true;
-    ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'inverted control mode'.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'inverted control mode'.");
   }
   
   // Checks if switch between camera views is necesassry due to change in (un)limiting directions.
@@ -102,8 +102,6 @@ void Visuals::updateStatus (temoto::Status status)
   std::vector <geometry_msgs::Point> now_and_before;				// Vector that contains current and target points
   now_and_before.push_back(status.end_effector_pose.pose.position);		// Add the just received position of end effector
   now_and_before.push_back(latest_status_.end_effector_pose.pose.position);	// Add the previous known position of end effector
-  double shift = calculateDistance(now_and_before);				// Calculate the linear distance between the two positions
-  if (shift > 0.001) adjust_camera_ = true;					// If the difference is more than 1 mm, set adjust_camera to true.
   
   // Overwrite latest_status values with the new status.
   latest_status_ = status;
@@ -120,9 +118,9 @@ void Visuals::powermateWheelEvent (griffin_powermate::PowermateEvent powermate)
   return;
 }
 
-/** Creates the initial CameraPlacment message that is used for positioning point-of-view (POW) camera in RViz.
+/** Creates the initial CameraPlacment message that is used for positioning point-of-view (POV) camera in RViz.
  */
-void Visuals::initPOWCamera(/*std::string frame_id*/)
+void Visuals::initPOVCamera()
 {
   // Set target frame and animation time
   point_of_view_.target_frame = eef_frame_;
@@ -270,28 +268,6 @@ void Visuals::initActiveRangeBox()
   return;
 } // end Visuals::initActiveRangeBox()
 
-/** Creates the initial marker that visualizes cartesian path by connecting wayposes with lines. */
-void Visuals::initCartesianPath()
-{
-  cartesian_path_.header.frame_id = "base_link"/*"leap_motion"*/;	//TODO figure out a general frame type we need here
-  cartesian_path_.header.stamp = ros::Time();
-  cartesian_path_.ns = "cartesian_path";
-  cartesian_path_.id = 0;
-  cartesian_path_.type = visualization_msgs::Marker::LINE_STRIP;
-  cartesian_path_.action = visualization_msgs::Marker::ADD;
-
-  cartesian_path_.scale.x = 0.01;	// width of the line
-
-  // Make the line visible by setting alpha to 1.
-  cartesian_path_.color.a = 1;  
-  // Make the line strip blue.
-  cartesian_path_.color.r = 0.0;
-  cartesian_path_.color.g = 0.0;
-  cartesian_path_.color.b = 1.0;
-  
-  return;
-} // end Visuals::initCartesianPath()
-
 /** Calculates the distance between two points in meters or millimeters and returns it as a string.
  *  @param twoPointVector vector containing two points.
  *  @return string containing the distance between two points in meters or millimeters followed by ' m' or ' mm', respectively.
@@ -306,7 +282,7 @@ std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & two
   double distance = calculateDistance(twoPointVector);
   if (distance < 1)	// if distance is less than 1 m, use mm instead
   {
-    // Covnvert the distance m -> mm
+    // Convert the distance m -> mm
     distance = distance*1000;
     units = " mm";
     if (distance >= 10) precision = 1;
@@ -327,7 +303,7 @@ std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & two
 /** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id.
  *  @param frame_id frmae name to change 
  */
-void Visuals::changePOWCameraFrameTo(std::string frame_id)
+void Visuals::changePOVCameraFrameTo(std::string frame_id)
 {
   point_of_view_.target_frame = frame_id;
   point_of_view_.eye.header.frame_id = frame_id;
@@ -335,7 +311,7 @@ void Visuals::changePOWCameraFrameTo(std::string frame_id)
   point_of_view_.up.header.frame_id = frame_id;
 }
 
-void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher)
+void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publisher)
 {
   // ============================================================ 
   // ==  VISUALIZATION MARKERS  =================================
@@ -518,15 +494,15 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
   // ============================================================ 
   // ==  CAMERA POSE  ===========================================
   // ============================================================
-  // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POW) camera.
+  // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV) camera.
     
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
     // During NAVIGATION camera moves relative to 'base_link' frame.
-    changePOWCameraFrameTo( mobile_frame_ );
+    changePOVCameraFrameTo( mobile_frame_ );
 
-    ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
+    //ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
 
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
     point_of_view_.up.vector.x = 1;
@@ -541,21 +517,21 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
     point_of_view_.focus.point.x = 0;
 
     latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
-    pow_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
+    pov_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
     adjust_camera_ = false;						// set adjust_camera 'false'     
   }
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
     // During MANIPULATION camera akways moves relative to 'temoto_end_effector' frame.
-    changePOWCameraFrameTo( eef_frame_ );
+    changePOVCameraFrameTo( eef_frame_ );
 
     // Adjust camera for NATURAL CONTROL MODE
     if (latest_status_.in_natural_control_mode)
     {
       if (camera_is_aligned_)					// here alignment means the so-called bird's view
       {
-	ROS_INFO("NATURAL: Switching to aligned view.");
+	//ROS_INFO("NATURAL: Switching to aligned view.");
 	// Set +Z as 'UP'
 	point_of_view_.up.vector.x = 0;
 	point_of_view_.up.vector.z = 1;
@@ -572,7 +548,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
       }
       else							// natural control mode top view
       {
-	ROS_INFO("NATURAL: Switching to top view.");
+	//ROS_INFO("NATURAL: Switching to top view.");
 	// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
 	point_of_view_.up.vector.x = 1;
 	point_of_view_.up.vector.z = 0;
@@ -587,7 +563,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
       }
       
       latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e natural
-      pow_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
+      pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera in_natural_control_mode
       
@@ -596,7 +572,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
     {
       if (camera_is_aligned_)					// here alignment means the camera is in the front facing the end effector
       {
-	ROS_INFO("INVERTED: Switching to aligned view.");
+	//ROS_INFO("INVERTED: Switching to aligned view.");
 	// Set +Z as 'UP'
 	point_of_view_.up.vector.z = 1;
 	point_of_view_.up.vector.x = 0;
@@ -612,7 +588,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
       }
       else							// else means camera should be in the top position
       {
-	ROS_INFO("INVERTED: Switching to top view.");
+	//ROS_INFO("INVERTED: Switching to top view.");
 	// In the top view of inverted control mode, -X is considered 'UP'.
 	point_of_view_.up.vector.z = 0;
 	point_of_view_.up.vector.x = -1;
@@ -627,22 +603,22 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publi
       }
       
       latest_known_camera_mode_ = 2;				// set latest_known_camera_mode to 2, i.e inverted
-      pow_publisher.publish( point_of_view_ );		// publish a CameraPlacement msg
+      pov_publisher.publish( point_of_view_ );		// publish a CameraPlacement msg
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
     
   // Doublecheck    
-  // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pow camera.
+  // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pov camera.
   if (latest_known_camera_mode_ != 1 && latest_status_.in_natural_control_mode)
   {
     adjust_camera_ = 1;
     // unless in recognized NAVIGATION mode, then all was OK
     if (latest_known_camera_mode_ == 11 && latest_status_.in_navigation_mode) adjust_camera_ = 0;
   }
-  // If camera IS NOT in inverted mode but the system IS in inverted mode, try adjusting the pow camera.
+  // If camera IS NOT in inverted mode but the system IS in inverted mode, try adjusting the pov camera.
   if (latest_known_camera_mode_ != 2 && !latest_status_.in_natural_control_mode) adjust_camera_ = 1;
-  // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pow camera.
+  // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pov camera.
   if (latest_known_camera_mode_ != 11 && latest_status_.in_navigation_mode) adjust_camera_ = 1;
 } // end Visuals::crunch()
 
@@ -660,18 +636,18 @@ int main(int argc, char **argv)
   
   // Get all the relevant frame names from parameter server
   std::string human, end_effector, mobile_base;
-  ROS_INFO("[rviz_visual] Getting frame names from parameter server.");
+  //ROS_INFO("[rviz_visual] Getting frame names from parameter server.");
   n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
-  ROS_INFO("[rviz_visual] Human frame is: %s", human.c_str());
+  //ROS_INFO("[rviz_visual] Human frame is: %s", human.c_str());
   n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
-  ROS_INFO("[rviz_visual] End-effector frame is: %s", end_effector.c_str());
+  //ROS_INFO("[rviz_visual] End-effector frame is: %s", end_effector.c_str());
   n.param<std::string>("/temoto_frames/mobile_base", mobile_base, "base_link");
-  ROS_INFO("[rviz_visual] Mobile base frame is: %s", mobile_base.c_str());
+  //ROS_INFO("[rviz_visual] Mobile base frame is: %s", mobile_base.c_str());
   
   Visuals rviz_visuals(human, end_effector, mobile_base);
 
   // Set up service /temoto/adjust_rviz_camera; if there's a service request, executes adjustCameraPlacement() function
-  ros::ServiceServer srv_visuals = n.advertiseService("temoto/adjust_rviz_camera", &Visuals::adjustPOWCameraPlacement, &rviz_visuals);
+  ros::ServiceServer srv_visuals = n.advertiseService("temoto/adjust_rviz_camera", &Visuals::adjustPOVCameraPlacement, &rviz_visuals);
   
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
@@ -681,18 +657,18 @@ int main(int argc, char **argv)
   
   // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
   // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
-  ros::Publisher pub_pow_camera = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
+  ros::Publisher pub_pov_camera = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
 
   // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
  
   // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
-  pub_pow_camera.publish( rviz_visuals.point_of_view_ );
+  pub_pov_camera.publish( rviz_visuals.point_of_view_ );
   
   while ( ros::ok() )
   {
     // Update point-of-view camera pose and all the visualization markers
-    rviz_visuals.crunch(pub_marker, pub_pow_camera);
+    rviz_visuals.crunch(pub_marker, pub_pov_camera);
     
     // Spin
     ros::spinOnce();
