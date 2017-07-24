@@ -39,8 +39,20 @@ int turn_handle_clockwise::rotate()
   turn_handle_clockwise::move_group.setGoalOrientationTolerance(0.05);
 
   // Get the robot's current position
+  // Sometimes getCurrentPose is incorrect, so check it.
+  // May need a sleep after creating the MoveGroup
   geometry_msgs::PoseStamped pose;
-  pose = turn_handle_clockwise::move_group.getCurrentPose();
+  geometry_msgs::PoseStamped secondPose;
+
+CHECK_POSE:
+  pose = move_group.getCurrentPose();
+  secondPose = move_group.getCurrentPose();
+  if ( 
+    ( fabs(pose.pose.position.x-secondPose.pose.position.x) > 0.001 ) ||
+    ( fabs(pose.pose.position.y-secondPose.pose.position.y) > 0.001 ) ||
+    ( fabs(pose.pose.position.z-secondPose.pose.position.z) > 0.001 )
+    )
+    goto CHECK_POSE;
 
   std::vector<double> rpy = turn_handle_clockwise::move_group.getCurrentRPY();
 

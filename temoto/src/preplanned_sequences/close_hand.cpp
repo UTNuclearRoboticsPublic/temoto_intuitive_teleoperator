@@ -13,7 +13,7 @@ int close_hand::close_hand()
   grasp_interface::RCGripperCommand gripper_msg;
   gripper_msg.force = 255; // Max force
   gripper_msg.speed = 255;
-  gripper_msg.position = 0; // closed
+  gripper_msg.position = 255; // closed
   gripper_publisher.publish(gripper_msg);
 
   ros::Duration(4).sleep();
