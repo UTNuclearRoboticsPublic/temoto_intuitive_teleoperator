@@ -57,7 +57,6 @@ class MoveRobotInterface {
      new_plan_available_ = false;
      req_action_type_ = "";
      new_move_requested_ = false;
-     new_end_effector_pose_ = true;
    };
    
    moveit::planning_interface::MoveGroupInterface movegroup_;
@@ -78,7 +77,6 @@ class MoveRobotInterface {
    bool use_named_target_;		///< When named target is requested, use_named_target is set to true.
    bool new_plan_available_;		///< After calculating a new motion plan, is_new_plan is set to 1; after executing the plan, is_new_plan is set to 0.
    bool new_move_requested_; 		///< If new move has been requested by a client, it is set to 1; after calling move(), it is set to 0.
-   bool new_end_effector_pose_;		///< If end effector has a new position, this is set to 1; after requesting rviz camera move, it is 0.
 };
 
 #endif

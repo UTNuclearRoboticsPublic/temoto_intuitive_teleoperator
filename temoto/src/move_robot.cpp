@@ -203,10 +203,6 @@ int main(int argc, char **argv)
   
   // Set up publisher for the end effector location
   ros::Publisher pub_end_effector = n.advertise<geometry_msgs::PoseStamped>( "temoto/end_effector_pose", 1 );
-  
-  // ROS client for /temoto/adjust_rviz_camera
-  ros::ServiceClient client_visual = n.serviceClient<std_srvs::Empty>("temoto/adjust_rviz_camera");
-  std_srvs::Empty empty_srv;			// Empty service.
 
   while ( ros::ok() )
   {
@@ -215,18 +211,10 @@ int main(int argc, char **argv)
     {
       moveIF.requestMove();			// plan and execute move using move_group
       moveIF.new_move_requested_ = false;	// set request flag to false
-      moveIF.new_end_effector_pose_ = true;	// assumes that request move resulted in new pose for end effector and sets the corresponding flag
     }
     
     // get and publish current end effector pose;
     pub_end_effector.publish( moveIF.movegroup_.getCurrentPose() );
-
-    // If pose of the end effector has changed. Update camera position if the end effector has moved since the last time camera was positioned.
-    if ( moveIF.new_end_effector_pose_ )
-    {
-      client_visual.call(empty_srv);
-      moveIF.new_end_effector_pose_ = false;	// set new_end_effector_pose to zero
-    } // end if
     
     ros::spinOnce();
     // sleep to meet the node_rate frequency

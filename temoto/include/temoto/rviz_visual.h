@@ -69,9 +69,6 @@ public:
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
   };
-   
-  /** Server function for temoto/adjust_rviz_camera. Sets adjust_camera_ TRUE. */
-  bool adjustPOVCameraPlacement (std_srvs::Empty::Request  &req, std_srvs::Empty::Response &res);
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
   void updateStatus (temoto::Status status);

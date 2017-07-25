@@ -36,20 +36,6 @@
 
 #include "temoto/rviz_visual.h"
 
-/** The actual service call function for temoto/adjust_rviz_camera.
- *  @param req empty service request.
- *  @param res empty service response.
- *  @return always true.
- */
-bool Visuals::adjustPOVCameraPlacement (std_srvs::Empty::Request  &req,
-				     std_srvs::Empty::Response &res)
-{
-  //ROS_INFO("[rviz_visual/adjust_rviz_camera] adjust_camera is set 'true' due to service request.");
-  // Set adjust_camera to TRUE.
-  adjust_camera_ = true;
-  return true;
-}
-
 /** Callback function for /temoto/status.
  *  Looks for any changes that would require re-adjustment of the point-of-view camera.
  *  Stores the received status in a class variable latest_status_.
@@ -58,15 +44,10 @@ bool Visuals::adjustPOVCameraPlacement (std_srvs::Empty::Request  &req,
 void Visuals::updateStatus (temoto::Status status)
 {
   // Before overwriting previous status, checks if switch between camera views is necesassry due to switch between navigation and manipulation modes.
-  if (status.in_navigation_mode && !latest_status_.in_navigation_mode)
+  if (status.in_navigation_mode != latest_status_.in_navigation_mode)
   {
     adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION.");
-  }
-  else if (!status.in_navigation_mode && latest_status_.in_navigation_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from NAVIGATION to MANIPULATION.");
+    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION or vice versa.");
   }
 
   // Before overwriting previous status, checks if switch between camera views is necesassry due to limited directions.
@@ -109,7 +90,7 @@ void Visuals::updateStatus (temoto::Status status)
 void Visuals::initPOVCamera()
 {
   // Set target frame and animation time
-  point_of_view_.target_frame = eef_frame_;
+  point_of_view_.target_frame = mobile_frame_;  // Use mobile_frame_ because it does not move with the end effector ==> will remain upright
   point_of_view_.time_from_start = ros::Duration(0.5);
 
   // Position of the camera relative to target_frame
@@ -422,12 +403,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     marker_publisher.publish( distance_as_text_ );
 
 
-
-
-
-
-
-
     /* ==  HAND POSE MARKER  ================================= */
     // Size of the hand pose marker
     hand_pose_marker_.scale.x = 0.06;
@@ -446,13 +421,9 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Publish hand_pose_marker_
     marker_publisher.publish( hand_pose_marker_ );
 
-
-
-
-
-
   } // end setting markers in MANIPULATION mode
     
+
   // ============================================================ 
   // ==  CAMERA POSE  ===========================================
   // ============================================================
@@ -494,9 +465,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
 		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
 		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
-		// if constrained to a plane and scaled down align camrea with the end effector in z-direction
-		if (!latest_status_.position_unlimited && latest_status_.scale_by < 0.1)
-			point_of_view_.eye.point.z = 0;
 
 		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
 		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
@@ -520,7 +488,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 		ROS_INFO_STREAM(point_of_view_);
       }
       
-      latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e natural
+      latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
       pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera in_natural_control_mode
@@ -566,19 +534,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
-   
-  // Doublecheck    
-  // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pov camera.
-  if (latest_known_camera_mode_ != 1 && latest_status_.in_natural_control_mode)
-  {
-    adjust_camera_ = 1;
-    // unless in recognized NAVIGATION mode, then all was OK
-    if (latest_known_camera_mode_ == 11 && latest_status_.in_navigation_mode) adjust_camera_ = 0;
-  }
-  // If camera IS NOT in inverted mode but the system IS in inverted mode, try adjusting the pov camera.
-  if (latest_known_camera_mode_ != 2 && !latest_status_.in_natural_control_mode) adjust_camera_ = 1;
-  // If camera IS NOT in NAVIGATION natural mode but system IS in NAVIGATION natural mode, try adjusting the pov camera.
-  if (latest_known_camera_mode_ != 11 && latest_status_.in_navigation_mode) adjust_camera_ = 1;
+
 } // end Visuals::crunch()
 
 /** Main method. */
@@ -604,9 +560,6 @@ int main(int argc, char **argv)
   //ROS_INFO("[rviz_visual] Mobile base frame is: %s", mobile_base.c_str());
   
   Visuals rviz_visuals(human, end_effector, mobile_base);
-
-  // Set up service /temoto/adjust_rviz_camera; if there's a service request, executes adjustCameraPlacement() function
-  ros::ServiceServer srv_visuals = n.advertiseService("temoto/adjust_rviz_camera", &Visuals::adjustPOVCameraPlacement, &rviz_visuals);
   
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);

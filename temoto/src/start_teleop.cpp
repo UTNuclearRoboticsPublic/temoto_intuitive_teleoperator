@@ -419,7 +419,6 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose)
 {
   current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
-  ROS_INFO_STREAM(current_pose_);
   return;
 } // end processEndeffector()
 
