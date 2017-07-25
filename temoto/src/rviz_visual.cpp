@@ -127,19 +127,19 @@ void Visuals::initPOVCamera()
   point_of_view_.time_from_start = ros::Duration(0.5);
 
   // Position of the camera relative to target_frame
-  point_of_view_.eye.header.frame_id = eef_frame_;
+  point_of_view_.eye.header.frame_id = mobile_frame_;
   point_of_view_.eye.point.x = -2;
   point_of_view_.eye.point.y = 0;
   point_of_view_.eye.point.z = 0;
 
   // Target_frame-relative point for the focus
-  point_of_view_.focus.header.frame_id = eef_frame_;
+  point_of_view_.focus.header.frame_id = mobile_frame_;
   point_of_view_.focus.point.x = 0;
   point_of_view_.focus.point.y = 0;
   point_of_view_.focus.point.z = 0;
 
   // Target_frame-relative vector that maps to "up" in the view plane.
-  point_of_view_.up.header.frame_id = eef_frame_;
+  point_of_view_.up.header.frame_id = mobile_frame_;
   point_of_view_.up.vector.x = 0;
   point_of_view_.up.vector.y = 0;
   point_of_view_.up.vector.z = 1;
@@ -230,7 +230,7 @@ void Visuals::initHandPoseMarker()
   hand_pose_marker_.pose.position.z = 0.0;
 
   // Make the box visible by setting alpha to 1.
-  hand_pose_marker_.color.a = 1;  
+  hand_pose_marker_.color.a = 1;
   // Make the box orange.
   hand_pose_marker_.color.r = 1.0;
   hand_pose_marker_.color.g = 0.5;
@@ -300,17 +300,6 @@ std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & two
   return distance_as_text;
 }
 
-/** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id.
- *  @param frame_id frmae name to change 
- */
-void Visuals::changePOVCameraFrameTo(std::string frame_id)
-{
-  point_of_view_.target_frame = frame_id;
-  point_of_view_.eye.header.frame_id = frame_id;
-  point_of_view_.focus.header.frame_id = frame_id;
-  point_of_view_.up.header.frame_id = frame_id;
-}
-
 void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publisher)
 {
   // ============================================================ 
@@ -375,13 +364,13 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     displacement_arrow_.points[1] = latest_status_.live_hand_pose.pose.position;// set the end point of the arrow to actual hand position
     if (latest_status_.in_natural_control_mode)
     {
-      displacement_arrow_.points[0].z = -VIRTUAL_SCREEN_FRONT_;		// shift the marker in front of the FT sensor and gripper
-      displacement_arrow_.points[1].z -= VIRTUAL_SCREEN_FRONT_;		// shift the marker in front of the FT sensor and gripper
+      displacement_arrow_.points[0].z = -EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
+      displacement_arrow_.points[1].z -= EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
     }
     else
     {
-      displacement_arrow_.points[0].z = VIRTUAL_SCREEN_FRONT_;		// shift the marker in front of the FT sensor and gripper
-      displacement_arrow_.points[1].z += VIRTUAL_SCREEN_FRONT_;		// shift the marker in front of the FT sensor and gripper
+      displacement_arrow_.points[0].z = EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
+      displacement_arrow_.points[1].z += EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
     }
 
     // Change arrow's thickness based on scaling factor
@@ -462,8 +451,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     hand_pose_marker_.pose = latest_status_.live_hand_pose.pose;
 
     // Shift the marker in front of the ft sensor and robotiq gripper
-    if (latest_status_.in_natural_control_mode) hand_pose_marker_.pose.position.z -= VIRTUAL_SCREEN_FRONT_;
-    else hand_pose_marker_.pose.position.z += VIRTUAL_SCREEN_FRONT_;
+    if (latest_status_.in_natural_control_mode) hand_pose_marker_.pose.position.z -= EYE_DISPLACEMENT_FRONT_;
+    else hand_pose_marker_.pose.position.z += EYE_DISPLACEMENT_FRONT_;
 
     // Paint the marker based on restricted motion
     if (latest_status_.orientation_free) hand_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
@@ -495,13 +484,10 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // ==  CAMERA POSE  ===========================================
   // ============================================================
   // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV) camera.
-    
+
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
-    // During NAVIGATION camera moves relative to 'base_link' frame.
-    changePOVCameraFrameTo( mobile_frame_ );
-
     //ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
 
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
@@ -523,43 +509,41 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-    // During MANIPULATION camera akways moves relative to 'temoto_end_effector' frame.
-    changePOVCameraFrameTo( eef_frame_ );
-
     // Adjust camera for NATURAL CONTROL MODE
     if (latest_status_.in_natural_control_mode)
     {
-      if (camera_is_aligned_)					// here alignment means the so-called bird's view
+      if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
       {
-	//ROS_INFO("NATURAL: Switching to aligned view.");
-	// Set +Z as 'UP'
-	point_of_view_.up.vector.x = 0;
-	point_of_view_.up.vector.z = 1;
+		point_of_view_.up.vector.x = 0;
+		point_of_view_.up.vector.z = 1;
 
-	// Camera will be behind temoto_end_effector, somewhat elevated
-	point_of_view_.eye.point.x = -2*latest_status_.scale_by;// Distance backwards from the end effector
-	point_of_view_.eye.point.y = 0;				// Align with end effector
-	point_of_view_.eye.point.z = 0.2 + 2*latest_status_.scale_by;// Distance upwards from the end effector
-	// if constrained to a plane and scaled down align camrea with the end effector in z-direction
-	if (!latest_status_.position_unlimited && latest_status_.scale_by < 0.1) point_of_view_.eye.point.z = 0;
+		// Camera will be behind temoto_end_effector, somewhat elevated
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+		// if constrained to a plane and scaled down align camrea with the end effector in z-direction
+		if (!latest_status_.position_unlimited && latest_status_.scale_by < 0.1) point_of_view_.eye.point.z = 0;
 
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-	point_of_view_.focus.point.x = VIRTUAL_SCREEN_FRONT_;
+		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
       else							// natural control mode top view
       {
-	//ROS_INFO("NATURAL: Switching to top view.");
-	// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-	point_of_view_.up.vector.x = 1;
-	point_of_view_.up.vector.z = 0;
+		//ROS_INFO("NATURAL: Switching to top view.");
+		// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
+		point_of_view_.up.vector.x = 1;
+		point_of_view_.up.vector.z = 0;
 
-	// Camera is positioned directly above the virtual FRONT view screen.
-	point_of_view_.eye.point.x = VIRTUAL_SCREEN_FRONT_;				// Above the virtual FRONT view screen
-	point_of_view_.eye.point.y = 0;
-	point_of_view_.eye.point.z = VIRTUAL_SCREEN_TOP_ + 1.5*latest_status_.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+		// Camera is positioned directly above the end effector
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;
 
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	point_of_view_.focus.point.x = VIRTUAL_SCREEN_FRONT_;
+		// Look at the end effector
+		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
+		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
+		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
+		ROS_INFO_STREAM(point_of_view_);
       }
       
       latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e natural
@@ -572,34 +556,35 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     {
       if (camera_is_aligned_)					// here alignment means the camera is in the front facing the end effector
       {
-	//ROS_INFO("INVERTED: Switching to aligned view.");
-	// Set +Z as 'UP'
-	point_of_view_.up.vector.z = 1;
-	point_of_view_.up.vector.x = 0;
+		//ROS_INFO("INVERTED: Switching to aligned view.");
+		// Set +Z as 'UP'
+		point_of_view_.up.vector.z = 1;
+		point_of_view_.up.vector.x = 0;
 
-	// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-	point_of_view_.eye.point.x = VIRTUAL_SCREEN_FRONT_ + 1.5*latest_status_.scale_by;
-	point_of_view_.eye.point.y = 0;				// move camera to align with end effector along the y-axis
-	point_of_view_.eye.point.z = 0;				// move camera to align with end effector along the z-axis
-	if (latest_status_.position_unlimited) point_of_view_.eye.point.z = 0.1 + 1*latest_status_.scale_by;	// shift camera upwards ... 
+		// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x + EYE_DISPLACEMENT_FRONT_;  // + 1.5*latest_status_.scale_by;
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// move camera to align with end effector along the y-axis
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z;				// move camera to align with end effector along the z-axis
 
-	// Look at the origin of temoto_end_effector, i.e. all zeros
-	point_of_view_.focus.point.x = VIRTUAL_SCREEN_FRONT_;
+		// Look at the origin of temoto_end_effector, i.e. all zeros
+		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
       else							// else means camera should be in the top position
       {
-	//ROS_INFO("INVERTED: Switching to top view.");
-	// In the top view of inverted control mode, -X is considered 'UP'.
-	point_of_view_.up.vector.z = 0;
-	point_of_view_.up.vector.x = -1;
+		//ROS_INFO("INVERTED: Switching to top view.");
+		// In the top view of inverted control mode, -X is considered 'UP'.
+		point_of_view_.up.vector.z = 0;
+		point_of_view_.up.vector.x = -1;
 
-	// Camera is positioned directly above the virtual FRONT view screen.
-	point_of_view_.eye.point.x = VIRTUAL_SCREEN_FRONT_;				// Above the virtual FRONT view screen
-	point_of_view_.eye.point.y = 0;
-	point_of_view_.eye.point.z = VIRTUAL_SCREEN_TOP_ + 1.5*latest_status_.scale_by;	// Never closer than virtual TOP view screen, max distance at 1.5 m
-	  
-	// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. look at virtual FRONT view screen
-	point_of_view_.focus.point.x = VIRTUAL_SCREEN_FRONT_;
+		// Camera is positioned directly above the end effector
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;				// Above the virtual FRONT view screen
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;	// Never closer than virtual TOP view screen, max distance at 1.5 m
+		  
+		// Look at the end effector
+		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
+		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
+		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
       }
       
       latest_known_camera_mode_ = 2;				// set latest_known_camera_mode to 2, i.e inverted
@@ -607,7 +592,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
-    
+   
   // Doublecheck    
   // If camera IS NOT in natural mode but system IS in natural mode, try adjusting the pov camera.
   if (latest_known_camera_mode_ != 1 && latest_status_.in_natural_control_mode)

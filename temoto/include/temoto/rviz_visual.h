@@ -108,9 +108,6 @@ private:
   /** Calculates the distance between two points in meters or millimeters and returns it as a string. */
   std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
-  /** Changes target_frame and header.frame_ids of every pose in point_of_view_ to frame_id. */
-  void changePOVCameraFrameTo(std::string frame_id); 
-
   // ___ CLASS VARIABLES AND CONSTANTS ___
   
   /** Human input frame. */
@@ -150,10 +147,10 @@ private:
   visualization_msgs::Marker cartesian_path_;
 
   /** A number that is used when some distance is required between robot and any marker or camera. */
-  const double VIRTUAL_SCREEN_FRONT_ = 0;
+  const double EYE_DISPLACEMENT_FRONT_ = 1.;
 
   /** A number that is used when some distance is required between robot and any marker or camera. */
-  const double VIRTUAL_SCREEN_TOP_ = 0.2;
+  const double EYE_DISPLACEMENT_TOP_ = 1.;
 };
 
 #endif

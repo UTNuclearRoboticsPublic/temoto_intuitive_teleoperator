@@ -17,7 +17,7 @@
   
 
   <!-- Bring up some temoto core components -->
-  <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
+  <node name="rviz_visual" pkg="temoto" type="rviz_visual" output="screen"/>
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   
