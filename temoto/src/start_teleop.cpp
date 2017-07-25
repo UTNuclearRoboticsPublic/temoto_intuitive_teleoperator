@@ -187,7 +187,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   else if ( !navigate_to_goal_ )						// If Teleoperator is in MANIPULATION (MoveIt!) mode
   {  
-    // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
+    // Adjust orientation for inverted control mode
     if ( !using_natural_control_)
     {
       // rotate orientation 180 around UP-vector
@@ -244,34 +244,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
   }
   return;
 } // end callRobotMotionInterfaceWithNamedTarget
-
-/** Returns a vector of wayposes that have been tranformed from "leap_motion" frame to "base_link".
- * 
- *  @param wayposes_leapmotion vector of wayposes defined in "leap_motion" frame.
- *  @param tf_listener a TransformListener that has been around long enough to know a transform from "leap_motion" to "base_link".
- *  @return a vector where all the poses are defined in "base_link" and current_pose_ is inserted as the first element.
- */
-std::vector<geometry_msgs::Pose> Teleoperator::wayposesInFixedFrame(std::vector<geometry_msgs::Pose> wayposes_leapmotion)
-{
-  std::vector<geometry_msgs::Pose> wayposes_baselink;
-  wayposes_baselink.push_back(current_pose_.pose);			// Start the vector with current end-effector pose
-  std::reverse(wayposes_leapmotion.begin(),wayposes_leapmotion.end());	// reversed the order of elements in wayposes_leapmotion
-  geometry_msgs::PoseStamped stamped_pose_msg_lm, stamped_pose_msg_bl;	// temp stamped poses for leap_motion and base_link
-  stamped_pose_msg_lm.header.frame_id = "leap_motion";			// stamp leap_motion poses with appropriate data
-  stamped_pose_msg_lm.header.stamp = ros::Time(0);			// ros::Time(0) is different from ros::Time::now() and is better in this case, idky
-  while ( !wayposes_leapmotion.empty() )
-  {
-    stamped_pose_msg_lm.pose = wayposes_leapmotion.back();		// access the last element of reversed wayposes_
-    wayposes_leapmotion.pop_back();					// delete the last element
-    tf::Stamped<tf::Pose> tf_pose_lm;					// tf equivalent for PoseStamped
-    tf::Stamped<tf::Pose> tf_pose_bl;
-    tf::poseStampedMsgToTF(stamped_pose_msg_lm, tf_pose_lm);		// convert geometry_msgs/PoseStamped to TF Stamped<Pose>
-    transform_listener_.transformPose("base_link", tf_pose_lm, tf_pose_bl);	// tranform pose to base_link frame
-    tf::poseStampedTFToMsg(tf_pose_bl, stamped_pose_msg_bl);		// convert TF Stamped<Pose> to geometry_msgs/PoseStamped 
-    wayposes_baselink.push_back(stamped_pose_msg_bl.pose);		// push to the end of return vector
-  }
-  return wayposes_baselink;
-}
 
 /** Alters a quaternion so that the pitch is preserved while roll and yaw are set to zero.
  * 
@@ -386,9 +358,9 @@ void Teleoperator::processLeap(leap_motion_controller::Set leap_data)
   }
   
     // == Additional explanation of the above coordinates and origins ==
-    // While the motion planner often uses base_link as origin, it is not convenient for the operator as s/he likely wishes to see the motion relative to end effector.
-    // leap_motion frame has been attached to the end effector and, thus, hand motion is visualized relative to the pose of end effector.
-    // If hand is moved to the origin of hand motion system, the target position is at current position. This makes the UI more intuitive for the operator, imho.
+    // For navigation, leap_motion is attached to base_link.
+    // For manipulation, leap_motion is attached to the end effector.
+    // This switch occurs in human_frame_broadcaster.cpp
     // Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
     // Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
     // Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
@@ -447,6 +419,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose)
 {
   current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
+  ROS_INFO_STREAM(current_pose_);
   return;
 } // end processEndeffector()
 
@@ -471,7 +444,7 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
 geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg)
 {
   geometry_msgs::Quaternion quaternion_msg_out;
-  // Adjust orientation for inverted control mode, i.e. translate leap_motion to leap_motion_on_robot
+  // Adjust orientation for inverted control mode
   tf::Quaternion invert_rotation(0, 1, 0, 0);				// 180° turn around Y axis, UP in leap_motion frame
   tf::Quaternion operator_input;					// incoming operator's palm orientation
   tf::quaternionMsgToTF(operator_input_quaternion_msg, operator_input);	// convert incoming quaternion msg to tf quaternion
@@ -670,11 +643,13 @@ temoto::Status Teleoperator::getStatus()
   status.header.frame_id = "teleoperator";
   status.scale_by = scale_by_;					// Latest scale_by_ value
   status.live_hand_pose = live_pose_;				// Latest hand pose stamped
-  status.cartesian_wayposes = wayposes_fixed_in_baselink_;	// Latest cartesian wayposes in base_link frame
   status.in_natural_control_mode = using_natural_control_;
   status.orientation_free = !orientation_locked_;
   status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
+  //if (current_pose_.header.frame_id != "/base_link")
+    //ROS_INFO_STREAM(current_pose_.header.frame_id);
+    //ROS_WARN("[start_teleop] The current robot pose is not being reported in base_link.");
   status.position_forward_only = position_fwd_only_;
   status.in_navigation_mode = navigate_to_goal_;
 

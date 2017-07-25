@@ -96,25 +96,11 @@ void Visuals::updateStatus (temoto::Status status)
   }
   
   // Checks if switch between camera views is necesassry due to change in (un)limiting directions.
-  if (status.position_unlimited != latest_status_.position_unlimited) adjust_camera_ = true;
-  
-  // Check difference between the known and new end effector positions
-  std::vector <geometry_msgs::Point> now_and_before;				// Vector that contains current and target points
-  now_and_before.push_back(status.end_effector_pose.pose.position);		// Add the just received position of end effector
-  now_and_before.push_back(latest_status_.end_effector_pose.pose.position);	// Add the previous known position of end effector
+  if (status.position_unlimited != latest_status_.position_unlimited)
+  	adjust_camera_ = true;
   
   // Overwrite latest_status values with the new status.
   latest_status_ = status;
-  return;
-}
-
-/** Callback function for /griffin_powermate/events.
- *  Sets adjust_camera_ flag if griffin powermate turn knob was rotated, i.e., any turn knob rotation triggers re-adjustement of camera placement.
- *  @param powermate griffin_powermate::PowermateEvent message from Griffin Powermate.
- */
-void Visuals::powermateWheelEvent (griffin_powermate::PowermateEvent powermate)
-{
-  if (abs(powermate.direction)) adjust_camera_ = true;
   return;
 }
 
@@ -360,18 +346,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     /* ==  ARROW  ============================================ */
     // Update arrow marker properties and make hand tracking visible in RViz
     // Arrow marker is described in leap_motion frame.
-    // Start point of the arrow is always at (0, 0, 0).
-    displacement_arrow_.points[1] = latest_status_.live_hand_pose.pose.position;// set the end point of the arrow to actual hand position
-    if (latest_status_.in_natural_control_mode)
-    {
-      displacement_arrow_.points[0].z = -EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
-      displacement_arrow_.points[1].z -= EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
-    }
-    else
-    {
-      displacement_arrow_.points[0].z = EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
-      displacement_arrow_.points[1].z += EYE_DISPLACEMENT_FRONT_;		// shift the marker in front of the FT sensor and gripper
-    }
+    // The arrow start point is always (0.0.0)
+    displacement_arrow_.points[1] = latest_status_.live_hand_pose.pose.position; // arrow end point
 
     // Change arrow's thickness based on scaling factor
     displacement_arrow_.scale.x = 0.001 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
@@ -383,8 +359,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // A tweak for extreme close-ups to make the arrow out of scale but more informative
     if (latest_status_.scale_by < 0.01 && camera_is_aligned_ /*&& !latest_status.in_natural_control_mode*/)// only when the rviz camera is in the front
     {
-      displacement_arrow_.points[0].z -= 0.02;				// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
-      displacement_arrow_.points[1].z -= 0.02;     
+      //displacement_arrow_.points[0].z -= 0.02;				// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
+      //displacement_arrow_.points[1].z -= 0.02;     
       displacement_arrow_.scale.x = 0.0001;				// make the shaft thinner
       displacement_arrow_.scale.y = 0.0003;				// make the arrow head thinner
       displacement_arrow_.color.a = 0.6;				// and make the arrow a bit transparent
@@ -398,8 +374,10 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       displacement_arrow_.color.a = 0.4;				// the arrow marker is translucent
     }
 
-    if (latest_status_.position_unlimited) displacement_arrow_.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
-    else displacement_arrow_.color.g = 0.5;					// else, the arrow is orange
+    if (latest_status_.position_unlimited) 
+      displacement_arrow_.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
+    else 
+      displacement_arrow_.color.g = 0.5;	// else, the arrow is orange
 
     // Publish displacement_arrow_
     marker_publisher.publish( displacement_arrow_ );
@@ -443,16 +421,19 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Publish distance_as_text_
     marker_publisher.publish( distance_as_text_ );
 
+
+
+
+
+
+
+
     /* ==  HAND POSE MARKER  ================================= */
     // Size of the hand pose marker
     hand_pose_marker_.scale.x = 0.06;
     hand_pose_marker_.scale.z = 0.15; 
     // Hand pose marker (relative to leap_motion frame)
     hand_pose_marker_.pose = latest_status_.live_hand_pose.pose;
-
-    // Shift the marker in front of the ft sensor and robotiq gripper
-    if (latest_status_.in_natural_control_mode) hand_pose_marker_.pose.position.z -= EYE_DISPLACEMENT_FRONT_;
-    else hand_pose_marker_.pose.position.z += EYE_DISPLACEMENT_FRONT_;
 
     // Paint the marker based on restricted motion
     if (latest_status_.orientation_free) hand_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
@@ -464,20 +445,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Publish hand_pose_marker_
     marker_publisher.publish( hand_pose_marker_ );
-      
-    /* ==  CARTESIAN PATH ++ ================================= */
-    // Empty any previous waypoints from the visualized cartesian path
-    cartesian_path_.points.clear();
 
-    // Take only position members of available cartesian wayposes and push them to cartesian_path.
-    for (int i = 0; i < latest_status_.cartesian_wayposes.size(); ++i)
-    {
-      cartesian_path_.points.push_back( latest_status_.cartesian_wayposes.at(i).position );
-    }
 
-    // Publish cartesian_path_ as LINE_STRIP marker
-    marker_publisher.publish( cartesian_path_ );
-      
+
+
+
+
   } // end setting markers in MANIPULATION mode
     
   // ============================================================ 
@@ -522,7 +495,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
 		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 		// if constrained to a plane and scaled down align camrea with the end effector in z-direction
-		if (!latest_status_.position_unlimited && latest_status_.scale_by < 0.1) point_of_view_.eye.point.z = 0;
+		if (!latest_status_.position_unlimited && latest_status_.scale_by < 0.1)
+			point_of_view_.eye.point.z = 0;
 
 		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
 		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
@@ -636,9 +610,6 @@ int main(int argc, char **argv)
   
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
-
-  // ROS subscriber on /griffin_powermate/events.
-  ros::Subscriber sub_powermate = n.subscribe("/griffin_powermate/events", 1, &Visuals::powermateWheelEvent, &rviz_visuals); 
   
   // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
   // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.

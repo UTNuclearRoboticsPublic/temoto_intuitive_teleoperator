@@ -142,9 +142,6 @@ private:
   
   /** Translucent box or area that is centered around the starting pose while displacement_arrow_ always points to one of its corners. */
   visualization_msgs::Marker active_range_box_;
-  
-  /** Line strip marker that interconnects all the wayposes requested for a cartesian motion. */
-  visualization_msgs::Marker cartesian_path_;
 
   /** A number that is used when some distance is required between robot and any marker or camera. */
   const double EYE_DISPLACEMENT_FRONT_ = 1.;

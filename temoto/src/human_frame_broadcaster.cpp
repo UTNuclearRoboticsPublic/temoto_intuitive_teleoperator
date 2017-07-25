@@ -41,10 +41,17 @@
 // temoto includes
 #include "temoto/temoto_common.h"
 
-bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
-bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
+namespace human_frame_broadcaster
+{
+  /** Latest recieved full system status published by start_teleop node. */
+  temoto::Status latest_status;
 
-/** This method is executed when change_human2robot_tf service is called.
+  bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
+  bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
+}
+using namespace human_frame_broadcaster;
+
+/** This function is executed when change_human2robot_tf service is called.
  *  It updates leap_motion frame based on the client's request.
  *  @param req temoto::ChangeTf service request.
  *  @param res temoto::ChangeTf service response.
@@ -60,6 +67,16 @@ bool service_change_tf(	temoto::ChangeTf::Request  &req,
   
   return true;
 } // end service_change_tf
+
+/** Update the status of the robot.
+ *  We use this to get the current end effector pose.
+ *  @param status A temoto status msg.
+ *  @return void.
+ */
+void statusCallback(temoto::Status status)
+{
+  latest_status = status;
+}
 
 /** Main method. */
 int main(int argc, char **argv)
@@ -82,13 +99,14 @@ int main(int argc, char **argv)
   ROS_INFO("[human_frame_broadcaster] Getting frame names from parameter server.");
   nh.param<std::string>("/temoto_frames/human_input", human_frame, "leap_motion");
   ROS_INFO("[human_frame_broadcaster] Human frame is: %s", human_frame.c_str());
-//   nh.param<std::string>("/temoto_frames/end_effector", eef_frame, "temoto_end_effector");
-//   ROS_INFO("[human_frame_broadcaster] End-effector frame is: %s", eef_frame.c_str());
   nh.param<std::string>("/temoto_frames/mobile_base", mobile_frame, "base_link");
   ROS_INFO("[human_frame_broadcaster] Mobile base frame is: %s", mobile_frame.c_str());
   
   // Create a tranform broadcaster.
   static tf::TransformBroadcaster tf_broadcaster;
+
+  // ROS subscriber on /temoto/status. Used to get the EE pose
+  ros::Subscriber sub_status = nh.subscribe("temoto/status", 1, statusCallback);
   
   // Advertise a service for switchig between tranfrom rotations.
   ros::ServiceServer service = nh.advertiseService("temoto/change_human2robot_tf", service_change_tf);
@@ -115,17 +133,23 @@ int main(int argc, char **argv)
       // Set appropriate rotation for how leap_motion data is interpreted.
       if ( g_natural_perspective )						// "natural" means robot arm is direct extension of human hand
       {
-	// in natural mode leap_motion and leap_motion_on_robot are oriented exactly the same
-	hand_frame_to_robot.setRotation ( tf::Quaternion(0, 0, 0, 1) );	// identity quaternion, i.e., no rotation
+        // in manipulation/natural control mode, leap_motion is rotated RPY=(90, 0, -90) about base_link
+        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set leap_motion about base_link
       }
-      else 									// not "natural" means human is facing the robot, i.e. left and right are inverted.
+      else // not "natural" means human is facing the robot, i.e. left and right are inverted.
       {
-	// in inverted mode leap_motion is rotated 180° around the y(UP)-axis of leap_motion_on_robot
-	hand_frame_to_robot.setRotation( tf::Quaternion(0, 1, 0, 0) );	// 180 around y-axis
+      	// in manipulation/natural control mode, leap_motion is rotated RPY=(90, 0, 90) about base_link
+        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );// set leap_motion about base_link
       }
 
-      // Broadcast a transform that attaches leap_motion to leap_motion_on_robot using the hand_frame_to_robot tranform. TODO: "leap_motion_on_robot" should not be hard-coded
-      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "leap_motion_on_robot", human_frame) );
+      // The origin shifts to the end effector.
+      // Make sure an end effector pose has been received.
+      while ((latest_status.end_effector_pose.pose.position.x==0) && (latest_status.end_effector_pose.pose.position.y==0) && (latest_status.end_effector_pose.pose.position.z==0) )
+        r.sleep();
+      hand_frame_to_robot.setOrigin( tf::Vector3(latest_status.end_effector_pose.pose.position.x, latest_status.end_effector_pose.pose.position.y, latest_status.end_effector_pose.pose.position.z) );
+
+      // Broadcast the new transform
+      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "base_link", human_frame) );
     }
 
     ros::spinOnce();
