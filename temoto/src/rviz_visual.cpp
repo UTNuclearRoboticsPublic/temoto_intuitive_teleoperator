@@ -87,7 +87,7 @@ void Visuals::updateStatus (temoto::Status status)
 
 /** Creates the initial CameraPlacment message that is used for positioning point-of-view (POV) camera in RViz.
  */
-void Visuals::initPOVCamera()
+void Visuals::initCameraFrames()
 {
   // Set target frame and animation time
   point_of_view_.target_frame = base_frame_;  // Use base_frame_ because it does not move with the end effector ==> will remain upright
@@ -95,44 +95,12 @@ void Visuals::initPOVCamera()
 
   // Position of the camera relative to target_frame
   point_of_view_.eye.header.frame_id = base_frame_;
-  //point_of_view_.eye.point.x = -2;
-  //point_of_view_.eye.point.y = 0;
-  //point_of_view_.eye.point.z = 0;
 
   // Target_frame-relative point for the focus
   point_of_view_.focus.header.frame_id = base_frame_;
-  //point_of_view_.focus.point.x = 0;
-  //point_of_view_.focus.point.y = 0;
-  //point_of_view_.focus.point.z = 0;
 
   // Target_frame-relative vector that maps to "up" in the view plane.
   point_of_view_.up.header.frame_id = base_frame_;
-  //point_of_view_.up.vector.x = 0;
-  //point_of_view_.up.vector.y = 0;
-  //point_of_view_.up.vector.z = 1;
-
-/*
-  // For navigation
-  if (!latest_status_.in_navigation_mode)
-  {
-    ;
-  }
-
-  // For manipulation:
-  if (!latest_status_.in_navigation_mode)
-  {
-    point_of_view_.up.vector.x = 0;
-    point_of_view_.up.vector.z = 1;
-
-    // Camera will be behind temoto_end_effector, somewhat elevated
-    point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-    point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;        // Align with end effector
-    point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
-
-    // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-    point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-  }
-  */
 }
 
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
@@ -572,11 +540,11 @@ int main(int argc, char **argv)
   ros::Rate node_rate(100);
 
   // Get all the relevant frame names from parameter server
-  std::string human, end_effector, mobile_base;
+  std::string human, end_effector, base_frame;
   n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
   n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
-  n.param<std::string>("/temoto_frames/mobile_base", mobile_base, "base_link");
-  Visuals rviz_visuals(human, end_effector, mobile_base);
+  n.param<std::string>("/temoto_frames/base_frame", base_frame, "base_link");
+  Visuals rviz_visuals(human, end_effector, base_frame);
   
   // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);

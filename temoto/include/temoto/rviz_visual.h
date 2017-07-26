@@ -58,7 +58,7 @@ public:
     eef_frame_ = end_effector;
     base_frame_ = mobile_base;
     // Initialize point-of-view camera placement and all the required markers
-    initPOVCamera();
+    initCameraFrames();
     initDisplacementArrow();
     initDistanceAsText();
     initHandPoseMarker();
@@ -80,7 +80,7 @@ public:
   void crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher);
 
   /** Initializes camera placement to a preset pose in frame specified by frame_id */
-  void initPOVCamera();
+  void initCameraFrames();
   
   /** ROS camera placement message that defines user's point-of-view in RViz. */
   view_controller_msgs::CameraPlacement point_of_view_;
