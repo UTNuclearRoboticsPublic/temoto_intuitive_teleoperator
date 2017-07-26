@@ -530,10 +530,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 /** Main method. */
 int main(int argc, char **argv)
 {
-  // ROS init
   ros::init(argc, argv, "rviz_visual");
-  
-  // ROS node handle
   ros::NodeHandle n;
   
   // Setting the node rate (Hz)
@@ -546,7 +543,6 @@ int main(int argc, char **argv)
   n.param<std::string>("/temoto_frames/base_frame", base_frame, "base_link");
   Visuals rviz_visuals(human, end_effector, base_frame);
   
-  // ROS subscriber on /temoto/status
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
   
   // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
@@ -573,10 +569,7 @@ int main(int argc, char **argv)
     // Update point-of-view camera pose and all the visualization markers
     rviz_visuals.crunch(pub_marker, pub_pov_camera);
     
-    // Spin
     ros::spinOnce();
-    
-    // Sleep to meet the node_rate
     node_rate.sleep();
   }
   
