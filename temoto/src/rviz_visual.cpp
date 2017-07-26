@@ -90,27 +90,49 @@ void Visuals::updateStatus (temoto::Status status)
 void Visuals::initPOVCamera()
 {
   // Set target frame and animation time
-  point_of_view_.target_frame = mobile_frame_;  // Use mobile_frame_ because it does not move with the end effector ==> will remain upright
+  point_of_view_.target_frame = base_frame_;  // Use base_frame_ because it does not move with the end effector ==> will remain upright
   point_of_view_.time_from_start = ros::Duration(0.5);
 
   // Position of the camera relative to target_frame
-  point_of_view_.eye.header.frame_id = mobile_frame_;
-  point_of_view_.eye.point.x = -2;
-  point_of_view_.eye.point.y = 0;
-  point_of_view_.eye.point.z = 0;
+  point_of_view_.eye.header.frame_id = base_frame_;
+  //point_of_view_.eye.point.x = -2;
+  //point_of_view_.eye.point.y = 0;
+  //point_of_view_.eye.point.z = 0;
 
   // Target_frame-relative point for the focus
-  point_of_view_.focus.header.frame_id = mobile_frame_;
-  point_of_view_.focus.point.x = 0;
-  point_of_view_.focus.point.y = 0;
-  point_of_view_.focus.point.z = 0;
+  point_of_view_.focus.header.frame_id = base_frame_;
+  //point_of_view_.focus.point.x = 0;
+  //point_of_view_.focus.point.y = 0;
+  //point_of_view_.focus.point.z = 0;
 
   // Target_frame-relative vector that maps to "up" in the view plane.
-  point_of_view_.up.header.frame_id = mobile_frame_;
-  point_of_view_.up.vector.x = 0;
-  point_of_view_.up.vector.y = 0;
-  point_of_view_.up.vector.z = 1;
-  
+  point_of_view_.up.header.frame_id = base_frame_;
+  //point_of_view_.up.vector.x = 0;
+  //point_of_view_.up.vector.y = 0;
+  //point_of_view_.up.vector.z = 1;
+
+/*
+  // For navigation
+  if (!latest_status_.in_navigation_mode)
+  {
+    ;
+  }
+
+  // For manipulation:
+  if (!latest_status_.in_navigation_mode)
+  {
+    point_of_view_.up.vector.x = 0;
+    point_of_view_.up.vector.z = 1;
+
+    // Camera will be behind temoto_end_effector, somewhat elevated
+    point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+    point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;        // Align with end effector
+    point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+
+    // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+    point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+  }
+  */
 }
 
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
@@ -458,34 +480,34 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     {
       if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
       {
-		point_of_view_.up.vector.x = 0;
-		point_of_view_.up.vector.z = 1;
+    		point_of_view_.up.vector.x = 0;
+    		point_of_view_.up.vector.z = 1;
 
-		// Camera will be behind temoto_end_effector, somewhat elevated
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+    		// Camera will be behind temoto_end_effector, somewhat elevated
+    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
+    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+    		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+    		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
       else							// natural control mode top view
       {
-		//ROS_INFO("NATURAL: Switching to top view.");
-		// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-		point_of_view_.up.vector.x = 1;
-		point_of_view_.up.vector.z = 0;
+    		//ROS_INFO("NATURAL: Switching to top view.");
+    		// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
+    		point_of_view_.up.vector.x = 1;
+    		point_of_view_.up.vector.z = 0;
 
-		// Camera is positioned directly above the end effector
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;
+    		// Camera is positioned directly above the end effector
+    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;
+    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
+    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;
 
-		// Look at the end effector
-		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
-		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
-		ROS_INFO_STREAM(point_of_view_);
+    		// Look at the end effector
+    		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
+    		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
+    		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
+    		ROS_INFO_STREAM(point_of_view_);
       }
       
       latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
@@ -548,17 +570,12 @@ int main(int argc, char **argv)
   
   // Setting the node rate (Hz)
   ros::Rate node_rate(100);
-  
+
   // Get all the relevant frame names from parameter server
   std::string human, end_effector, mobile_base;
-  //ROS_INFO("[rviz_visual] Getting frame names from parameter server.");
   n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
-  //ROS_INFO("[rviz_visual] Human frame is: %s", human.c_str());
   n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
-  //ROS_INFO("[rviz_visual] End-effector frame is: %s", end_effector.c_str());
   n.param<std::string>("/temoto_frames/mobile_base", mobile_base, "base_link");
-  //ROS_INFO("[rviz_visual] Mobile base frame is: %s", mobile_base.c_str());
-  
   Visuals rviz_visuals(human, end_effector, mobile_base);
   
   // ROS subscriber on /temoto/status
@@ -570,6 +587,15 @@ int main(int argc, char **argv)
 
   // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
+
+  // Wait for initial end-effector position to set camera position
+  while ((rviz_visuals.latest_status_.end_effector_pose.pose.position.x==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.y==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.z==0) )
+  {
+    ROS_WARN("[rviz_visual] Waiting for the initial end effector pose.");
+    ros::spinOnce();
+    ros::Duration(0.1).sleep();
+  }
+  rviz_visuals.crunch(pub_marker, pub_pov_camera);
  
   // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
   pub_pov_camera.publish( rviz_visuals.point_of_view_ );

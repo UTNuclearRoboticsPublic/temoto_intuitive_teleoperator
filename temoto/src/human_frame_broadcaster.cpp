@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   // ROS subscriber on /temoto/status. Used to get the EE pose
   ros::Subscriber sub_status = nh.subscribe("temoto/status", 1, statusCallback);
   
-  // Advertise a service for switchig between tranfrom rotations.
+  // Advertise a service for switching between tranfrom rotations.
   ros::ServiceServer service = nh.advertiseService("temoto/change_human2robot_tf", service_change_tf);
   ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_human2robot_tf' up and going.");
   
@@ -143,9 +143,6 @@ int main(int argc, char **argv)
       }
 
       // The origin shifts to the end effector.
-      // Make sure an end effector pose has been received.
-      while ((latest_status.end_effector_pose.pose.position.x==0) && (latest_status.end_effector_pose.pose.position.y==0) && (latest_status.end_effector_pose.pose.position.z==0) )
-        r.sleep();
       hand_frame_to_robot.setOrigin( tf::Vector3(latest_status.end_effector_pose.pose.position.x, latest_status.end_effector_pose.pose.position.y, latest_status.end_effector_pose.pose.position.z) );
 
       // Broadcast the new transform

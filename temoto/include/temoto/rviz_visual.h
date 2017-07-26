@@ -56,7 +56,7 @@ public:
   {
     human_frame_ = human;
     eef_frame_ = end_effector;
-    mobile_frame_ = mobile_base;
+    base_frame_ = mobile_base;
     // Initialize point-of-view camera placement and all the required markers
     initPOVCamera();
     initDisplacementArrow();
@@ -78,15 +78,18 @@ public:
   
   /** Updates RViz point-of-view and visualization markers as needed. */
   void crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher);
+
+  /** Initializes camera placement to a preset pose in frame specified by frame_id */
+  void initPOVCamera();
   
   /** ROS camera placement message that defines user's point-of-view in RViz. */
   view_controller_msgs::CameraPlacement point_of_view_;
 
+  /** Latest recieved full system status published by start_teleop node. */
+  temoto::Status latest_status_;
+
 private:
   // ___ INITIALIZERS ___
-  
-  /** Initializes camera placement to a preset pose in frame specified by frame_id */
-  void initPOVCamera();
   
   /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
   void initDisplacementArrow();
@@ -114,7 +117,7 @@ private:
   std::string eef_frame_;
   
   /** Navigation control frame. */
-  std::string mobile_frame_;
+  std::string base_frame_;
 
   /** This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.*/
   bool adjust_camera_;
@@ -124,9 +127,6 @@ private:
   
   /** A state variable for keeping track of where rviz_visual node thinks the camera is. */
   uint8_t latest_known_camera_mode_; 	// 0-unknown, 1-natural, 2-inverted, 11-navigation natural, 12-navigation inverted
-
-  /** Latest recieved full system status published by start_teleop node. */
-  temoto::Status latest_status_;
   
   /** Arrow-shaped marker that visualizes target displacement of the robot. */
   visualization_msgs::Marker displacement_arrow_;

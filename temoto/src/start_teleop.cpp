@@ -63,7 +63,7 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   if (manipulate && navigate)
   {
     control_state_ = 3;
-    navigate_to_goal_ = true;		// if navigation AND manipulation are enabled, start out in navigation mode.
+    navigate_to_goal_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (navigate && !manipulate)
@@ -521,7 +521,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
       switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
       // if service request successful, change the value of control perspective in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = true;
+      if ( tf_change_client_.call( switch_human2robot_tf ) )
+      	using_natural_control_ = true;
     }
     else if (voice_command.cmd_string == "inverted control mode")
     {
@@ -530,7 +531,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
       switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
       // if service request successful, change the value of control perspective in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) ) using_natural_control_ = false;
+      if ( tf_change_client_.call( switch_human2robot_tf ) )
+      	using_natural_control_ = false;
     }
     else if (voice_command.cmd_string == "free directions")
     {
@@ -561,7 +563,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       switch_human2robot_tf.request.navigate = false;	// request a change of control mode
       switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
       // if service request successful, change the value of control mode in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = false;
+      if ( tf_change_client_.call( switch_human2robot_tf ) )
+      	navigate_to_goal_ = false;
     }
     else if (voice_command.cmd_string == "navigation" && control_state_ != 1)	// Switch over to navigation mode
     { 
@@ -571,7 +574,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       switch_human2robot_tf.request.navigate = true;	// request a change of control mode
       switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
       // if service request successful, change the value of control mode in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) ) navigate_to_goal_ = true;
+      if ( tf_change_client_.call( switch_human2robot_tf ) )
+      	navigate_to_goal_ = true;
     }
     else if (voice_command.cmd_string == "close hand")  // Close the gripper - a preplanned sequence
     {
@@ -685,15 +689,11 @@ int main(int argc, char **argv)
   // Instance of Teleoperator
   Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate, n);
 
-  // Wait for human_frame_broadcaster to come on-line.
-  while( !temoto_teleop.tf_change_client_.waitForExistence(ros::Duration(1)) )
-  {
-      ROS_INFO("[start_teleop] Waiting for human_frame_broadcaster.");
-  }
   // Make a request for initial human2robot TF set-up
   temoto::ChangeTf initial_human2robot_tf;
-  initial_human2robot_tf.request.navigate = temoto_teleop.getStatus().in_navigation_mode;
-  initial_human2robot_tf.request.first_person_perspective = temoto_teleop.getStatus().in_natural_control_mode;
+  initial_human2robot_tf.request.navigate = navigate; //temoto_teleop.getStatus().in_navigation_mode;
+  initial_human2robot_tf.request.first_person_perspective = true; //temoto_teleop.getStatus().in_natural_control_mode;
+  ros::service::waitForService("temoto/change_human2robot_tf");
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 
   // Setup ROS subscribers
