@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro"
+       name="ur5" >
+
+  <!-- common stuff -->
+  <xacro:include filename="$(find ur_description)/urdf/common.gazebo.xacro" />
+
+  <!-- ur5 -->
+  <xacro:include filename="$(find ur_description)/urdf/ur5.urdf.xacro" />
+
+  <!-- arm -->
+  <xacro:ur5_robot prefix="" joint_limited="false"/>
+
+  <link name="world" />
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world" />
+    <child link = "base_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+  </joint>
+
+  <!-- attach Temoto frame -->
+  <!-- A tool link that will serve as the base end effector, instead of tool0. -->
+  <link name="temoto_end_effector" />
+  <joint name="ur5-temoto" type="fixed" >
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+    <parent link="ee_link" />	<!-- end-effector link for UR5 -->
+    <child link="temoto_end_effector" />
+  </joint>  
+
+</robot>
