@@ -6,8 +6,4 @@ src.kdev4
 # Temp files
 *~
 
-# These are cloned repositories -- not submodules.
-# Ignore them because we don't want to duplicate repos.
-rviz_animated_view_controller
-
 
