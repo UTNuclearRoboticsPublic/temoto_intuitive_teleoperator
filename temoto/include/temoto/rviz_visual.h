@@ -52,11 +52,14 @@ class Visuals
 {
 public:
   // ___ CONSTRUCTOR ___
-  Visuals(std::string human, std::string end_effector, std::string mobile_base)
+  Visuals(std::string human, std::string end_effector, std::string mobile_base, std::string manip_stl, std::string nav_stl)
   {
     human_frame_ = human;
     eef_frame_ = end_effector;
     base_frame_ = mobile_base;
+    manip_stl_ = manip_stl;
+    nav_stl_ = nav_stl;
+
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
     initDisplacementArrow();
@@ -109,6 +112,9 @@ private:
   std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
+
+  /** STL files for the hand markers. */
+  std::string manip_stl_, nav_stl_;
   
   /** Human input frame. */
   std::string human_frame_;

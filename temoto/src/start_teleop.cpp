@@ -50,6 +50,7 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   position_fwd_only_ = false;
   secondary_hand_before_ = false;
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
+  
 
   // client for /temoto/move_robot_service
   move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
@@ -691,8 +692,8 @@ int main(int argc, char **argv)
 
   // Make a request for initial human2robot TF set-up
   temoto::ChangeTf initial_human2robot_tf;
-  initial_human2robot_tf.request.navigate = navigate; //temoto_teleop.getStatus().in_navigation_mode;
-  initial_human2robot_tf.request.first_person_perspective = true; //temoto_teleop.getStatus().in_natural_control_mode;
+  initial_human2robot_tf.request.navigate = navigate;
+  initial_human2robot_tf.request.first_person_perspective = true;
   ros::service::waitForService("temoto/change_human2robot_tf");
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 

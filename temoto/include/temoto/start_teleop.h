@@ -72,8 +72,6 @@ public:
   void callRobotMotionInterface(std::string action_type);
   
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
-  
-  void computeCartesian(std::string frame_id);
 
   // Helper functions
 

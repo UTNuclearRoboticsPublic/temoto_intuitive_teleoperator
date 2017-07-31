@@ -174,21 +174,25 @@ void Visuals::initHandPoseMarker()
   hand_pose_marker_.header.stamp = ros::Time();
   hand_pose_marker_.ns = "hand_pose_marker";
   hand_pose_marker_.id = 0;
+  hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+  hand_pose_marker_.mesh_resource = manip_stl_;
+  hand_pose_marker_.action = visualization_msgs::Marker::ADD;
+/*
   hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
   hand_pose_marker_.action = visualization_msgs::Marker::ADD;
 
   hand_pose_marker_.scale.x = 0.06;	// side
   hand_pose_marker_.scale.y = 0.02;	// thickness
   hand_pose_marker_.scale.z = 0.15;	// depth
+*/
   
   // begin at the position of end effector
   hand_pose_marker_.pose.position.x = 0.0;
   hand_pose_marker_.pose.position.y = 0.0;
   hand_pose_marker_.pose.position.z = 0.0;
 
-  // Make the box visible by setting alpha to 1.
-  hand_pose_marker_.color.a = 1;
-  // Make the box orange.
+  hand_pose_marker_.color.a = 0.5;
+  // Orange.
   hand_pose_marker_.color.r = 1.0;
   hand_pose_marker_.color.g = 0.5;
   hand_pose_marker_.color.b = 0.0;
@@ -295,7 +299,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // In NAVIGATION, the hand pose marker must always be visible
     hand_pose_marker_.color.a = 1;
 
-    // Publish hand_pose_marker_
     marker_publisher.publish( hand_pose_marker_ );
 
     /* ==  TEXT LABEL  ======================================= */
@@ -394,7 +397,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
 
     /* ==  HAND POSE MARKER  ================================= */
-    // Size of the hand pose marker
     hand_pose_marker_.scale.x = 0.06;
     hand_pose_marker_.scale.z = 0.15; 
     // Hand pose marker (relative to leap_motion frame)
@@ -532,6 +534,14 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "rviz_visual");
   ros::NodeHandle n;
+
+  // NodeHandle for accessing private parameters
+  ros::NodeHandle pn("~");
+
+  // Get the STL's for the manip/nav hand markers from launch file, if any
+  std::string manip_stl, nav_stl;
+  pn.param<std::string>("manip_stl", manip_stl, "none");  // Defaults to "none"
+  pn.param<std::string>("nav_stl", nav_stl, "none");
   
   // Setting the node rate (Hz)
   ros::Rate node_rate(100);
@@ -541,7 +551,7 @@ int main(int argc, char **argv)
   n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
   n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
   n.param<std::string>("/temoto_frames/base_frame", base_frame, "base_link");
-  Visuals rviz_visuals(human, end_effector, base_frame);
+  Visuals rviz_visuals( human, end_effector, base_frame, manip_stl, nav_stl );
   
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
   
