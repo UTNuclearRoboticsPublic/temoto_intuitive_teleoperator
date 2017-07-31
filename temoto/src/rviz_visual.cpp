@@ -174,24 +174,33 @@ void Visuals::initHandPoseMarker()
   hand_pose_marker_.header.stamp = ros::Time();
   hand_pose_marker_.ns = "hand_pose_marker";
   hand_pose_marker_.id = 0;
-  hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-  hand_pose_marker_.mesh_resource = manip_stl_;
-  hand_pose_marker_.action = visualization_msgs::Marker::ADD;
-/*
-  hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
-  hand_pose_marker_.action = visualization_msgs::Marker::ADD;
 
-  hand_pose_marker_.scale.x = 0.06;	// side
-  hand_pose_marker_.scale.y = 0.02;	// thickness
-  hand_pose_marker_.scale.z = 0.15;	// depth
-*/
+  if ( manip_stl_ == "" )  // No end-effector CAD model was specified.
+  {
+    ROS_WARN_STREAM("No end-effector CAD model was specified.");
+    hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
+    hand_pose_marker_.action = visualization_msgs::Marker::ADD;
+
+    hand_pose_marker_.scale.x = 0.06;	// side
+    hand_pose_marker_.scale.y = 0.02;	// thickness
+    hand_pose_marker_.scale.z = 0.15;	// depth
+  }
+  else  // the user specified an end-effector CAD file
+  {
+    hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+    hand_pose_marker_.mesh_resource = manip_stl_;
+    hand_pose_marker_.action = visualization_msgs::Marker::ADD;
+    hand_pose_marker_.scale.x = 1;
+    hand_pose_marker_.scale.y = 0.1;
+    hand_pose_marker_.scale.z = 1;
+  }
   
   // begin at the position of end effector
   hand_pose_marker_.pose.position.x = 0.0;
   hand_pose_marker_.pose.position.y = 0.0;
   hand_pose_marker_.pose.position.z = 0.0;
 
-  hand_pose_marker_.color.a = 0.5;
+  hand_pose_marker_.color.a = 0.1;
   // Orange.
   hand_pose_marker_.color.r = 1.0;
   hand_pose_marker_.color.g = 0.5;
@@ -286,6 +295,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     
     /* ==  HAND POSE BOX MARKER  ============================= */
     // Resize of the hand pose marker to robot base dimensions
+    hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
     hand_pose_marker_.scale.x = 0.5;
     hand_pose_marker_.scale.z = 1.0; 
 
@@ -397,10 +407,23 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
 
     /* ==  HAND POSE MARKER  ================================= */
+    hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+    hand_pose_marker_.mesh_resource = manip_stl_;
     hand_pose_marker_.scale.x = 0.06;
-    hand_pose_marker_.scale.z = 0.15; 
+    hand_pose_marker_.scale.z = 0.15;
     // Hand pose marker (relative to leap_motion frame)
     hand_pose_marker_.pose = latest_status_.live_hand_pose.pose;
+
+    if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE
+    {
+      // 180* about y (pitch) then 90* about z (yaw)
+      // Multiply by this second quaternion to rotate it.
+      tf::Quaternion q_orig, q_rot( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
+      quaternionMsgToTF(hand_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
+      q_orig *= q_rot;  // Calculate the new orientation
+      quaternionTFToMsg(q_orig, hand_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
+    }
+    // else ==> do nothing
 
     // Paint the marker based on restricted motion
     if (latest_status_.orientation_free) hand_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
@@ -523,10 +546,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       
       latest_known_camera_mode_ = 2;				// set latest_known_camera_mode to 2, i.e inverted
       pov_publisher.publish( point_of_view_ );		// publish a CameraPlacement msg
+
+      // RESET
       adjust_camera_ = false;					// set adjust_camera 'false'
+
     } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
-
 } // end Visuals::crunch()
 
 /** Main method. */
@@ -539,9 +564,8 @@ int main(int argc, char **argv)
   ros::NodeHandle pn("~");
 
   // Get the STL's for the manip/nav hand markers from launch file, if any
-  std::string manip_stl, nav_stl;
-  pn.param<std::string>("manip_stl", manip_stl, "none");  // Defaults to "none"
-  pn.param<std::string>("nav_stl", nav_stl, "none");
+  std::string manip_stl;
+  pn.param<std::string>("manip_stl", manip_stl, "");
   
   // Setting the node rate (Hz)
   ros::Rate node_rate(100);
@@ -551,7 +575,7 @@ int main(int argc, char **argv)
   n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
   n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
   n.param<std::string>("/temoto_frames/base_frame", base_frame, "base_link");
-  Visuals rviz_visuals( human, end_effector, base_frame, manip_stl, nav_stl );
+  Visuals rviz_visuals( human, end_effector, base_frame, manip_stl );
   
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
   

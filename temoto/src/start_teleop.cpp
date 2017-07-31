@@ -692,7 +692,10 @@ int main(int argc, char **argv)
 
   // Make a request for initial human2robot TF set-up
   temoto::ChangeTf initial_human2robot_tf;
-  initial_human2robot_tf.request.navigate = navigate;
+  if (manipulate)  // Start in manipulation mode, if it's available
+    initial_human2robot_tf.request.navigate = false;
+  else
+    initial_human2robot_tf.request.navigate = true;
   initial_human2robot_tf.request.first_person_perspective = true;
   ros::service::waitForService("temoto/change_human2robot_tf");
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );

@@ -39,6 +39,7 @@
 #include "visualization_msgs/Marker.h"
 #include "geometry_msgs/Pose.h"
 #include "std_srvs/Empty.h"
+#include <tf/transform_datatypes.h>
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
@@ -52,13 +53,12 @@ class Visuals
 {
 public:
   // ___ CONSTRUCTOR ___
-  Visuals(std::string human, std::string end_effector, std::string mobile_base, std::string manip_stl, std::string nav_stl)
+  Visuals(std::string human, std::string end_effector, std::string mobile_base, std::string manip_stl)
   {
     human_frame_ = human;
     eef_frame_ = end_effector;
     base_frame_ = mobile_base;
     manip_stl_ = manip_stl;
-    nav_stl_ = nav_stl;
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
@@ -114,7 +114,7 @@ private:
   // ___ CLASS VARIABLES AND CONSTANTS ___
 
   /** STL files for the hand markers. */
-  std::string manip_stl_, nav_stl_;
+  std::string manip_stl_;;
   
   /** Human input frame. */
   std::string human_frame_;

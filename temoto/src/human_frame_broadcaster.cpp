@@ -47,7 +47,7 @@ namespace human_frame_broadcaster
   temoto::Status latest_status;
 
   bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
-  bool g_navigation_control = true;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
+  bool g_navigation_control = false;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
 }
 using namespace human_frame_broadcaster;
 
@@ -138,8 +138,8 @@ int main(int argc, char **argv)
       }
       else // not "natural" means human is facing the robot, i.e. left and right are inverted.
       {
-      	// in manipulation/natural control mode, leap_motion is rotated RPY=(90, 0, 90) about base_link
-        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );// set leap_motion about base_link
+      	// in manipulation/inverted control mode, leap_motion is rotated RPY=(90, 0, 90) about base_link
+        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );  // set leap_motion about base_link
       }
 
       // The origin shifts to the end effector.
