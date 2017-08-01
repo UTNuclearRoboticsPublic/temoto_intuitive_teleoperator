@@ -1,19 +1,35 @@
 <launch>
 
+  <!-- //////////////////////////////  -->
   <!-- BRING THE HARDWARE ROBOT ONLINE -->
+  <!-- //////////////////////////////  -->
+
   <!-- 
   <include file="$(find ur_bringup)/launch/ur3_bringup.launch">
     <arg name="robot_ip" value="192.168.1.15" />
-  </include> -->
+  </include> 
+  -->
 
+  <!-- //////////////////////////////  -->
   <!-- BRING THE SOFTWARE ROBOT ONLINE -->
+  <!-- //////////////////////////////  -->
+
   <include file="$(find ur_gazebo)/launch/ur3.launch" />
   
   <include file="$(find ur3_moveit_config)/launch/ur3_moveit_planning_execution.launch" >
    <arg name="sim" value="true" />
   </include>
-  
-  <!-- BRING TEMOTO ONLINE -->  
+
+  <!-- bringup proper rviz config -->
+  <include file="$(find temoto)/launch/ur3_moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
+
+
+  <!-- //////////////////  -->
+  <!-- BRING TEMOTO ONLINE -->
+  <!-- //////////////////  -->
+  <!-- 
   <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" />
 
   <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
@@ -24,22 +40,17 @@
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
   
-  <!-- Start temoto teleoperation -->
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
     <param name="primary_hand" type="str" value="left" />
     <param name="navigate" type="bool" value="false" />
     <param name="manipulate" type="bool" value="true" />
   </node>
   
-  <!-- Temoto MoveIt interface -->
   <node name="move_robot" pkg="temoto" type="move_robot">
     <param name="movegroup" value="manipulator" />
   </node>
 
-  <!-- bringup proper rviz config -->
-  <include file="$(find temoto)/launch/ur3_moveit_rviz.launch">
-    <arg name="config" value="true"/>
-  </include>
+  -->
   
 </launch>
 

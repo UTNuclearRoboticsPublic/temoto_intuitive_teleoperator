@@ -19,4 +19,13 @@
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
   </joint>
 
+  <!-- attach Temoto frame -->
+  <!-- A tool link that will serve as the end effector, instead of tool0. -->
+  <link name="temoto_end_effector" />
+  <joint name="ur3-temoto" type="fixed" >
+    <origin xyz="0 0 0" rpy="1.571 1.571 -1.571"/>
+    <parent link="ee_link" />
+    <child link="temoto_end_effector" />
+  </joint>
+
 </robot>
