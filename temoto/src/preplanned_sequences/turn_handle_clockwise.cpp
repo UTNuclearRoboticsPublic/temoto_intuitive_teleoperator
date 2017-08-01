@@ -32,7 +32,7 @@ void turn_handle_clockwise::enable_compliance()
 int turn_handle_clockwise::rotate()
 {
   // Set up the MoveGroup
-  moveit::planning_interface::MoveGroupInterface::Plan move_plan;
+  moveit::planning_interface::MoveGroup::Plan move_plan;
   turn_handle_clockwise::move_group.setPlannerId("RRTConnectkConfigDefault");
   turn_handle_clockwise::move_group.setMaxVelocityScalingFactor( 0.1 );
   turn_handle_clockwise::move_group.setGoalPositionTolerance(0.02);

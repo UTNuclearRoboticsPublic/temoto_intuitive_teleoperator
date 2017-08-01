@@ -67,7 +67,7 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 } // end serviceUpdate
 
 /** Plans and/or executes the motion of the robot.
- *  @param robot MoveGroupInterface object of the robot.
+ *  @param robot MoveGroup object of the robot.
  */
 void MoveRobotInterface::requestMove()
 {
@@ -77,7 +77,7 @@ void MoveRobotInterface::requestMove()
   
   // Get and print current position of the end effector
   geometry_msgs::PoseStamped current_pose = movegroup_.getCurrentPose();
-  ROS_INFO("[move_robot/requestMove] === CURRENT POSE ( as given by MoveGroupInterface::getCurrentPose() ) ===");
+  ROS_INFO("[move_robot/requestMove] === CURRENT POSE ( as given by MoveGroup::getCurrentPose() ) ===");
   ROS_INFO("[move_robot/requestMove] Current pose frame: %s", current_pose.header.frame_id.c_str());
   ROS_INFO("[move_robot/requestMove] Current pose (posit x, y, z): (%f, %f, %f)", current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
   ROS_INFO("[move_robot/requestMove] Current pose (orien x, y, z, w): (%f, %f, %f, %f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
@@ -145,7 +145,7 @@ void MoveRobotInterface::requestMove()
     ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
 //     robot.move();						// Plan and execute.
     // Since move() has a bug of start state not being current state, I am going to plan and execute sequentally.
-    moveit::planning_interface::MoveGroupInterface::Plan move_plan;
+    moveit::planning_interface::MoveGroup::Plan move_plan;
     printf("[move_robot/requestMove] Planning ...");
     movegroup_.plan( move_plan );
     printf("[DONE] \n[move_robot/requestMove] and Executing ...\n");
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   // Rate used for this node. If I only use the following async spinenr, the node also works but takes over 130%CPU.
   ros::Rate node_rate(200);
 
-  // Using an async spinner. It is needed for moveit's MoveGroupInterface::plan(), which would get stuck otherwise. Might be a bug.
+  // Using an async spinner. It is needed for moveit's MoveGroup::plan(), which would get stuck otherwise. Might be a bug.
   ros::AsyncSpinner spinner(0);
   spinner.start();
   

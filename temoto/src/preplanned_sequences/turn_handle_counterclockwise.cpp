@@ -30,7 +30,7 @@ void turn_handle_counterclockwise::enable_compliance()
 int turn_handle_counterclockwise::rotate()
 {
   // Set up the MoveGroup
-  moveit::planning_interface::MoveGroupInterface::Plan move_plan;
+  moveit::planning_interface::MoveGroup::Plan move_plan;
   turn_handle_counterclockwise::move_group.setPlannerId("RRTConnectkConfigDefault");
   turn_handle_counterclockwise::move_group.setMaxVelocityScalingFactor( 0.1 );
   turn_handle_counterclockwise::move_group.setGoalPositionTolerance(0.02);

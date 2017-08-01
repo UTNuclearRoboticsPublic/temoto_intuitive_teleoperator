@@ -10,6 +10,3 @@
 [submodule "ur_script_compliance"]
 	path = ur_script_compliance
 	url = https://github.com/UTNuclearRobotics/ur_script_compliance.git
-[submodule "rviz_animated_view_controller"]
-	path = rviz_animated_view_controller
-	url = https://github.com/UTNuclearRoboticsPublic/rviz_animated_view_controller.git
