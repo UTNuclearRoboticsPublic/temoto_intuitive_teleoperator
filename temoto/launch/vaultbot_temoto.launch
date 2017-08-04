@@ -18,7 +18,7 @@
 
   <!-- Bring up some temoto core components -->
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" output="screen">
-      <!-- <param name="manip_stl" type="str" value="package://temoto_support/meshes/2_finger_140_gripper.dae" /> -->
+      <param name="manip_stl" type="str" value="package://temoto_support/meshes/2_finger_140_gripper.dae" />
   </node>
 
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />

@@ -16,7 +16,10 @@
 
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
-  <node name="rviz_visual" pkg="temoto" type="rviz_visual" />
+
+  <node name="rviz_visual" pkg="temoto" type="rviz_visual" output="screen">
+      <param name="manip_stl" type="str" value="package://temoto_support/meshes/2_finger_85_gripper.dae" />
+  </node>
   
   <!-- Start temoto teleoperation -->
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
