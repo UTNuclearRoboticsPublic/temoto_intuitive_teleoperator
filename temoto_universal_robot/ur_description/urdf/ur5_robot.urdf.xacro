@@ -23,7 +23,7 @@
   <!-- A tool link that will serve as the base end effector, instead of tool0. -->
   <link name="temoto_end_effector" />
   <joint name="ur5-temoto" type="fixed" >
-    <origin xyz="0.0 0.0 0.0" rpy="1.571 1.571 -1.571"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 -1.571 0"/>
     <parent link="ee_link" />	<!-- end-effector link for UR5 -->
     <child link="temoto_end_effector" />
   </joint>  
