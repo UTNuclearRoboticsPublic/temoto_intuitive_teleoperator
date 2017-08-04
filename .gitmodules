@@ -10,3 +10,6 @@
 [submodule "ur_script_compliance"]
 	path = ur_script_compliance
 	url = https://github.com/UTNuclearRobotics/ur_script_compliance.git
+[submodule "keyboard_reader"]
+	path = keyboard_reader
+	url = https://github.com/UTNuclearRoboticsPublic/keyboard_reader.git

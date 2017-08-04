@@ -1,0 +1,8 @@
+<launch>
+
+  <!-- Use the keyboard instead of voice commands -->
+  <node name="keyboard_reader" pkg="keyboard_reader" type="keyboard_event_publisher" output="screen" />
+  <node name="fake_voice" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
+  
+</launch>
+

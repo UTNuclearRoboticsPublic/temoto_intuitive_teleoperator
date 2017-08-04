@@ -13,6 +13,7 @@ find_package(catkin REQUIRED
   geometry_msgs
   grasp_interface
   griffin_powermate
+  keyboard_reader
   leap_motion_controller
   message_generation
   move_base_msgs
@@ -184,6 +185,10 @@ add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
 target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand turn_handle_clockwise turn_handle_counterclockwise)
+
+add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
+target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
+add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 
 #############
 ## Install ##
