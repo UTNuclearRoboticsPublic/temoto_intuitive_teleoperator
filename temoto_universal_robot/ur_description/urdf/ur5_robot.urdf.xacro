@@ -26,6 +26,31 @@
     <origin xyz="0.0 0.0 0.0" rpy="0 -1.571 0"/>
     <parent link="ee_link" />	<!-- end-effector link for UR5 -->
     <child link="temoto_end_effector" />
+  </joint>
+
+   <!-- attach gripper. Z is up -->
+  <joint name="hand_attach_joint" type="fixed">
+    <parent link= "ee_link" />
+    <child link = "2_finger_85_gripper_link" />
+    <origin xyz="0.09 0 0" rpy="0 0 -1.571" />    
   </joint>  
+
+  <link name="2_finger_85_gripper_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+        <material name="black">
+          <color rgba="0.05 0.05 0.05 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+        <geometry>
+          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+  </link>
 
 </robot>

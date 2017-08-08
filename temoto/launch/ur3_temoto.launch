@@ -20,6 +20,10 @@
    <arg name="sim" value="true" />
   </include>
 
+  <!-- //// -->
+  <!-- RVIZ -->
+  <!-- //// -->
+
   <!-- bringup proper rviz config -->
   <include file="$(find temoto)/launch/ur3_moveit_rviz.launch">
     <arg name="config" value="true"/>
