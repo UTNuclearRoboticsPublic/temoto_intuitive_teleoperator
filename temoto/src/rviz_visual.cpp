@@ -170,41 +170,41 @@ void Visuals::initDistanceAsText()
 /** Creates the initial marker that visualizes hand pose as a flattened box. */
 void Visuals::initHandPoseMarker()
 {
-  hand_pose_marker_.header.frame_id = human_frame_;
-  hand_pose_marker_.header.stamp = ros::Time();
-  hand_pose_marker_.ns = "hand_pose_marker";
-  hand_pose_marker_.id = 0;
+  cmd_pose_marker_.header.frame_id = human_frame_;
+  cmd_pose_marker_.header.stamp = ros::Time();
+  cmd_pose_marker_.ns = "hand_pose_marker";
+  cmd_pose_marker_.id = 0;
 
   if ( manip_stl_ == "" )  // No end-effector CAD model was specified.
   {
     ROS_WARN_STREAM("No end-effector CAD model was specified.");
-    hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    hand_pose_marker_.action = visualization_msgs::Marker::ADD;
+    cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
+    cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
 
-    hand_pose_marker_.scale.x = 0.06;	// side
-    hand_pose_marker_.scale.y = 0.02;	// thickness
-    hand_pose_marker_.scale.z = 0.15;	// depth
+    cmd_pose_marker_.scale.x = 0.06;	// side
+    cmd_pose_marker_.scale.y = 0.02;	// thickness
+    cmd_pose_marker_.scale.z = 0.15;	// depth
   }
   else  // the user specified an end-effector CAD file
   {
-    hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-    hand_pose_marker_.mesh_resource = manip_stl_;
-    hand_pose_marker_.action = visualization_msgs::Marker::ADD;
-    hand_pose_marker_.scale.x = 1;
-    hand_pose_marker_.scale.y = 0.1;
-    hand_pose_marker_.scale.z = 1;
+    cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+    cmd_pose_marker_.mesh_resource = manip_stl_;
+    cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
+    cmd_pose_marker_.scale.x = 1;
+    cmd_pose_marker_.scale.y = 0.1;
+    cmd_pose_marker_.scale.z = 1;
   }
   
   // begin at the position of end effector
-  hand_pose_marker_.pose.position.x = 0.0;
-  hand_pose_marker_.pose.position.y = 0.0;
-  hand_pose_marker_.pose.position.z = 0.0;
+  cmd_pose_marker_.pose.position.x = 0.0;
+  cmd_pose_marker_.pose.position.y = 0.0;
+  cmd_pose_marker_.pose.position.z = 0.0;
 
-  hand_pose_marker_.color.a = 0.1;
+  cmd_pose_marker_.color.a = 0.1;
   // Orange.
-  hand_pose_marker_.color.r = 1.0;
-  hand_pose_marker_.color.g = 0.5;
-  hand_pose_marker_.color.b = 0.0;
+  cmd_pose_marker_.color.r = 1.0;
+  cmd_pose_marker_.color.g = 0.5;
+  cmd_pose_marker_.color.b = 0.0;
   
   return;
 } // end Visuals::initHandPoseMarker()
@@ -295,28 +295,28 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     
     /* ==  HAND POSE BOX MARKER  ============================= */
     // Resize of the hand pose marker to robot base dimensions
-    hand_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    hand_pose_marker_.scale.x = 0.5;
-    hand_pose_marker_.scale.z = 1.0; 
+    cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
+    cmd_pose_marker_.scale.x = 0.5;
+    cmd_pose_marker_.scale.z = 1.0; 
 
     // Hand pose marker (relative to leap_motion frame)
-    hand_pose_marker_.pose = latest_status_.live_hand_pose.pose;
+    cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
     
     // Paint the marker based on restricted motion latest_status
-    if (latest_status_.orientation_free) hand_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else hand_pose_marker_.color.g = 0.5;					// else, the marker is orange
+    if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
+    else cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
 
     // In NAVIGATION, the hand pose marker must always be visible
-    hand_pose_marker_.color.a = 1;
+    cmd_pose_marker_.color.a = 1;
 
-    marker_publisher.publish( hand_pose_marker_ );
+    marker_publisher.publish( cmd_pose_marker_ );
 
     /* ==  TEXT LABEL  ======================================= */
     // Update display_distance parameters (display_distance operates relative to leap_motion frame)
     std::vector<geometry_msgs::Point> temp;
     geometry_msgs::Point zero_point;
     temp.push_back(zero_point);
-    temp.push_back(latest_status_.live_hand_pose.pose.position);
+    temp.push_back(latest_status_.commanded_pose.pose.position);
     distance_as_text_.text = getDistanceString(temp);			// get the linear distance from zero to hand position end point as string
     distance_as_text_.scale.z = 0.05 + latest_status_.scale_by/8;	// scale the display text based on scale_by value
     distance_as_text_.pose.position = temp[1];				// text is placed at the hand position
@@ -331,7 +331,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Update arrow marker properties and make hand tracking visible in RViz
     // Arrow marker is described in leap_motion frame.
     // The arrow start point is always (0.0.0)
-    displacement_arrow_.points[1] = latest_status_.live_hand_pose.pose.position; // arrow end point
+    displacement_arrow_.points[1] = latest_status_.commanded_pose.pose.position; // arrow end point
 
     // Change arrow's thickness based on scaling factor
     displacement_arrow_.scale.x = 0.001 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
@@ -370,9 +370,9 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Use the same origin/pivot point as the start point of the arrow marker
     active_range_box_.pose.position = displacement_arrow_.points[0];
     // Dimensions of the box are determined by the hand position
-    active_range_box_.scale.x = latest_status_.live_hand_pose.pose.position.x * 2;
-    active_range_box_.scale.y = latest_status_.live_hand_pose.pose.position.y * 2;
-    active_range_box_.scale.z = latest_status_.live_hand_pose.pose.position.z * 2;
+    active_range_box_.scale.x = latest_status_.commanded_pose.pose.position.x * 2;
+    active_range_box_.scale.y = latest_status_.commanded_pose.pose.position.y * 2;
+    active_range_box_.scale.z = latest_status_.commanded_pose.pose.position.z * 2;
     // If setting pose in one plane only, give the aid box thickness of the arrow
     if (!latest_status_.position_forward_only && !latest_status_.position_unlimited) active_range_box_.scale.z = displacement_arrow_.scale.x;
     // Coloring the active range box
@@ -407,34 +407,36 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
 
     /* ==  HAND POSE MARKER  ================================= */
-    hand_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-    hand_pose_marker_.mesh_resource = manip_stl_;
-    hand_pose_marker_.scale.x = 0.06;
-    hand_pose_marker_.scale.z = 0.15;
+    cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+    cmd_pose_marker_.mesh_resource = manip_stl_;
+    cmd_pose_marker_.scale.x = 0.001;
+    cmd_pose_marker_.scale.y = 0.001;
+    cmd_pose_marker_.scale.z = 0.001;
+
     // Hand pose marker (relative to leap_motion frame)
-    hand_pose_marker_.pose = latest_status_.live_hand_pose.pose;
+    cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
     if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE
     {
       // 180* about y (pitch) then 90* about z (yaw)
       // Multiply by this second quaternion to rotate it.
       tf::Quaternion q_orig, q_rot( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
-      quaternionMsgToTF(hand_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
+      quaternionMsgToTF(cmd_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
       q_orig *= q_rot;  // Calculate the new orientation
-      quaternionTFToMsg(q_orig, hand_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
+      quaternionTFToMsg(q_orig, cmd_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
     }
     // else ==> do nothing
 
     // Paint the marker based on restricted motion
-    if (latest_status_.orientation_free) hand_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else hand_pose_marker_.color.g = 0.5;					// else, the marker is orange
+    if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
+    else cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
 
     // SPECIAL CASE! Hide hand pose marker when orientation is to be ignored.
-    if (!latest_status_.orientation_free) hand_pose_marker_.color.a = 0;	// make the marker invisible
-    else hand_pose_marker_.color.a = 1;
+    if (!latest_status_.orientation_free) cmd_pose_marker_.color.a = 0;	// make the marker invisible
+    else cmd_pose_marker_.color.a = 1;
 
-    // Publish hand_pose_marker_
-    marker_publisher.publish( hand_pose_marker_ );
+    // Publish cmd_pose_marker_
+    marker_publisher.publish( cmd_pose_marker_ );
 
   } // end setting markers in MANIPULATION mode
     

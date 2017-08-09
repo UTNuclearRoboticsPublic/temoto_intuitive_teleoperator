@@ -141,7 +141,7 @@ private:
   visualization_msgs::Marker distance_as_text_;
   
   /** Flattened-box-shaped marker that represents the position and orientation of the operator's primary hand. */
-  visualization_msgs::Marker hand_pose_marker_;
+  visualization_msgs::Marker cmd_pose_marker_;
   
   /** Translucent box or area that is centered around the starting pose while displacement_arrow_ always points to one of its corners. */
   visualization_msgs::Marker active_range_box_;

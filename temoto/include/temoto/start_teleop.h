@@ -38,6 +38,7 @@
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "ros/ros.h"
+#include "sensor_msgs/Joy.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include "tf/tf.h"
@@ -65,7 +66,7 @@ class Teleoperator
 public:
   // Constructor
   
-  Teleoperator(std::string primary_hand, bool navigate, bool manipulate, ros::NodeHandle& n);
+  Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_cmd, ros::NodeHandle& n);
   
   // Callback functions
   
@@ -83,7 +84,9 @@ public:
   
   //Callback functions
   
-  void processLeap(leap_motion_controller::Set leap_data);  // TODO rename to more general case, e.g. processHumanInput
+  void processAbsolutePoseCmd(leap_motion_controller::Set leap_data);
+
+  void processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd);
   
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
   
@@ -104,8 +107,9 @@ private:
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;
 
-  /// Scaling factor. Normalized to 1.
-  double scale_by_;
+  /// Scaling factor
+  double pos_scale_;
+  double rot_scale_;
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
@@ -118,8 +122,8 @@ private:
   /// Latest pose value received for the end effector.
   geometry_msgs::PoseStamped current_pose_;
   
-  /// Properly scaled target pose in reference to the hand pose input (e.g. leap_motion) frame.
-  geometry_msgs::PoseStamped live_pose_;
+  /// Properly scaled target pose in reference to the leap_motions frame.
+  geometry_msgs::PoseStamped commanded_pose_;
 
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
@@ -128,11 +132,12 @@ private:
   bool orientation_locked_;		///< Hand orientation info is to be ignored if TRUE.
   bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
   bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processLeap(..).
-  bool navigate_to_goal_;		///< TRUE: interpret live_pose_ as 2D navigation goal; FALSE: live_pose_ is the motion planning target for robot EEF.
+  bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsolutePoseCmd(..).
+  bool navigate_to_goal_;		///< TRUE: interpret commanded_pose_ as 2D navigation goal; FALSE: commanded_pose_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
   uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
   bool executing_preplanned_sequence_ = false;
+  bool absolute_pose_cmd_ = true;       // Specify whether incoming pose commands are absolute or relative
 
   // ROS publishers
   ros::Publisher pub_abort_;
