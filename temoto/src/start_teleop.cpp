@@ -300,8 +300,9 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
   commanded_pose_.pose.position.z += -pos_scale_*pose_cmd.axes[0];  // Z is back
 
   double roll = -rot_scale_*pose_cmd.axes[4];  // about x axis
-  double pitch = rot_scale_*pose_cmd.axes[5];  // about y axis
-  double yaw = -rot_scale_*pose_cmd.axes[3];  // about z axis
+  double pitch = rot_scale_*pose_cmd.axes[3];  // about y axis
+  double yaw = rot_scale_*pose_cmd.axes[5];  // about z axis
+  double r=1.3, p=0.1, y=0.1;
   tf::Quaternion q_orig, q_rot;
   q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);
   quaternionMsgToTF(commanded_pose_.pose.orientation , q_orig);  // Get the original orientation
