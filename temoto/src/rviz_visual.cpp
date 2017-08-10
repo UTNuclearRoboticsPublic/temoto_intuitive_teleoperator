@@ -82,6 +82,7 @@ void Visuals::updateStatus (temoto::Status status)
   
   // Overwrite latest_status values with the new status.
   latest_status_ = status;
+
   return;
 }
 
@@ -170,7 +171,7 @@ void Visuals::initDistanceAsText()
 /** Creates the initial marker that visualizes hand pose as a flattened box. */
 void Visuals::initHandPoseMarker()
 {
-  cmd_pose_marker_.header.frame_id = human_frame_;
+  cmd_pose_marker_.header.frame_id = "base_link";
   cmd_pose_marker_.header.stamp = ros::Time();
   cmd_pose_marker_.ns = "hand_pose_marker";
   cmd_pose_marker_.id = 0;
@@ -299,7 +300,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     cmd_pose_marker_.scale.x = 0.5;
     cmd_pose_marker_.scale.z = 1.0; 
 
-    // Hand pose marker (relative to leap_motion frame)
+    // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
     
     // Paint the marker based on restricted motion latest_status

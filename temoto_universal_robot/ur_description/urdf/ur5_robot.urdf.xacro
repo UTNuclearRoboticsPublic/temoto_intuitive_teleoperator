@@ -39,7 +39,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper_urdf.stl" scale="0.001 0.001 0.001"/>
         </geometry>
         <material name="black">
           <color rgba="0.05 0.05 0.05 1"/>
@@ -48,7 +48,7 @@
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
         <geometry>
-          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper_urdf.stl" scale="0.001 0.001 0.001"/>
         </geometry>
       </collision>
   </link>

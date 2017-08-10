@@ -45,23 +45,21 @@
 bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 				       temoto::Goal::Response &res)
 {
-  //  ROS_INFO("New service update requested.");
   // sets the action associated to target pose
   req_action_type_ = req.action_type;
   
   // sets target requested pose
   target_pose_stamped_ = req.goal;
+  ROS_INFO_STREAM("[MoveRobotInterface::serviceUpdate] target_pose_stamped_: " << target_pose_stamped_ );
     
   // check for named target
   use_named_target_ = false;					// by default do not use named_target.
   named_target_ = req.named_target;				// get named_target from the service request.
   ROS_INFO("[MoveRobotInterface::serviceUpdate] named_target_='%s'", named_target_.c_str());
   if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
-  if (use_named_target_) ROS_INFO("[MoveRobotInterface::serviceUpdate] use_named_target is set TRUE");
     
   // Set new_move_requested_ TRUE for main() to see it
   new_move_requested_ = true;
-  ROS_INFO("[MoveRobotInterface::serviceUpdate] new_move_requested_ is set TRUE");
   
   return true;
 } // end serviceUpdate
@@ -76,11 +74,13 @@ void MoveRobotInterface::requestMove()
   movegroup_.setStartState( *(movegroup_.getCurrentState()) );
   
   // Get and print current position of the end effector
+/*
   geometry_msgs::PoseStamped current_pose = movegroup_.getCurrentPose();
   ROS_INFO("[move_robot/requestMove] === CURRENT POSE ( as given by MoveGroup::getCurrentPose() ) ===");
   ROS_INFO("[move_robot/requestMove] Current pose frame: %s", current_pose.header.frame_id.c_str());
   ROS_INFO("[move_robot/requestMove] Current pose (posit x, y, z): (%f, %f, %f)", current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
   ROS_INFO("[move_robot/requestMove] Current pose (orien x, y, z, w): (%f, %f, %f, %f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
+*/
  
   // Use either named or pose target (named target takes the priority over regular pose target).
   if (use_named_target_)						// if use_named_target is true
@@ -95,8 +95,7 @@ void MoveRobotInterface::requestMove()
   } // end if (use_named_target_)
   else
   {
-//     movegroup_.setEndEffectorLink( "temoto_end_effector" );
-    ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
+    //ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
     if ( !movegroup_.setPoseTarget(target_pose_stamped_ /*, "temoto_end_effector"*/) )	// check if set target pose failed
     {
@@ -119,15 +118,14 @@ void MoveRobotInterface::requestMove()
   
   // Just checking what is the target pose
   geometry_msgs::PoseStamped current_target = movegroup_.getPoseTarget();
-  ROS_INFO("[move_robot/requestMove] Target pose frame: %s", current_target.header.frame_id.c_str());
-  ROS_INFO("[move_robot/requestMove] Target pose (posit x, y, z): (%f, %f, %f)", current_target.pose.position.x, current_target.pose.position.y, current_target.pose.position.z);
-  ROS_INFO("[move_robot/requestMove] Target pose (orien x, y, z, w): (%f, %f, %f, %f)", current_target.pose.orientation.x, current_target.pose.orientation.y, current_target.pose.orientation.z, current_target.pose.orientation.w);
+  //ROS_INFO("[move_robot/requestMove] Target pose frame: %s", current_target.header.frame_id.c_str());
+  ROS_INFO_STREAM("[move_robot/requestMove] Target pose: " << current_target.pose);
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
   if ( req_action_type_ == low_level_cmds::PLAN )
   {
     ROS_INFO("[move_robot/requestMove] Starting to plan ...");
-    ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
+    //ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
     movegroup_.plan( latest_plan_ );				// Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
     ROS_INFO("[move_robot/requestMove] DONE planning.");
@@ -188,6 +186,11 @@ int main(int argc, char **argv)
   MoveRobotInterface moveIF(move_group_name);
   // Using RRTConnectkConfigDefault planner for motion planning
   moveIF.movegroup_.setPlannerId("RRTConnectkConfigDefault");
+
+  // For frame transformations
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+  geometry_msgs::TransformStamped transform_stamped;
   
   // FYI
   ROS_INFO("[move_robot/main] Planning frame: %s", moveIF.movegroup_.getPlanningFrame().c_str());
@@ -213,8 +216,19 @@ int main(int argc, char **argv)
       moveIF.new_move_requested_ = false;	// set request flag to false
     }
     
-    // get and publish current end effector pose;
-    pub_end_effector.publish( moveIF.movegroup_.getCurrentPose() );
+    // get and publish current end effector pose. Ensure it's in base_link frame
+    geometry_msgs::PoseStamped current_pose = moveIF.movegroup_.getCurrentPose();
+    try{
+      transform_stamped = tfBuffer.lookupTransform("base_link", "world",
+                               ros::Time(0));
+    }
+    catch (tf2::TransformException &ex) {
+      ROS_WARN("%s",ex.what());
+      ros::Duration(1.0).sleep();
+      continue;
+    }
+    tf2::doTransform(current_pose, current_pose, transform_stamped); // robotPose is the PoseStamped I want to transform
+    pub_end_effector.publish( current_pose );
     
     ros::spinOnce();
     // sleep to meet the node_rate frequency

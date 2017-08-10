@@ -80,7 +80,7 @@ public:
   
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
-  temoto::Status getStatus();
+  temoto::Status setStatus();
   
   //Callback functions
   
@@ -122,8 +122,10 @@ private:
   /// Latest pose value received for the end effector.
   geometry_msgs::PoseStamped current_pose_;
   
-  /// Properly scaled target pose in reference to the leap_motions frame.
-  geometry_msgs::PoseStamped commanded_pose_;
+  /// For absolute pose commands, as from LeapMotion
+  geometry_msgs::PoseStamped absolute_pose_cmd_;
+  // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
+  geometry_msgs::PoseStamped incremental_pose_cmd_;
 
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
@@ -133,11 +135,11 @@ private:
   bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
   bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
   bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsolutePoseCmd(..).
-  bool navigate_to_goal_;		///< TRUE: interpret commanded_pose_ as 2D navigation goal; FALSE: commanded_pose_ is the motion planning target for robot EEF.
+  bool navigate_to_goal_;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
   uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
   bool executing_preplanned_sequence_ = false;
-  bool absolute_pose_cmd_ = true;       // Specify whether incoming pose commands are absolute or relative
+  bool absolute_pose_input_ = true;       // Specify whether incoming pose commands are absolute or relative
 
   // ROS publishers
   ros::Publisher pub_abort_;

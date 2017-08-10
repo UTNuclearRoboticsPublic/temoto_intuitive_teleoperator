@@ -1,5 +1,3 @@
-std_msgs/Header header
-
 float64 scale_by
 geometry_msgs/PoseStamped commanded_pose
 

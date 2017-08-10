@@ -41,7 +41,7 @@
  *  @param manipulate enables teleoperation for move interface.
  *  @param absolute_pose_cmd specifies whether the user input poses are incremental or absolute.
  */
-Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_cmd, ros::NodeHandle& n)
+Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_input, ros::NodeHandle& n)
  : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
 {
   using_natural_control_ = true;	// always start in natural control perspective
@@ -50,12 +50,17 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   position_fwd_only_ = false;
   secondary_hand_before_ = false;
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
-  absolute_pose_cmd_ = absolute_pose_cmd;
-  commanded_pose_.header.frame_id = "base_link";
-  commanded_pose_.pose.position.x = 0; commanded_pose_.pose.position.y = 0; commanded_pose_.pose.position.z = 0;
-  commanded_pose_.pose.orientation.x = 0; commanded_pose_.pose.orientation.y = 0; commanded_pose_.pose.orientation.z = 0; commanded_pose_.pose.orientation.w = 1;
+  absolute_pose_input_ = absolute_pose_input;
 
-  if (absolute_pose_cmd)
+  incremental_pose_cmd_.header.frame_id = "base_link";
+  incremental_pose_cmd_.pose.position.x = 0; incremental_pose_cmd_.pose.position.y = 0; incremental_pose_cmd_.pose.position.z = 0;
+  incremental_pose_cmd_.pose.orientation.x = 0; incremental_pose_cmd_.pose.orientation.y = 0; incremental_pose_cmd_.pose.orientation.z = 0; incremental_pose_cmd_.pose.orientation.w = 1;
+
+  absolute_pose_cmd_.header.frame_id = "base_link";
+  absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
+  absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
+
+  if (absolute_pose_input)
   {
     pos_scale_ = 1.;
     rot_scale_ = 1.;
@@ -118,7 +123,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
 {
   // Create a service request
   temoto::Goal motion;	
-  motion.request.goal = commanded_pose_;		// set commanded_pose_ as the requested pose for the motion planner
+  motion.request.goal = absolute_pose_cmd_;  // motion planner goal
+
   motion.request.action_type = action_type;	// set action_type
 
   // =================================================
@@ -156,7 +162,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       
       // Translate leap_motion pose to base_link
       geometry_msgs::PoseStamped goal_in_baselink;
-      // commanded_pose_ is given in leap_motion frame and shall be transformed into base_link
+      // absolute_pose_cmd_ is given in leap_motion frame and shall be transformed into base_link
       transform_listener_.transformPose("base_link", motion.request.goal, goal_in_baselink);
     
       // ------------------------- DEBUG START {
@@ -289,27 +295,39 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
 }
 
 /** Callback function for relative position commands.
- *  Add the new command to the current RViz marker (its pose is commanded_pose).
+ *  Add the new command to the current RViz marker.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
  */
 void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
 {
-  commanded_pose_.header.frame_id = "base_link";
-  commanded_pose_.pose.position.x += -pos_scale_*pose_cmd.axes[1];  // X is right
-  commanded_pose_.pose.position.y += pos_scale_*pose_cmd.axes[2];   // Y is up
-  commanded_pose_.pose.position.z += -pos_scale_*pose_cmd.axes[0];  // Z is back
+  // Ensure incoming data is in the right frame
+  if (current_pose_.header.frame_id != "base_link")
+  {
+    ROS_WARN("[start_teleop] The current pose is not being published in the base_link frame.");
+    return;
+  }
 
-  double roll = -rot_scale_*pose_cmd.axes[4];  // about x axis
-  double pitch = rot_scale_*pose_cmd.axes[3];  // about y axis
+  // POSITION
+  // Integrate the incremental cmd. It persists even if the robot moves
+  incremental_pose_cmd_.pose.position.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+  incremental_pose_cmd_.pose.position.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+  incremental_pose_cmd_.pose.position.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
+  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_pose_cmd_.pose.position.x;
+  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_pose_cmd_.pose.position.y;
+  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_pose_cmd_.pose.position.z;
+
+  // ORIENTATION
+  double roll = rot_scale_*pose_cmd.axes[3];  // about x axis
+  double pitch = rot_scale_*pose_cmd.axes[4];  // about y axis
   double yaw = rot_scale_*pose_cmd.axes[5];  // about z axis
-  double r=1.3, p=0.1, y=0.1;
   tf::Quaternion q_orig, q_rot;
   q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);
-  quaternionMsgToTF(commanded_pose_.pose.orientation , q_orig);  // Get the original orientation
+  quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_orig);  // Get the original orientation
   q_orig *= q_rot;  // Calculate the new orientation
   q_orig.normalize();
-  quaternionTFToMsg(q_orig, commanded_pose_.pose.orientation);  // Stuff it back into the commanded pose
-    
+  quaternionTFToMsg(q_orig, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
   return;
 } // end processIncrementalPoseCmd
 
@@ -408,14 +426,14 @@ void Teleoperator::processAbsolutePoseCmd(leap_motion_controller::Set leap_data)
     // Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
     // Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
 
-  // Setting properly scaled and limited pose as the commanded_pose_
-  commanded_pose_.pose = scaled_pose.pose;
-  commanded_pose_.header.frame_id = leap_data.header.frame_id;
-  commanded_pose_.header.stamp = ros::Time(0);//ros::Time::now();
+  // Setting properly scaled and limited pose as the absolute_pose_cmd_
+  absolute_pose_cmd_.pose = scaled_pose.pose;
+  absolute_pose_cmd_.header.frame_id = leap_data.header.frame_id;
+  absolute_pose_cmd_.header.stamp = ros::Time(0);//ros::Time::now();
 
   // Print position info to terminal
   /*printf("Scale motion by %f; move robot end-effector by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
-	   AMP_HAND_MOTION_*pos_scale_, commanded_pose_.pose.position.x*1000, commanded_pose_.pose.position.y*1000, commanded_pose_.pose.position.z*1000, position_fwd_only_); */
+	   AMP_HAND_MOTION_*pos_scale_, absolute_pose_cmd_.pose.position.x*1000, absolute_pose_cmd_.pose.position.y*1000, absolute_pose_cmd_.pose.position.z*1000, position_fwd_only_); */
 
   return;
 } // end processAbsolutePoseCmd
@@ -457,7 +475,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 
     // Print position info to terminal
     /*printf("Scale motion by %f; move SIA5 by (x=%f, y=%f, z=%f) mm; position_fwd_only_=%d\n",
-	    AMP_HAND_MOTION_*pos_scale_, commanded_pose_.pose.position.x*1000, commanded_pose_.pose.position.y*1000, commanded_pose_.pose.position.z*1000, position_fwd_only_);*/
+	    AMP_HAND_MOTION_*pos_scale_, absolute_pose_cmd_.pose.position.x*1000, absolute_pose_cmd_.pose.position.y*1000, absolute_pose_cmd_.pose.position.z*1000, position_fwd_only_);*/
     return;
   } // else
 } // end processPowermate()
@@ -685,17 +703,18 @@ void Teleoperator::triggerROSAction(temoto::Command& voice_command)
   preplanned_sequence_client_.sendGoal(goal);
 }
 
-
 /** Puts all the latest private variable values into temoto/status message.
+ *  This is used in marker publication.
  *  @return temoto::Status message.
  */
-temoto::Status Teleoperator::getStatus()
+temoto::Status Teleoperator::setStatus()
 {
   temoto::Status status;
-  status.header.stamp = ros::Time::now();
-  status.header.frame_id = "teleoperator";
-  status.scale_by = pos_scale_;					// Latest pos_scale_ value
-  status.commanded_pose = commanded_pose_;				// Latest hand pose stamped
+  status.scale_by = pos_scale_;			// Latest pos_scale_ value
+
+
+  status.commanded_pose = absolute_pose_cmd_;
+
   status.in_natural_control_mode = using_natural_control_;
   status.orientation_free = !orientation_locked_;
   status.position_unlimited = !position_limited_;
@@ -707,7 +726,7 @@ temoto::Status Teleoperator::getStatus()
   status.in_navigation_mode = navigate_to_goal_;
 
   return status;
-} // end getStatus()
+} // end setStatus()
 
 
 /** MAIN */
@@ -739,12 +758,12 @@ int main(int argc, char **argv)
   // By default manipulation is turned ON
   bool manipulate;
   pn.param<bool>("manipulate", manipulate, true);
-  // By default, the input device gives absolute pose commands (vs. incremental)
-  bool absolute_pose_cmd;
-  pn.param<bool>("absolute_pose_cmd", absolute_pose_cmd, true);
+  // Absolute or incremental pose input (e.g. SpaceMouse is incremental, LeapMotion is absolute)
+  bool absolute_pose_input;
+  pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
   
   // Instance of Teleoperator
-  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate, absolute_pose_cmd, n);
+  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate, absolute_pose_input, n);
 
   // Make a request for initial human2robot TF set-up
   temoto::ChangeTf initial_human2robot_tf;
@@ -760,7 +779,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
-  if (absolute_pose_cmd)
+  if (absolute_pose_input)
   {
     sub_pose_cmd = n.subscribe(temoto_pose_cmd_topic, 10,  &Teleoperator::processAbsolutePoseCmd, &temoto_teleop);
   }
@@ -773,7 +792,6 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
   
-  // Publisher for Teleoperator::getStatus()
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
   
   ROS_INFO("Starting teleoperation ...");
@@ -781,7 +799,7 @@ int main(int argc, char **argv)
   while ( ros::ok() )
   {
     // publish status current
-    pub_status.publish( temoto_teleop.getStatus() );
+    pub_status.publish( temoto_teleop.setStatus() );
     
     ros::spinOnce();
     node_rate.sleep();
