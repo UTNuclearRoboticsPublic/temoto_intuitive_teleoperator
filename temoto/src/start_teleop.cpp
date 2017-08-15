@@ -43,6 +43,7 @@
  */
 Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_input, ros::NodeHandle& n)
  : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
+  //, q_incremental_(0., 0., 0., 1.) // initially, add no rotation. New incremental rotation commands from e.g. the SpaceMouse will be added here.
 {
   using_natural_control_ = true;	// always start in natural control perspective
   orientation_locked_ = false;
@@ -51,10 +52,6 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   secondary_hand_before_ = false;
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   absolute_pose_input_ = absolute_pose_input;
-
-  incremental_pose_cmd_.header.frame_id = "base_link";
-  incremental_pose_cmd_.pose.position.x = 0; incremental_pose_cmd_.pose.position.y = 0; incremental_pose_cmd_.pose.position.z = 0;
-  incremental_pose_cmd_.pose.orientation.x = 0; incremental_pose_cmd_.pose.orientation.y = 0; incremental_pose_cmd_.pose.orientation.z = 0; incremental_pose_cmd_.pose.orientation.w = 1;
 
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
@@ -309,24 +306,29 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
 
   // POSITION
   // Integrate the incremental cmd. It persists even if the robot moves
-  incremental_pose_cmd_.pose.position.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
-  incremental_pose_cmd_.pose.position.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
-  incremental_pose_cmd_.pose.position.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
+  incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+  incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+  incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
 
-  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_pose_cmd_.pose.position.x;
-  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_pose_cmd_.pose.position.y;
-  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_pose_cmd_.pose.position.z;
+  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_position_cmd_.x;
+  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_position_cmd_.y;
+  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_position_cmd_.z;
 
   // ORIENTATION
-  double roll = rot_scale_*pose_cmd.axes[3];  // about x axis
-  double pitch = rot_scale_*pose_cmd.axes[4];  // about y axis
-  double yaw = rot_scale_*pose_cmd.axes[5];  // about z axis
-  tf::Quaternion q_orig, q_rot;
-  q_rot = tf::createQuaternionFromRPY(roll, pitch, yaw);
-  quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_orig);  // Get the original orientation
-  q_orig *= q_rot;  // Calculate the new orientation
-  q_orig.normalize();
-  quaternionTFToMsg(q_orig, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+  // new incremental rpy command
+  incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
+  incremental_orientation_cmd_.y = rot_scale_*pose_cmd.axes[4];  // about y axis
+  incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+
+  tf::Quaternion q_previous_cmd, q_incremental;
+  q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
+
+  // Add the incremental command to the previously commanded orientation
+  quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+  q_previous_cmd *= q_incremental;  // Calculate the new orientation
+  q_previous_cmd.normalize();
+  quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
 
   return;
 } // end processIncrementalPoseCmd

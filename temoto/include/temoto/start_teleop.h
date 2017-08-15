@@ -125,7 +125,8 @@ private:
   /// For absolute pose commands, as from LeapMotion
   geometry_msgs::PoseStamped absolute_pose_cmd_;
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
-  geometry_msgs::PoseStamped incremental_pose_cmd_;
+  geometry_msgs::Vector3 incremental_position_cmd_;
+  geometry_msgs::Vector3 incremental_orientation_cmd_;
 
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
