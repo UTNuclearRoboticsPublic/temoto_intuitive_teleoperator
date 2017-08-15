@@ -327,26 +327,31 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Update arrow marker properties and make hand tracking visible in RViz
     // Arrow marker is described in leap_motion frame.
     // The arrow start point is always (0.0.0)
-    displacement_arrow_.points[1] = latest_status_.commanded_pose.pose.position; // arrow end point
+
+    geometry_msgs::PointStamped arrow_tip_stamped;
+    arrow_tip_stamped.header.frame_id = latest_status_.commanded_pose.header.frame_id;
+    arrow_tip_stamped.point = latest_status_.commanded_pose.pose.position;
+    geometry_msgs::PointStamped arrow_tip;
+    tf_listener_.transformPoint( "leap_motion", arrow_tip_stamped, arrow_tip );
+    displacement_arrow_.points[1] = arrow_tip.point; // arrow end point
 
     // Change arrow's thickness based on scaling factor
-    displacement_arrow_.scale.x = 0.001 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
-    displacement_arrow_.scale.y = 0.002 + latest_status_.scale_by/100;	// head diameter when start and end point are defined
+    displacement_arrow_.scale.x = 0.01 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
+    displacement_arrow_.scale.y = 0.02 + latest_status_.scale_by/100;	// head diameter when start and end point are defined
     displacement_arrow_.scale.z = 0;					// automatic head length
     
     displacement_arrow_.color.a = 1;					// the arrow is visibly solid
 
+/*
     // A tweak for extreme close-ups to make the arrow out of scale but more informative
-    if (latest_status_.scale_by < 0.01 && camera_is_aligned_ /*&& !latest_status.in_natural_control_mode*/)// only when the rviz camera is in the front
-    {
-      //displacement_arrow_.points[0].z -= 0.02;				// shift arrow marker away from the camera because camera is at the VIRTUAL_VIEW_SCREEN
-      //displacement_arrow_.points[1].z -= 0.02;     
+    if (latest_status_.scale_by < 0.01 && camera_is_aligned_ )// only when the rviz camera is in the front
+    {    
       displacement_arrow_.scale.x = 0.0001;				// make the shaft thinner
       displacement_arrow_.scale.y = 0.0003;				// make the arrow head thinner
       displacement_arrow_.color.a = 0.6;				// and make the arrow a bit transparent
     }
 
-    // Change arrow's appearance when camera in on the top, looking down
+    // Change arrow's appearance when camera is on the top, looking down
     if (!camera_is_aligned_ && !latest_status_.position_unlimited)	// if camera is on the top and facing down, the arrow marker must be made more visible
     {
       displacement_arrow_.scale.x = 0.15;				// shaft is now quite fat
@@ -358,17 +363,17 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       displacement_arrow_.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
     else 
       displacement_arrow_.color.g = 0.5;	// else, the arrow is orange
-
+*/
     // Publish displacement_arrow_
     marker_publisher.publish( displacement_arrow_ );
 
     /* ==  ACTIVE RANGE BOX  ================================= */
     // Use the same origin/pivot point as the start point of the arrow marker
     active_range_box_.pose.position = displacement_arrow_.points[0];
-    // Dimensions of the box are determined by the hand position
-    active_range_box_.scale.x = latest_status_.commanded_pose.pose.position.x * 2;
-    active_range_box_.scale.y = latest_status_.commanded_pose.pose.position.y * 2;
-    active_range_box_.scale.z = latest_status_.commanded_pose.pose.position.z * 2;
+    // Dimensions of the box are also based on the arrow
+    active_range_box_.scale.x = displacement_arrow_.points[1].x * 2;
+    active_range_box_.scale.y = displacement_arrow_.points[1].y * 2;
+    active_range_box_.scale.z = displacement_arrow_.points[1].z * 2;
     // If setting pose in one plane only, give the aid box thickness of the arrow
     if (!latest_status_.position_forward_only && !latest_status_.position_unlimited) active_range_box_.scale.z = displacement_arrow_.scale.x;
     // Coloring the active range box

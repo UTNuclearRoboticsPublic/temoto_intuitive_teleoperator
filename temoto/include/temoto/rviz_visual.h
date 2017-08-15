@@ -41,6 +41,7 @@
 #include "std_srvs/Empty.h"
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
+#include <tf/transform_listener.h>
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
@@ -156,6 +157,9 @@ private:
   /** Show the hand marker frame in RViz **/
   tf::TransformBroadcaster tf_br_;
   tf::Transform hand_marker_tf_;
+
+  /** ROS transform listener **/
+  tf::TransformListener tf_listener_;
 };
 
 #endif
