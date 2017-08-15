@@ -387,16 +387,14 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Update display_distance parameters (display_distance operates relative to leap_motion frame)
     // Get the distance between start and end point as string
     distance_as_text_.text = getDistanceString( displacement_arrow_.points );
+          distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
     if (!latest_status_.in_natural_control_mode)			// INVERTED CONTROL MODE
     {
-      distance_as_text_.scale.z = 0.001 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-      distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
+      distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
     }
     else								// NATURAL CONTROL MODE
     {
-      distance_as_text_.scale.z = 0.010 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-      distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
-      if (latest_status_.scale_by < 0.1 && camera_is_aligned_) distance_as_text_.scale.z = 0.001 + latest_status_.scale_by/20; // extreme close-up
+      distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
     }
     // A tweak for when the camera is on the top facing down; lift text above the arrow
     if (!camera_is_aligned_) distance_as_text_.pose.position.y = 0.7*displacement_arrow_.scale.y; // lift text to the top of arrows head
