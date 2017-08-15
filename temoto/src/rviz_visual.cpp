@@ -191,15 +191,10 @@ void Visuals::initHandPoseMarker()
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
     cmd_pose_marker_.mesh_resource = manip_stl_;
     cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
-    cmd_pose_marker_.scale.x = 1;
-    cmd_pose_marker_.scale.y = 0.1;
-    cmd_pose_marker_.scale.z = 1;
+    cmd_pose_marker_.scale.x = 0.001;
+    cmd_pose_marker_.scale.y = 0.001;
+    cmd_pose_marker_.scale.z = 0.001;
   }
-  
-  // begin at the position of end effector
-  cmd_pose_marker_.pose.position.x = 0.0;
-  cmd_pose_marker_.pose.position.y = 0.0;
-  cmd_pose_marker_.pose.position.z = 0.0;
 
   cmd_pose_marker_.color.a = 0.1;
   // Orange.
@@ -410,11 +405,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     /* ==  HAND POSE MARKER  ================================= */
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
     cmd_pose_marker_.mesh_resource = manip_stl_;
-    cmd_pose_marker_.scale.x = 0.001;
-    cmd_pose_marker_.scale.y = 0.001;
-    cmd_pose_marker_.scale.z = 0.001;
 
-    // Hand pose marker (relative to leap_motion frame)
+    // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
     if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE
@@ -426,7 +418,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       q_orig *= q_rot;  // Calculate the new orientation
       quaternionTFToMsg(q_orig, cmd_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
     }
-    // else ==> do nothing
 
     // Paint the marker based on restricted motion
     if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
@@ -438,6 +429,11 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Publish cmd_pose_marker_
     marker_publisher.publish( cmd_pose_marker_ );
+
+    // Add a frame to the hand pose marker. Useful to view in RViz.
+    hand_marker_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
+    hand_marker_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
+    tf_br_.sendTransform(tf::StampedTransform(hand_marker_tf_, ros::Time::now(), "base_link", "hand_marker"));
 
   } // end setting markers in MANIPULATION mode
     

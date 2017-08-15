@@ -315,7 +315,6 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
   absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_position_cmd_.z;
 
   // ORIENTATION
-
   // new incremental rpy command
   incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
   incremental_orientation_cmd_.y = rot_scale_*pose_cmd.axes[4];  // about y axis
@@ -568,6 +567,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       ROS_INFO("Executing last plan ...");
       callRobotMotionInterface(low_level_cmds::EXECUTE);
+
+      // Reset the incremental commands integrations
+      incremental_position_cmd_.x = 0.;
+      incremental_position_cmd_.y = 0.;
+      incremental_position_cmd_.z = 0.;
     }
     else if (voice_command.cmd_string == "robot plan and go")
     {

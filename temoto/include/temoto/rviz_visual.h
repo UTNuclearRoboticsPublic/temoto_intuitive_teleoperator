@@ -39,6 +39,7 @@
 #include "visualization_msgs/Marker.h"
 #include "geometry_msgs/Pose.h"
 #include "std_srvs/Empty.h"
+#include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include "view_controller_msgs/CameraPlacement.h"
 
@@ -151,6 +152,10 @@ private:
 
   /** A number that is used when some distance is required between robot and any marker or camera. */
   const double EYE_DISPLACEMENT_TOP_ = 1.;
+
+  /** Show the hand marker frame in RViz **/
+  tf::TransformBroadcaster tf_br_;
+  tf::Transform hand_marker_tf_;
 };
 
 #endif
