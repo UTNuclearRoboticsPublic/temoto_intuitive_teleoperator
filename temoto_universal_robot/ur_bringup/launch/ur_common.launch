@@ -28,7 +28,7 @@
   <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
 
   <!-- driver -->
-  <node name="ur_driver" pkg="ur_driver" type="driver.py" args="$(arg robot_ip) $(arg reverse_port)" output="screen">
+  <node name="ur_modern_driver" pkg="ur_modern_driver" type="ur_driver" args="$(arg robot_ip) $(arg reverse_port)" output="screen">
     <param name="min_payload" type="double" value="$(arg min_payload)"/>
     <param name="max_payload" type="double" value="$(arg max_payload)"/>
     <param name="max_velocity" type="double" value="$(arg max_velocity)"/>

@@ -4,24 +4,24 @@
   <!-- BRING THE HARDWARE ROBOT ONLINE -->
   <!-- /////////////////////////////// -->
 
-  <!--
   <include file="$(find ur_bringup)/launch/ur5_bringup.launch">
     <arg name="robot_ip" value="192.168.1.16" />
   </include>
 
   <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" />
-  -->
 
 
   <!-- //////////////////////////////  -->
   <!-- BRING THE SOFTWARE ROBOT ONLINE -->
   <!-- //////////////////////////////  -->
 
+  <!--
   <include file="$(find ur_gazebo)/launch/ur5.launch" />
 
   <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" >
    <arg name="sim" value="true" />
   </include>
+  -->
 
   
   <!-- //////////////////  -->
