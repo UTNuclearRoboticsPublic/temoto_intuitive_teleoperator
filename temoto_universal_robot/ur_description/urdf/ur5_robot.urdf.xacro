@@ -19,6 +19,52 @@
     <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
   </joint>
 
+  <!-- Floor -->
+  <link name="floor">
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="3 3 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <geometry>
+        <box size="3 3 0.01"/>
+      </geometry>
+      <material name="transparent_blue">
+        <color rgba="0 0 0.8 0.02"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="world_to_floor" type="fixed">
+    <origin xyz="0 0 -0.1" rpy="0 0 0" />
+    <parent link="world"/>
+    <child link = "floor" />
+  </joint>
+
+  <!-- Back wall -->
+  <link name="back_wall">
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+      <geometry>
+        <box size="0.01 3 3"/>
+      </geometry>
+    </collision>
+    <visual>
+      <geometry>
+        <box size="0.01 3 3"/>
+      </geometry>
+      <material name="transparent_blue">
+        <color rgba="0 0 0.8 0.02"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="world_to_back_wall" type="fixed">
+    <origin xyz="-0.5 0 1.5" rpy="0 0 0" />
+    <parent link="world"/>
+    <child link = "back_wall" />
+  </joint>
+
   <!-- attach Temoto frame -->
   <!-- A tool link that will serve as the base end effector, instead of tool0. -->
   <link name="temoto_end_effector" />

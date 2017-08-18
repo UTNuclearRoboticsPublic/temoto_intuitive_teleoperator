@@ -212,10 +212,8 @@ int main(int argc, char **argv)
   }
   ROS_INFO("[move_robot/main] Retrieved '%s' from parameter server as a movegroup name.", move_group_name.c_str());
   
-  // Create MoveRobotInterface for user-specified movegroup
   MoveRobotInterface moveIF(move_group_name);
-  // Using RRTConnectkConfigDefault planner for motion planning
-  moveIF.movegroup_.setPlannerId("RRTConnectkConfigDefault");
+  moveIF.movegroup_.setPlannerId("RRTstarkConfigDefault");
 
   // For frame transformations
   tf2_ros::Buffer tfBuffer;
