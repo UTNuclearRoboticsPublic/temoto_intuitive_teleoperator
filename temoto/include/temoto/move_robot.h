@@ -70,6 +70,10 @@ class MoveRobotInterface {
 
    void requestCartesianMove();
 
+   void calculate_linear_tols(geometry_msgs::PoseStamped curr_pose, geometry_msgs::PoseStamped target_pose);
+
+   void calculate_ang_tols(geometry_msgs::PoseStamped curr_pose, geometry_msgs::PoseStamped target_pose);
+
    geometry_msgs::PoseStamped target_pose_stamped_;		///< Target pose for the robot.
    std::string named_target_;					///< Named target for the robot.
    moveit::planning_interface::MoveGroup::Plan latest_plan_;	///< Latest motion plan.
@@ -79,6 +83,9 @@ class MoveRobotInterface {
    bool use_named_target_;		///< When named target is requested, use_named_target is set to true.
    bool new_plan_available_;		///< After calculating a new motion plan, is_new_plan is set to 1; after executing the plan, is_new_plan is set to 0.
    bool new_move_requested_; 		///< If new move has been requested by a client, it is set to 1; after calling move(), it is set to 0.
+   double fractional_tolerance_ = 0.1;  ///< Allow a small % error for motion planning. % of the distance from current to target
+   double min_position_tolerance_ = 0.001;  ///< Don't ask for tighter position tolerances than this.
+   double min_orientation_tolerance_ = 0.01; ///< Don't ask for tighter orientation tolerances than this.
 };
 
 #endif

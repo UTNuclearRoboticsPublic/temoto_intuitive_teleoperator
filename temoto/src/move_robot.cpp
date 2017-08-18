@@ -48,14 +48,12 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   // sets the action associated to target pose
   req_action_type_ = req.action_type;
   
-  // sets target requested pose
   target_pose_stamped_ = req.goal;
-  ROS_INFO_STREAM("[MoveRobotInterface::serviceUpdate] target_pose_stamped_: " << target_pose_stamped_ );
     
   // check for named target
   use_named_target_ = false;					// by default do not use named_target.
   named_target_ = req.named_target;				// get named_target from the service request.
-  ROS_INFO("[MoveRobotInterface::serviceUpdate] named_target_='%s'", named_target_.c_str());
+
   if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
     
   // Set new_move_requested_ TRUE for main() to see it
@@ -97,7 +95,7 @@ void MoveRobotInterface::requestMove()
   {
     //ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
-    if ( !movegroup_.setPoseTarget(target_pose_stamped_ /*, "temoto_end_effector"*/) )	// check if set target pose failed
+    if ( !movegroup_.setPoseTarget(target_pose_stamped_ ) )	// check if set target pose failed
     {
       ROS_INFO("[move_robot/requestMove] Failed to set pose target. Please retry.");
       return;								// return if setPoseTarget failed
@@ -106,54 +104,86 @@ void MoveRobotInterface::requestMove()
       ROS_INFO("[move_robot/requestMove] Using POSE TARGET for planning and/or moving.");
   }
 
-  // TODO
-//   // Set goal tolerance based on the actual shift from current position to target position
-//   std::vector <geometry_msgs::Point> current_and_target;		// Vector that contains current and target points
-//   current_and_target.push_back(current_pose.pose.position);		// Add current position
-//   current_and_target.push_back(target_pose.position);			// Add target position
-//   double shift = calculateDistance(current_and_target);			// Calculate the linear distance between the two positions
-//   // CALCULATE DISTNACE BETWEEN CURRENT AND TARGET
-//   // CALCULATE TOLERANCE AS A PERCENTAGE OF DISTANCE && CONSIDER SOME MIN/MAX LIMITS
-//   // SET TOLERANCE FOR PLANNING
+  // Set goal tolerance based on the actual shift from current position to target position.
+  // Apply minimums, e.g. we can't control motion down to the nanometer level.
+  geometry_msgs::PoseStamped current_pose_stamped = movegroup_.getCurrentPose();
+  calculate_linear_tols(current_pose_stamped, target_pose_stamped_);
+  calculate_ang_tols(current_pose_stamped, target_pose_stamped_);
   
   // Just checking what is the target pose
   geometry_msgs::PoseStamped current_target = movegroup_.getPoseTarget();
   //ROS_INFO("[move_robot/requestMove] Target pose frame: %s", current_target.header.frame_id.c_str());
-  ROS_INFO_STREAM("[move_robot/requestMove] Target pose: " << current_target.pose);
+  //ROS_INFO_STREAM("[move_robot/requestMove] Target pose: " << current_target.pose);
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
   if ( req_action_type_ == low_level_cmds::PLAN )
   {
-    ROS_INFO("[move_robot/requestMove] Starting to plan ...");
+    //ROS_INFO("[move_robot/requestMove] Starting to plan ...");
     //ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
     movegroup_.plan( latest_plan_ );				// Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
-    ROS_INFO("[move_robot/requestMove] DONE planning.");
+    //ROS_INFO("[move_robot/requestMove] DONE planning.");
   }
   else if ( req_action_type_ == low_level_cmds::EXECUTE )
   {
-    ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
+    //ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
     if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );	// If there is a new plan, execute latest_plan_.
     else ROS_INFO("[move_robot/requestMove] No plan to execute.");	// Else do nothing but printout "no plan"
     new_plan_available_ = false;					// Either case, set new_plan_available_ to FALSE.
-    ROS_INFO("[move_robot/requestMove] DONE executing the plan");
+    //ROS_INFO("[move_robot/requestMove] DONE executing the plan");
   }
   else if ( req_action_type_ == low_level_cmds::GO )
   {
-    ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
+    //ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
 //     robot.move();						// Plan and execute.
     // Since move() has a bug of start state not being current state, I am going to plan and execute sequentally.
     moveit::planning_interface::MoveGroup::Plan move_plan;
-    printf("[move_robot/requestMove] Planning ...");
+    //printf("[move_robot/requestMove] Planning ...");
     movegroup_.plan( move_plan );
-    printf("[DONE] \n[move_robot/requestMove] and Executing ...\n");
+    //printf("[DONE] \n[move_robot/requestMove] and Executing ...\n");
     movegroup_.execute( move_plan );
-    ROS_INFO("[move_robot/requestMove] DONE moving.");
+    //ROS_INFO("[move_robot/requestMove] DONE moving.");
     new_plan_available_ = false;					// As any previous plan has become invalid, set new_plan_available_ to FALSE.
   }
 
   return;
 } // end requestMove
+
+void MoveRobotInterface::calculate_linear_tols(geometry_msgs::PoseStamped curr_pose, geometry_msgs::PoseStamped target_pose)
+{
+  double sum_of_squares = pow( curr_pose.pose.position.x - target_pose.pose.position.x,2) + pow( curr_pose.pose.position.y - target_pose.pose.position.y,2) + pow( curr_pose.pose.position.z - target_pose.pose.position.z,2);
+
+  double delta_position = pow( sum_of_squares, 0.5);
+
+  delta_position *= fractional_tolerance_;
+
+  if ( delta_position < min_position_tolerance_ )
+    delta_position = min_position_tolerance_;
+
+  ROS_INFO_STREAM( "Position tol: " << delta_position );
+
+  movegroup_.setGoalPositionTolerance( delta_position );
+
+  return;
+}
+
+void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose, geometry_msgs::PoseStamped target_pose)
+{
+  double sum_of_squares = pow( curr_pose.pose.orientation.x - target_pose.pose.orientation.x,2) + pow( curr_pose.pose.orientation.y - target_pose.pose.orientation.y,2) + pow( curr_pose.pose.orientation.z - target_pose.pose.orientation.z,2) + pow( curr_pose.pose.orientation.w - target_pose.pose.orientation.w,2);
+
+  double delta_orientation = pow( sum_of_squares, 0.5);
+
+  delta_orientation *= fractional_tolerance_;
+
+  if ( delta_orientation < min_orientation_tolerance_ )
+    delta_orientation = min_orientation_tolerance_;
+
+  ROS_INFO_STREAM( "Orient tol: " << delta_orientation );
+
+  movegroup_.setGoalOrientationTolerance( delta_orientation );
+
+  return;
+}
 
 /** Main method. */
 int main(int argc, char **argv)
