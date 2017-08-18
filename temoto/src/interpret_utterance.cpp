@@ -27,7 +27,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file interpret_utterance.cpp
- *  Subscribes to "pocketsphinx_recognizer/output" topic and tries to extract valid voice commands
+ *  Subscribes to the verbal command topic and tries to extract valid voice commands
  *  from it. If valid voice command is extracted, an approproate command code is published on
  *  "temoto/voice_commands".
  * 
@@ -36,8 +36,8 @@
 
 #include "temoto/interpret_utterance.h"
 
-/** Callback function for pocketsphinx_recognizer/output topic.
- *  It searches the pocketsphinx_recognizer output string for any of the strings specified in valid_voice_commands.
+/** Callback function for the verbal cmd topic.
+ *  It searches the voice command string for any of the strings specified in valid_voice_commands.
  *  @param last_phrase pocketsphinx_recognizer output string.
  */
 void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   Interpreter interpreter;
   
   // Subscribe to pocketsphinx_recognizer speech-to-text output
-  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>("pocketsphinx_recognizer/output", 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
+  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>("stt/spoken_text", 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
 
   // Publish unambiguous commands based on speech recognition
   interpreter.pub_voice_commands_ = n.advertise<temoto::Command>("temoto/voice_commands", 2);

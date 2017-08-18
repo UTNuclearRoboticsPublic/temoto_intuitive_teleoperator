@@ -27,8 +27,8 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file interpret_utterance.h
- *  Subscribes to "pocketsphinx_recognizer/output" topic and tries to extract valid voice commands
- *  from it. If valid voice command is extracted, an approproate command code is published on
+ *  Subscribes to the verbal command topic and tries to extract valid voice commands
+ *  from it. If valid voice command is extracted, an appropriate command code is published on
  *  "temoto/voice_commands".
  * 
  *  @author karl.kruusamae(at)utexas.edu

@@ -1,9 +1,7 @@
+#include "keyboard_reader/Key.h"
+#include "map"
 #include "ros/ros.h"
 #include "std_msgs/String.h"
-//#include "temoto/Command.h"
-#include "keyboard_reader/Key.h"
-#include <map>
-
 
 
 class fake_voice_commander
@@ -18,8 +16,7 @@ public:
     fake_voice_commander()
     {
         // Setup ROS publishers
-        //voiceCommandPublisher = n.advertise<temoto::Command>("temoto/voice_commands", 2);
-        voiceCommandPublisher = n.advertise<std_msgs::String>("pocketsphinx_recognizer/output", 2);
+        voiceCommandPublisher = n.advertise<std_msgs::String>("stt/spoken_text", 2);
 
         // Setup ROS subscribers
         sub_kb_event = n.subscribe<keyboard_reader::Key>("keyboard", 1, &fake_voice_commander::keyboardCallback, this);
