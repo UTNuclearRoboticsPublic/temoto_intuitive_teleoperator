@@ -27,16 +27,16 @@
   <!-- BRING TEMOTO ONLINE -->  
   <!-- //////////////////  -->
 
-  <!-- using the keyboard reader instead of Pocketsphinx for now -->
-  <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
-
   <!-- LeapMotion or SpaceMouse? -->
   <include file="$(find spacenav_node)/launch/classic.launch"/>
   <!-- <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" /> -->
     
   <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
 
-  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
+  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" >
+    <param name="input_voice_topic" type="str" value="stt/spoken_text" />
+  </node>
+
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
 
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" output="screen">
@@ -57,6 +57,8 @@
   <include file="$(find temoto)/launch/ur5_moveit_rviz.launch">
     <arg name="config" value="true"/>
   </include>
+
+  <include file="$(find speech_to_text)/launch/speech_to_text.launch" />
   
 </launch>
 

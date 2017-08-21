@@ -95,19 +95,19 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "interpret_utterance");
   ros::NodeHandle n;
-  
+  ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
+
   // Instance of Interpreter
   Interpreter interpreter;
+
+  // Get params from launch file
+  pn.param<std::string>("input_voice_topic", interpreter.input_voice_topic_, "stt/spoken_text");
   
   // Subscribe to speech recognizer
-  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>("spoken_text", 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
+  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>(interpreter.input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
 
   // Publish unambiguous commands based on speech recognition
   interpreter.pub_voice_commands_ = n.advertise<temoto::Command>("temoto/voice_commands", 2);
-  
-  // FYI
-  ROS_INFO("Listening the operator talk ...");
-  ROS_INFO("... and remember that manners maketh man.");
 
   // Output to the screen all the accepted voice commands
   interpreter.displayRecognizedVoiceCommands();

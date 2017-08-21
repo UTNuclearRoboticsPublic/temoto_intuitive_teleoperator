@@ -748,7 +748,6 @@ temoto::Status Teleoperator::setStatus()
 /** MAIN */
 int main(int argc, char **argv)
 {
-  // ROS init
   ros::init(argc, argv, "start_teleop");
 
   // NodeHandle for regular stuff

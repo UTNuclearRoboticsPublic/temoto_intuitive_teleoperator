@@ -16,7 +16,7 @@ public:
     fake_voice_commander()
     {
         // Setup ROS publishers
-        voiceCommandPublisher = n.advertise<std_msgs::String>("spoken_text", 2);
+        voiceCommandPublisher = n.advertise<std_msgs::String>("stt/spoken_text", 2);
 
         // Setup ROS subscribers
         sub_kb_event = n.subscribe<keyboard_reader::Key>("keyboard", 1, &fake_voice_commander::keyboardCallback, this);

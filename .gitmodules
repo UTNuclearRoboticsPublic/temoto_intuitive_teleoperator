@@ -4,9 +4,6 @@
 [submodule "griffin_powermate"]
 	path = griffin_powermate
 	url = https://github.com/UTNuclearRoboticsPublic/griffin_powermate.git
-[submodule "pocketsphinx"]
-	path = pocketsphinx
-	url = https://github.com/UTNuclearRoboticsPublic/pocketsphinx.git
 [submodule "ur_script_compliance"]
 	path = ur_script_compliance
 	url = https://github.com/UTNuclearRobotics/ur_script_compliance.git

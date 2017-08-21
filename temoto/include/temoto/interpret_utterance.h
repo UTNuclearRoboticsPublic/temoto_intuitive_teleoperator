@@ -90,6 +90,9 @@ public:
   
   /** Instance of SoundClient used for text-to-speech synthesis. */
   sound_play::SoundClient sound_client_;
+
+  /** Store a parameter from the launch file. This is the topic where voice commands come in. */
+  std::string input_voice_topic_;
   
   /** Callback for subscribed utterances. */
   void utteranceToRecognizedCommand (std_msgs::String utterance);
