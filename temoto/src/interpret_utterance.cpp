@@ -48,10 +48,6 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   // Set namespace for voice command messages
   temoto::Command latest_command;
   latest_command.ns = "temoto_voice_command";
-
-  // The utterance from pocketsphinx has a trailing space. Delete it.
-  std::string s(utterance.data.c_str());  // Convert char array to string 
-  s = s.substr(0, s.size()-1);  // Subtract last char
   
   // Print the output of pocketsphinx_recognizer
   //ROS_INFO_STREAM("[interpret_utterance] I think you just said: " << s);
@@ -59,7 +55,7 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   // Compare the input utterance string to every string in command_list_.
   for(int it=0; it<command_list_.size(); ++it)
   {
-    if ( s == command_list_.at(it)) {		// if valid voice command was found in utterance
+    if ( utterance.data.c_str() == command_list_.at(it)) {		// if valid voice command was found in utterance
       latest_command.cmd_string = command_list_.at(it);		// take the command
       valid_command = true;
     } // end if
@@ -97,16 +93,14 @@ void Interpreter::displayRecognizedVoiceCommands()
 /** Main method. */
 int main(int argc, char **argv)
 {
-  // ROS init
   ros::init(argc, argv, "interpret_utterance");
-  // ROS node handle
   ros::NodeHandle n;
   
   // Instance of Interpreter
   Interpreter interpreter;
   
-  // Subscribe to pocketsphinx_recognizer speech-to-text output
-  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>("stt/spoken_text", 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
+  // Subscribe to speech recognizer
+  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>("spoken_text", 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
 
   // Publish unambiguous commands based on speech recognition
   interpreter.pub_voice_commands_ = n.advertise<temoto::Command>("temoto/voice_commands", 2);

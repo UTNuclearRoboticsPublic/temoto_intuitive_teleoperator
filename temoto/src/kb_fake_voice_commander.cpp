@@ -16,7 +16,7 @@ public:
     fake_voice_commander()
     {
         // Setup ROS publishers
-        voiceCommandPublisher = n.advertise<std_msgs::String>("stt/spoken_text", 2);
+        voiceCommandPublisher = n.advertise<std_msgs::String>("spoken_text", 2);
 
         // Setup ROS subscribers
         sub_kb_event = n.subscribe<keyboard_reader::Key>("keyboard", 1, &fake_voice_commander::keyboardCallback, this);
@@ -33,77 +33,77 @@ public:
             // Plan trajecory: "p" key
             if (kbCommand.key_code == 0x0019 )
             {
-                voiceCommand.data = "robot please plan ";
+                voiceCommand.data = "robot please plan";
                 publish = true;
             }
 
             // Execute trajectory: "e" key
             else if (kbCommand.key_code == 0x0012)
             {
-                voiceCommand.data = "robot please execute ";
+                voiceCommand.data = "robot please execute";
                 publish = true;
             }
 
             // Natural perspective: "o" key
             else if (kbCommand.key_code == 0x0018)
             {
-                voiceCommand.data = "natural control mode ";
+                voiceCommand.data = "natural control mode";
                 publish = true;
             }
 
             // Inverted perspective: "i" key
             else if (kbCommand.key_code == 0x0017)
             {
-                voiceCommand.data = "inverted control mode ";
+                voiceCommand.data = "inverted control mode";
                 publish = true;
             }
 
             // Limit directions: "l" key
             else if (kbCommand.key_code == 0x0026)
             {
-                voiceCommand.data = "limit directions ";
+                voiceCommand.data = "limit directions";
                 publish = true;
             }
 
             // Limit directions: "f" key
             else if (kbCommand.key_code == 0x0021)
             {
-                voiceCommand.data = "free directions ";
+                voiceCommand.data = "free directions";
                 publish = true;
             }
 
             // Ignore rotation: "x" key
             else if (kbCommand.key_code == 0x002d)
             {
-                voiceCommand.data = "ignore rotation ";
+                voiceCommand.data = "ignore rotation";
                 publish = true;
             }
 
             // Consider rotation: "c" key
             else if (kbCommand.key_code == 0x002e)
             {
-                voiceCommand.data = "consider rotation ";
+                voiceCommand.data = "consider rotation";
                 publish = true;
             }
 
             // Manipulation: "m" key
             else if (kbCommand.key_code == 0x0032)
             {
-                voiceCommand.data = "manipulation ";
+                voiceCommand.data = "manipulation";
                 publish = true;
             }
 
             // Navigation: "n" key
             else if (kbCommand.key_code == 0x0031)
             {
-                voiceCommand.data = "navigation ";
+                voiceCommand.data = "navigation";
                 publish = true;
             }
 
             // Robot please go: "g" key
             else if (kbCommand.key_code == 0x0067)
             {
-                voiceCommand.data = "robot please go ";
+                voiceCommand.data = "robot please go";
                 publish = true;
             }
 
