@@ -255,7 +255,7 @@ int main(int argc, char **argv)
       ros::Duration(1.0).sleep();
       continue;
     }
-    tf2::doTransform(current_pose, current_pose, transform_stamped); // robotPose is the PoseStamped I want to transform
+    tf2::doTransform(current_pose, current_pose, transform_stamped);
     pub_end_effector.publish( current_pose );
     
     ros::spinOnce();

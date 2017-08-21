@@ -304,16 +304,6 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
     return;
   }
 
-  // POSITION
-  // Integrate the incremental cmd. It persists even if the robot moves
-  incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
-  incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
-  incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
-
-  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_position_cmd_.x;
-  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_position_cmd_.y;
-  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_position_cmd_.z;
-
   // ORIENTATION
   // new incremental rpy command
   incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
@@ -328,6 +318,26 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
   q_previous_cmd *= q_incremental;  // Calculate the new orientation
   q_previous_cmd.normalize();
   quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+  // POSITION
+
+  // Integrate the incremental cmd. It persists even if the robot moves
+  incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+  incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+  incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
+  // Incoming position cmds are in the leap_motion frame
+  // So convert them to base_link like everything else
+
+  geometry_msgs::Vector3Stamped incoming_position_cmd;
+  incoming_position_cmd.header.frame_id = "leap_motion";
+  incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+  transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+
+
+  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_position_cmd_.x;
+  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_position_cmd_.y;
+  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_position_cmd_.z;
 
   return;
 } // end processIncrementalPoseCmd
