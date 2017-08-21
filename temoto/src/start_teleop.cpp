@@ -326,18 +326,18 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
   incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
   incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
 
-  // Incoming position cmds are in the leap_motion frame
+  // Incoming position cmds are in the hand_marker frame
   // So convert them to base_link like everything else
 
   geometry_msgs::Vector3Stamped incoming_position_cmd;
-  incoming_position_cmd.header.frame_id = "leap_motion";
+  incoming_position_cmd.header.frame_id = "hand_marker";
   incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+  transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(3.0));
   transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
 
-
-  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incremental_position_cmd_.x;
-  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incremental_position_cmd_.y;
-  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incremental_position_cmd_.z;
+  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
+  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
+  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
 
   return;
 } // end processIncrementalPoseCmd
@@ -757,7 +757,7 @@ int main(int argc, char **argv)
   // NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
 
-  ros::Rate node_rate(100);
+  ros::Rate node_rate(60);
 
   // Getting user-specified primary hand from ROS parameter server
   std::string primary_hand_name;
