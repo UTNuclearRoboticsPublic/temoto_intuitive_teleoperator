@@ -91,7 +91,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/base.stl" scale="1.01 1.01 1.01"/>
+          <mesh filename="package://ur_description/meshes/ur5/collision/base.stl" scale="1.05 1.05 1.05"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.05" mass="${base_mass}">
@@ -124,7 +124,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/shoulder.stl" scale="1.01 1.01 1.01" />
+          <mesh filename="package://ur_description/meshes/ur5/collision/shoulder.stl" scale="1.05 1.05 1.05" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.15" mass="${shoulder_mass}">
@@ -157,7 +157,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/upperarm.stl" scale="1.01 1.01 1.01" />
+          <mesh filename="package://ur_description/meshes/ur5/collision/upperarm.stl" scale="1.05 1.05 1.05" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.56" mass="${upper_arm_mass}">
@@ -190,7 +190,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/forearm.stl" scale="1.01 1.01 1.01" />
+          <mesh filename="package://ur_description/meshes/ur5/collision/forearm.stl" scale="1.05 1.05 1.05" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.06" length="0.5" mass="${forearm_mass}">
@@ -223,7 +223,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/wrist1.stl" scale="1.01 1.01 1.01" />
+          <mesh filename="package://ur_description/meshes/ur5/collision/wrist1.stl" scale="1.05 1.05 1.05" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_1_mass}">
@@ -256,7 +256,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/wrist2.stl" scale="1.01 1.01 1.01" />
+          <mesh filename="package://ur_description/meshes/ur5/collision/wrist2.stl" scale="1.05 1.05 1.05" />
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_2_mass}">
@@ -289,7 +289,7 @@
       </visual>
       <collision>
         <geometry>
-          <mesh filename="package://ur_description/meshes/ur5/collision/wrist3.stl" scale="1.01 1.01 1.01"/>
+          <mesh filename="package://ur_description/meshes/ur5/collision/wrist3.stl" scale="1.05 1.05 1.05"/>
         </geometry>
       </collision>
       <xacro:cylinder_inertial radius="0.6" length="0.12" mass="${wrist_3_mass}">
