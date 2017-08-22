@@ -55,12 +55,19 @@ class Visuals
 {
 public:
   // ___ CONSTRUCTOR ___
-  Visuals(std::string human, std::string end_effector, std::string mobile_base, std::string manip_stl)
+  Visuals()
   {
-    human_frame_ = human;
-    eef_frame_ = end_effector;
-    base_frame_ = mobile_base;
-    manip_stl_ = manip_stl;
+    // NodeHandle for accessing private parameters
+    ros::NodeHandle pn("~");
+
+    // Get the STL's for the manip/nav hand markers from launch file, if any
+    std::string manip_stl;
+    pn.param<std::string>("manip_stl", manip_stl_, "");
+
+    // Get all the relevant frame names from parameter server
+    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "leap_motion");
+    pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
+    pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();

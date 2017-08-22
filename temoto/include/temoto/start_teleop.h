@@ -66,7 +66,7 @@ class Teleoperator
 public:
   // Constructor
   
-  Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_cmd, ros::NodeHandle& n);
+  Teleoperator(ros::NodeHandle& n);
   
   // Callback functions
   
@@ -102,6 +102,9 @@ public:
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame.
+  bool manipulate_ = true;		/// Is manipulation enabled?
+  bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
+  std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
 
 private:
   /// Local TransformListener for transforming poses
@@ -140,7 +143,6 @@ private:
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
   uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
   bool executing_preplanned_sequence_ = false;
-  bool absolute_pose_input_ = true;       // Specify whether incoming pose commands are absolute or relative
 
   // ROS publishers
   ros::Publisher pub_abort_;

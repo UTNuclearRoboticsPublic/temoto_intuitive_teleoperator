@@ -5,23 +5,22 @@
   <!-- /////////////////////////////// -->
 
   <!-- ////  HARDWARE  //// -->
-<!--
   <include file="$(find ur_bringup)/launch/ur5_bringup.launch">
-    <arg name="robot_ip" value="192.168.1.16" />
+    <arg name="robot_ip" value="192.168.1.15" />
   </include>
 
   <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" />
--->
+
 
 
   <!-- ////  SOFTWARE  //// -->
-
+<!--
   <include file="$(find ur_gazebo)/launch/ur5.launch" />
 
   <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" >
    <arg name="sim" value="true" />
   </include>
-
+-->
   
   <!-- //////////////////  -->
   <!-- BRING TEMOTO ONLINE -->  
@@ -42,6 +41,7 @@
   <node name="rviz_visual" pkg="temoto" type="rviz_visual" output="screen">
       <param name="manip_stl" type="str" value="package://temoto_support/meshes/2_finger_85_gripper_marker.stl" />
   </node>
+
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
     <param name="primary_hand" type="str" value="left" />
     <param name="navigate" type="bool" value="false" />

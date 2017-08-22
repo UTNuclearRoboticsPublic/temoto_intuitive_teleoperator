@@ -185,7 +185,7 @@ void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose
   return;
 }
 
-/** Main method. */
+/** Main */
 int main(int argc, char **argv)
 {
   // ROS init
@@ -213,7 +213,6 @@ int main(int argc, char **argv)
   ROS_INFO("[move_robot/main] Retrieved '%s' from parameter server as a movegroup name.", move_group_name.c_str());
   
   MoveRobotInterface moveIF(move_group_name);
-  moveIF.movegroup_.setPlannerId("RRTstarkConfigDefault");
 
   // For frame transformations
   tf2_ros::Buffer tfBuffer;

@@ -9,11 +9,11 @@
 // 
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
-//       documentation and/or other materials provided with the distribution.
+//       documentation and/or other materials provided with the distribution_.
 // 
 //     * Neither the name of the copyright holder nor the names of its
 //       contributors may be used to endorse or promote products derived from
-//       this software without specific prior written permission.
+//       this software without specific prior written permission_.
 // 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
@@ -53,6 +53,19 @@ public:
   /** Constructor */
   Interpreter()
   {
+    ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
+      
+    // Get params from launch file
+    pn.param<std::string>("input_voice_topic", input_voice_topic_, "stt/spoken_text");
+  
+    // Subscribe to speech recognizer
+    sub_utterances_ = n_.subscribe<std_msgs::String>(input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, this);
+
+    // Publish unambiguous commands based on speech recognition
+    pub_voice_commands_ = n_.advertise<temoto::Command>("temoto/voice_commands", 2);
+
+    // Output to the screen all the accepted voice commands
+    displayRecognizedVoiceCommands();
   };
   
   /** Maps verbal instructions to specific command code. */
@@ -81,6 +94,8 @@ public:
     {"turn handle clockwise"},	// a preplanned sequence
     {"turn handle counterclockwise"}	// a preplanned sequence
   };
+
+  ros::NodeHandle n_;
   
   /** Publisher for recognized voice commands. */
   ros::Publisher pub_voice_commands_;
@@ -91,7 +106,7 @@ public:
   /** Instance of SoundClient used for text-to-speech synthesis. */
   sound_play::SoundClient sound_client_;
 
-  /** Store a parameter from the launch file. This is the topic where voice commands come in. */
+  /** Store a parameter from the launch file. This is the topic where voice commands come in_. */
   std::string input_voice_topic_;
   
   /** Callback for subscribed utterances. */

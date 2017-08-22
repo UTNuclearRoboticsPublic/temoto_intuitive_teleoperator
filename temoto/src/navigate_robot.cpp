@@ -115,18 +115,10 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "navigate_robot");
   ros::NodeHandle n;
-  ros::Rate node_rate(100);
-//   ros::AsyncSpinner spinner(1);
-//   spinner.start();
+  ros::Rate node_rate(60);
 
   // Instance of NavigateRobotInterface
   NavigateRobotInterface navigateIF("move_base");
-
-  // Wait for the action server to come up
-  while( !navigateIF.move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
-  {
-    ROS_INFO("[temoto/navigate_robot] Waiting for the move_base action server to come up");
-  }
   
   // Set up service for navigate_robot_srv; if there's a service request, call serviceUpdate() function
   ros::ServiceServer service = n.advertiseService("temoto/navigate_robot_srv", &NavigateRobotInterface::serviceUpdate, &navigateIF);

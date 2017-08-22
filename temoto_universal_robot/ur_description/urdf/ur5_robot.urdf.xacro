@@ -94,7 +94,7 @@
       <collision>
         <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
         <geometry>
-          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper_urdf.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://temoto_support/meshes/2_finger_85_gripper_urdf.stl" scale="0.00105 0.00105 0.00105"/>
         </geometry>
       </collision>
   </link>

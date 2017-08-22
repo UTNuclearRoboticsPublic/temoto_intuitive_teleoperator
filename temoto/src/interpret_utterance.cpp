@@ -94,29 +94,13 @@ void Interpreter::displayRecognizedVoiceCommands()
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "interpret_utterance");
-  ros::NodeHandle n;
-  ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
 
   // Instance of Interpreter
   Interpreter interpreter;
 
-  // Get params from launch file
-  pn.param<std::string>("input_voice_topic", interpreter.input_voice_topic_, "stt/spoken_text");
-  
-  // Subscribe to speech recognizer
-  interpreter.sub_utterances_ = n.subscribe<std_msgs::String>(interpreter.input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, &interpreter);
-
-  // Publish unambiguous commands based on speech recognition
-  interpreter.pub_voice_commands_ = n.advertise<temoto::Command>("temoto/voice_commands", 2);
-
-  // Output to the screen all the accepted voice commands
-  interpreter.displayRecognizedVoiceCommands();
-
   // wait for for the sound_client server to come up
   // TODO: change to something that actually checks if the server is online
   sleep(1);
-
-  // Audible FYI
   interpreter.sound_client_.say("Hello! I am ready to receive verbal instructions.");
 
   // wait for utterances

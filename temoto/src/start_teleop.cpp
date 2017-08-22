@@ -36,15 +36,28 @@
 #include "temoto/start_teleop.h"
 
 /** Constructor for Teleoperator.
- *  @param primary_hand a std::string that determines the primary hand used during teleoperation. Unless specified as "right", primary hand will be left.
- *  @param navigate enables teleoperation for navigation interface.
- *  @param manipulate enables teleoperation for move interface.
- *  @param absolute_pose_cmd specifies whether the user input poses are incremental or absolute.
  */
-Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipulate, bool absolute_pose_input, ros::NodeHandle& n)
+Teleoperator::Teleoperator(ros::NodeHandle& n)
  : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
   //, q_incremental_(0., 0., 0., 1.) // initially, add no rotation. New incremental rotation commands from e.g. the SpaceMouse will be added here.
 {
+  // Get parameters from ROS param server
+  ros::NodeHandle pn("~");
+
+  std::string primary_hand;
+  pn.param<std::string>("primary_hand", primary_hand, "left");
+  pn.param<std::string>("temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "leap_motion_output");
+
+  // By default navigation is turned OFF
+  bool navigate;
+  pn.param<bool>("navigate", navigate, false);
+  // By default manipulation is turned ON
+  pn.param<bool>("manipulate", manipulate_, true);
+  // Absolute or incremental pose input (e.g. SpaceMouse is incremental, LeapMotion is absolute)
+  bool absolute_pose_input;
+  pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
+
+
   using_natural_control_ = true;	// always start in natural control perspective
   orientation_locked_ = false;
   position_limited_ = true;
@@ -79,19 +92,19 @@ Teleoperator::Teleoperator(std::string primary_hand, bool navigate, bool manipul
   // client for starting and waiting on a preplanned sequence
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
-  if (manipulate && navigate)
+  if (manipulate_ && navigate)
   {
     control_state_ = 3;
     navigate_to_goal_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
-  else if (navigate && !manipulate)
+  else if (navigate && !manipulate_)
   {
     control_state_ = 2;
     navigate_to_goal_ = true;		// if only navigation is enabled, navigate_to_goal_ is TRUE
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
-  else if (manipulate && !navigate)
+  else if (manipulate_ && !navigate)
   {
     control_state_ = 1;
     navigate_to_goal_ = false;		// if only manipulation is enabled, navigate_to_goal_ is FALSE
@@ -750,39 +763,16 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "start_teleop");
 
-  // NodeHandle for regular stuff
   ros::NodeHandle n;
 
-  // NodeHandle for accessing private parameters
-  ros::NodeHandle pn("~");
-
   ros::Rate node_rate(60);
-
-  // Getting user-specified primary hand from ROS parameter server
-  std::string primary_hand_name;
-  pn.param<std::string>("primary_hand", primary_hand_name, "left");
-
-  // Getting the position command topic name
-  std::string temoto_pose_cmd_topic;
-  pn.param<std::string>("temoto_pose_cmd_topic", temoto_pose_cmd_topic, "leap_motion_output");
-
-  // Getting parameters that specify the types of teleoperation
-  // By default navigation is turned OFF
-  bool navigate;
-  pn.param<bool>("navigate", navigate, false);
-  // By default manipulation is turned ON
-  bool manipulate;
-  pn.param<bool>("manipulate", manipulate, true);
-  // Absolute or incremental pose input (e.g. SpaceMouse is incremental, LeapMotion is absolute)
-  bool absolute_pose_input;
-  pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
   
   // Instance of Teleoperator
-  Teleoperator temoto_teleop(primary_hand_name, navigate, manipulate, absolute_pose_input, n);
+  Teleoperator temoto_teleop(n);
 
   // Make a request for initial human2robot TF set-up
   temoto::ChangeTf initial_human2robot_tf;
-  if (manipulate)  // Start in manipulation mode, if it's available
+  if (temoto_teleop.manipulate_)  // Start in manipulation mode, if it's available
     initial_human2robot_tf.request.navigate = false;
   else
     initial_human2robot_tf.request.navigate = true;
@@ -794,26 +784,26 @@ int main(int argc, char **argv)
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
-  if (absolute_pose_input)
+  if (temoto_teleop.absolute_pose_input_)
   {
-    sub_pose_cmd = n.subscribe(temoto_pose_cmd_topic, 10,  &Teleoperator::processAbsolutePoseCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 10,  &Teleoperator::processAbsolutePoseCmd, &temoto_teleop);
   }
   else  // incremental pose cmds
-    sub_pose_cmd = n.subscribe(temoto_pose_cmd_topic, 10,  &Teleoperator::processIncrementalPoseCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 10,  &Teleoperator::processIncrementalPoseCmd, &temoto_teleop);
 
   ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
 
   ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, &temoto_teleop);
 
   ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
-  
+
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
   
   ROS_INFO("Starting teleoperation ...");
   
   while ( ros::ok() )
   {
-    // publish status current
+    // publish current status
     pub_status.publish( temoto_teleop.setStatus() );
     
     ros::spinOnce();

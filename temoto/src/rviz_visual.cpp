@@ -556,28 +556,16 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
 } // end Visuals::crunch()
 
-/** Main method. */
+/** Main */
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "rviz_visual");
   ros::NodeHandle n;
-
-  // NodeHandle for accessing private parameters
-  ros::NodeHandle pn("~");
-
-  // Get the STL's for the manip/nav hand markers from launch file, if any
-  std::string manip_stl;
-  pn.param<std::string>("manip_stl", manip_stl, "");
   
   // Setting the node rate (Hz)
-  ros::Rate node_rate(100);
+  ros::Rate node_rate(60);
 
-  // Get all the relevant frame names from parameter server
-  std::string human, end_effector, base_frame;
-  n.param<std::string>("/temoto_frames/human_input", human, "leap_motion");
-  n.param<std::string>("/temoto_frames/end_effector", end_effector, "temoto_end_effector");
-  n.param<std::string>("/temoto_frames/base_frame", base_frame, "base_link");
-  Visuals rviz_visuals( human, end_effector, base_frame, manip_stl );
+  Visuals rviz_visuals;
   
   ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
   

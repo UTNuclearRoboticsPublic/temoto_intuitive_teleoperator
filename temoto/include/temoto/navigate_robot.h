@@ -54,6 +54,12 @@ public:
   {
     new_navgoal_requested_ = false;
     stop_navigation_ = false;
+
+    // Wait for the action server to come up
+    while( !move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
+    {
+      ROS_INFO("[temoto/navigate_robot] Waiting for the move_base action server to come up");
+    }
   };
    
   /** Simple Action Client for move_base */
