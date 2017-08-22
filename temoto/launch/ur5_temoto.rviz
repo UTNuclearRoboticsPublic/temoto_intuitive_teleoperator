@@ -9,7 +9,6 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
         - /MotionPlanning1/Planned Path1
-        - /TF1/Frames1
       Splitter Ratio: 0.680511
     Tree Height: 156
   - Class: rviz/Selection
@@ -284,6 +283,8 @@ Visualization Manager:
           Value: false
         base_link:
           Value: false
+        current_cmd_frame:
+          Value: false
         ee_link:
           Value: false
         floor:
@@ -292,15 +293,11 @@ Visualization Manager:
           Value: false
         hand_marker:
           Value: true
-        leap_motion:
-          Value: false
         shoulder_link:
           Value: false
         temoto_end_effector:
           Value: false
         tool0:
-          Value: false
-        tool0_controller:
           Value: false
         upper_arm_link:
           Value: false
@@ -324,9 +321,9 @@ Visualization Manager:
           base_link:
             base:
               {}
-            hand_marker:
+            current_cmd_frame:
               {}
-            leap_motion:
+            hand_marker:
               {}
             shoulder_link:
               upper_arm_link:
@@ -341,8 +338,6 @@ Visualization Manager:
                             {}
                         tool0:
                           {}
-            tool0_controller:
-              {}
           floor:
             {}
       Update Interval: 0.02
@@ -479,20 +474,20 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 2.67578
+      Distance: 3.1264
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -1.59663
-        Y: 0.169458
-        Z: 2.14056
+        X: -1.13053
+        Y: 1.93863
+        Z: 1.84048
       Focus:
-        X: 0.29543
-        Y: 0.169458
-        Z: 0.248496
+        X: 0.814333
+        Y: 0.344798
+        Z: -0.0173622
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View
