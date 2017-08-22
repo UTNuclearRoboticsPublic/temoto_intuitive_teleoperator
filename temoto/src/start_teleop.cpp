@@ -46,7 +46,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   std::string primary_hand;
   pn.param<std::string>("primary_hand", primary_hand, "left");
-  pn.param<std::string>("temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "leap_motion_output");
+  pn.param<std::string>("temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
 
   // By default navigation is turned OFF
   bool navigate;
@@ -162,17 +162,17 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     {  
       // ------------------------- DEBUG START {
       double lm_roll, lm_pitch, lm_yaw;
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in leap_motion: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
+      ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in current_cmd_frame: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
 	      motion.request.goal.pose.orientation.x, motion.request.goal.pose.orientation.y, motion.request.goal.pose.orientation.z, motion.request.goal.pose.orientation.w);
-      tf::Quaternion quat_leap_motion;
-      tf::quaternionMsgToTF(motion.request.goal.pose.orientation, quat_leap_motion);
-      tf::Matrix3x3(quat_leap_motion).getRPY(lm_roll, lm_pitch, lm_yaw);
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in leap_motion: ROLL=%.3f, PITCH=%.3f, YAW=%.3f", lm_roll, lm_pitch, lm_yaw);
+      tf::Quaternion quat_current_cmd_frame;
+      tf::quaternionMsgToTF(motion.request.goal.pose.orientation, quat_current_cmd_frame);
+      tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
+      ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in current_cmd_frame: ROLL=%.3f, PITCH=%.3f, YAW=%.3f", lm_roll, lm_pitch, lm_yaw);
       // } ----------------------- END DEBUG
       
-      // Translate leap_motion pose to base_link
+      // Translate current_cmd_frame pose to base_link
       geometry_msgs::PoseStamped goal_in_baselink;
-      // absolute_pose_cmd_ is given in leap_motion frame and shall be transformed into base_link
+      // absolute_pose_cmd_ is given in current_cmd_frame frame and shall be transformed into base_link
       transform_listener_.transformPose("base_link", motion.request.goal, goal_in_baselink);
     
       // ------------------------- DEBUG START {
@@ -191,8 +191,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       
       // TODO Figure it out!!
       // I still don't understand why the transformPose() is not doing this but ...
-      // ... I set hand pitch from leap_motion frame as the yaw in base_link frame,
-      // i.e., set rotation around UP in leap_motion as rotation around UP in base_link.
+      // ... I set hand pitch from current_cmd_frame frame as the yaw in base_link frame,
+      // i.e., set rotation around UP in current_cmd_frame as rotation around UP in base_link.
       ROS_INFO("[start_teleop/callRobotMotionInterface] Setting rotation around UP directly");
       quat_base_link.setRPY(0, 0, lm_pitch);
       quat_base_link.normalize();
@@ -402,9 +402,9 @@ void Teleoperator::processAbsolutePoseCmd(leap_motion_controller::Set leap_data)
   //		right		y	x
   //		down		z	y
 
-  // *** Following calculations are done in "leap_motion" frame, i.e. incoming leap_data pose is relative to leap_motion frame.
+  // *** Following calculations are done in "current_cmd_frame" frame, i.e. incoming leap_data pose is relative to current_cmd_frame frame.
 
-  // Working variable for potential target pole calculated from the hand pose coming from Leap Motion Controller (i.e. stamped to leap_motion frame).
+  // Working variable for potential target pole calculated from the hand pose coming from Leap Motion Controller (i.e. stamped to current_cmd_frame frame).
   geometry_msgs::PoseStamped scaled_pose;
   // Header is copied without a change.
   scaled_pose.header = leap_data.header;
@@ -443,8 +443,8 @@ void Teleoperator::processAbsolutePoseCmd(leap_motion_controller::Set leap_data)
   }
   
     // == Additional explanation of the above coordinates and origins ==
-    // For navigation, leap_motion is attached to base_link.
-    // For manipulation, leap_motion is attached to the end effector.
+    // For navigation, current_cmd_frame is attached to base_link.
+    // For manipulation, current_cmd_frame is attached to the end effector.
     // This switch occurs in human_frame_broadcaster.cpp
     // Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
     // Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
@@ -530,13 +530,13 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
 
 /** This function fixes the quaternion of a pose input in 'inverted control mode'.
  *  @param operator_input_quaternion_msg is the original quaternion during 'inverted control mode'.
- *  @return geometry_msgs::Quaternion quaternion_msg_out is the proper quaternion leap_motion frame.
+ *  @return geometry_msgs::Quaternion quaternion_msg_out is the proper quaternion current_cmd_frame frame.
  */
 geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg)
 {
   geometry_msgs::Quaternion quaternion_msg_out;
   // Adjust orientation for inverted control mode
-  tf::Quaternion invert_rotation(0, 1, 0, 0);				// 180° turn around Y axis, UP in leap_motion frame
+  tf::Quaternion invert_rotation(0, 1, 0, 0);				// 180° turn around Y axis, UP in current_cmd_frame frame
   tf::Quaternion operator_input;					// incoming operator's palm orientation
   tf::quaternionMsgToTF(operator_input_quaternion_msg, operator_input);	// convert incoming quaternion msg to tf quaternion
   tf::Quaternion final_rotation = operator_input * invert_rotation;	// apply invert_rotation to incoming palm rotation

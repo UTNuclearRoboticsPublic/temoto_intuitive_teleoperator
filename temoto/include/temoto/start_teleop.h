@@ -101,7 +101,7 @@ public:
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
-  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for leap_motion frame.
+  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for current_cmd_frame frame.
   bool manipulate_ = true;		/// Is manipulation enabled?
   bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds

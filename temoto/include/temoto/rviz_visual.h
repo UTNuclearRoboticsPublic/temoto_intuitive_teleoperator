@@ -65,7 +65,7 @@ public:
     pn.param<std::string>("manip_stl", manip_stl_, "");
 
     // Get all the relevant frame names from parameter server
-    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "leap_motion");
+    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
     pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 

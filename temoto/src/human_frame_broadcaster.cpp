@@ -52,7 +52,7 @@ namespace human_frame_broadcaster
 using namespace human_frame_broadcaster;
 
 /** This function is executed when change_human2robot_tf service is called.
- *  It updates leap_motion frame based on the client's request.
+ *  It updates current_cmd_frame frame based on the client's request.
  *  @param req temoto::ChangeTf service request.
  *  @param res temoto::ChangeTf service response.
  *  @return always true.
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
   
   // Get proper frame names from parameter servers
   ROS_INFO("[human_frame_broadcaster] Getting frame names from parameter server.");
-  nh.param<std::string>("/temoto_frames/human_input", human_frame, "leap_motion");
+  nh.param<std::string>("/temoto_frames/human_input", human_frame, "current_cmd_frame");
   ROS_INFO("[human_frame_broadcaster] Human frame is: %s", human_frame.c_str());
   nh.param<std::string>("/temoto_frames/mobile_base", mobile_frame, "base_link");
   ROS_INFO("[human_frame_broadcaster] Mobile base frame is: %s", mobile_frame.c_str());
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
   ros::ServiceServer service = nh.advertiseService("temoto/change_human2robot_tf", service_change_tf);
   ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_human2robot_tf' up and going.");
   
-  // A tranform between leap_motion (child) frame and parent robot frame. 
+  // A tranform between current_cmd_frame (child) frame and parent robot frame. 
   tf::Transform hand_frame_to_robot;
 
   while ( ros::ok() )
@@ -121,25 +121,25 @@ int main(int argc, char **argv)
     if ( g_navigation_control )
     {
       hand_frame_to_robot.setOrigin( tf::Vector3(0, 0, 0) );
-      // in navigation mode, leap_motion rotated RPY=(90, 0, -90) in base_link
-      hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set leap_motion about base_link
+      // in navigation mode, current_cmd_frame rotated RPY=(90, 0, -90) in base_link
+      hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set current_cmd_frame about base_link
       
-      // Broadcast a transform that attaches leap_motion to base_link using the hand_frame_to_robot transform.
+      // Broadcast a transform that attaches current_cmd_frame to base_link using the hand_frame_to_robot transform.
       tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), mobile_frame, human_frame) );
     }
     // ELSE: human input is used for moving end effector
     else
     {
-      // Set appropriate rotation for how leap_motion data is interpreted.
+      // Set appropriate rotation for how current_cmd_frame data is interpreted.
       if ( g_natural_perspective )						// "natural" means robot arm is direct extension of human hand
       {
-        // in manipulation/natural control mode, leap_motion is rotated RPY=(90, 0, -90) about base_link
-        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set leap_motion about base_link
+        // in manipulation/natural control mode, current_cmd_frame is rotated RPY=(90, 0, -90) about base_link
+        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set current_cmd_frame about base_link
       }
       else // not "natural" means human is facing the robot, i.e. left and right are inverted.
       {
-      	// in manipulation/inverted control mode, leap_motion is rotated RPY=(90, 0, 90) about base_link
-        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );  // set leap_motion about base_link
+      	// in manipulation/inverted control mode, current_cmd_frame is rotated RPY=(90, 0, 90) about base_link
+        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );  // set current_cmd_frame about base_link
       }
 
       // The origin shifts to the end effector.

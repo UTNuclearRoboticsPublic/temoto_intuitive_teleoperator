@@ -308,7 +308,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     marker_publisher.publish( cmd_pose_marker_ );
 
     /* ==  TEXT LABEL  ======================================= */
-    // Update display_distance parameters (display_distance operates relative to leap_motion frame)
+    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
     std::vector<geometry_msgs::Point> temp;
     geometry_msgs::Point zero_point;
     temp.push_back(zero_point);
@@ -325,14 +325,14 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   {
     /* ==  ARROW  ============================================ */
     // Update arrow marker properties and make hand tracking visible in RViz
-    // Arrow marker is described in leap_motion frame.
+    // Arrow marker is described in current_cmd_frame frame.
     // The arrow start point is always (0.0.0)
 
     geometry_msgs::PointStamped arrow_tip_stamped;
     arrow_tip_stamped.header.frame_id = latest_status_.commanded_pose.header.frame_id;
     arrow_tip_stamped.point = latest_status_.commanded_pose.pose.position;
     geometry_msgs::PointStamped arrow_tip;
-    tf_listener_.transformPoint( "leap_motion", arrow_tip_stamped, arrow_tip );
+    tf_listener_.transformPoint( "current_cmd_frame", arrow_tip_stamped, arrow_tip );
     displacement_arrow_.points[1] = arrow_tip.point; // arrow end point
 
     // Change arrow's thickness based on scaling factor
@@ -384,7 +384,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     marker_publisher.publish( active_range_box_ );
       
     /* ==  TEXT LABEL  ======================================= */
-    // Update display_distance parameters (display_distance operates relative to leap_motion frame)
+    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
     // Get the distance between start and end point as string
     distance_as_text_.text = getDistanceString( displacement_arrow_.points );
           distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
