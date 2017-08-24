@@ -119,6 +119,8 @@ public:
 
 int main(int argc, char **argv)
 {
+    ros::init(argc, argv, "fake_voice_commander");
+
     std::cout << std::endl << "* * * List of commands: * * *" << std::endl;
     std::cout << "* p - robot please plan" << std::endl;
     std::cout << "* e - robot please execute" << std::endl;
@@ -132,8 +134,6 @@ int main(int argc, char **argv)
     std::cout << "* n - navigation" << std::endl;
     std::cout << "* * * * * * *" << std::endl << std::endl;
 
-    // ROS init
-    ros::init(argc, argv, "fake_voice_commander");
     ROS_INFO("Fake voice commander up and running");
     fake_voice_commander fakeVoiceCommander;
 

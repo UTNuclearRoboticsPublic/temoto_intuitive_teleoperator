@@ -59,7 +59,7 @@ class MoveRobotInterface {
      new_plan_available_ = false;
      req_action_type_ = "";
      new_move_requested_ = false;
-     movegroup_.setPlannerId("RRTstarkConfigDefault");
+     movegroup_.setPlannerId("RRTConnectkConfigDefault"/*"RRTstarkConfigDefault"*/);
    };
    
    moveit::planning_interface::MoveGroup movegroup_;

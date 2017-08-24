@@ -188,15 +188,13 @@ void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose
 /** Main */
 int main(int argc, char **argv)
 {
-  // ROS init
   ros::init(argc, argv, "move_robot");
-  // ROS Nodehandle for public namespace
+  // ROS Nodehandle for normal things
   ros::NodeHandle n;
   // ROS NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
   
-  // Rate used for this node. If I only use the following async spinenr, the node also works but takes over 130%CPU.
-  ros::Rate node_rate(200);
+  ros::Rate node_rate(100);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan(), which would get stuck otherwise. Might be a bug.
   ros::AsyncSpinner spinner(0);
@@ -234,6 +232,8 @@ int main(int argc, char **argv)
   // Set up publisher for the end effector location
   ros::Publisher pub_end_effector = n.advertise<geometry_msgs::PoseStamped>( "temoto/end_effector_pose", 1 );
 
+  geometry_msgs::PoseStamped current_pose;
+
   while ( ros::ok() )
   {
     // check if there has been a service request for a new move
@@ -244,10 +244,10 @@ int main(int argc, char **argv)
     }
     
     // get and publish current end effector pose. Ensure it's in base_link frame
-    geometry_msgs::PoseStamped current_pose = moveIF.movegroup_.getCurrentPose();
+    current_pose = moveIF.movegroup_.getCurrentPose();
     try{
-      transform_stamped = tfBuffer.lookupTransform("base_link", "world",
-                               ros::Time(0));
+      // The 'erase' removes the leading slash
+      transform_stamped = tfBuffer.lookupTransform("base_link", current_pose.header.frame_id.erase(0,1), ros::Time(0));
     }
     catch (tf2::TransformException &ex) {
       ROS_WARN("%s",ex.what());

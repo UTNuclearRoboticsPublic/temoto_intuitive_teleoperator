@@ -581,7 +581,7 @@ int main(int argc, char **argv)
   {
     ROS_WARN("[rviz_visual] Waiting for the initial end effector pose.");
     ros::spinOnce();
-    ros::Duration(0.1).sleep();
+    ros::Duration(1.).sleep();
   }
   rviz_visuals.crunch(pub_marker, pub_pov_camera);
  

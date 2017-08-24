@@ -81,17 +81,13 @@ void statusCallback(temoto::Status status)
 /** Main method. */
 int main(int argc, char **argv)
 {
-  // ROS init
   ros::init(argc, argv, "human_frame_broadcaster");
-  // ROS node handle
   ros::NodeHandle nh;
-  // Set ROS rate to 10 Hz
   ros::Rate r(10);
   
   // Human input frame.
   std::string human_frame;
-  // Motion-planning control frame.
-//   std::string eef_frame;
+
   // Navigation control frame.
   std::string mobile_frame;
   
