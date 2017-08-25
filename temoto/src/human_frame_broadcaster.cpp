@@ -58,12 +58,11 @@ using namespace human_frame_broadcaster;
  *  @return always true.
  */
 bool service_change_tf(	temoto::ChangeTf::Request  &req,
-			temoto::ChangeTf::Response &res)
+			temoto::ChangeTf::Request &res)
 {
   // Get the value from the request
   g_natural_perspective = req.first_person_perspective;
   g_navigation_control = req.navigate;
-  ROS_INFO("[human_frame_broadcaster] New service update requested. Now g_natural_perspective = %d; g_navigation_control = %d", g_natural_perspective, g_navigation_control);
   
   return true;
 } // end service_change_tf

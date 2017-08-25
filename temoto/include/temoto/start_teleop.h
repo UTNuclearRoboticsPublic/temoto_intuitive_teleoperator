@@ -141,7 +141,6 @@ private:
   bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsolutePoseCmd(..).
   bool navigate_to_goal_;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
-  uint8_t control_state_;		///< 1 -> manipulate only; 2 -> navigate only; 3 -> manipulate&navigate
   bool executing_preplanned_sequence_ = false;
 
   // ROS publishers

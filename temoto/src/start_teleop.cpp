@@ -77,7 +77,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   }
   else
   {
-    // The SpaceMouse controller is more sensitive than the LeapMotion
+    // The SpaceNav controller is more sensitive than the LeapMotion
     pos_scale_ = 0.001;
     rot_scale_ = 0.004;
   }
@@ -94,25 +94,18 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
   {
-    control_state_ = 3;
     navigate_to_goal_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (navigate && !manipulate_)
   {
-    control_state_ = 2;
     navigate_to_goal_ = true;		// if only navigation is enabled, navigate_to_goal_ is TRUE
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (manipulate_ && !navigate)
   {
-    control_state_ = 1;
     navigate_to_goal_ = false;		// if only manipulation is enabled, navigate_to_goal_ is FALSE
     AMP_HAND_MOTION_ = 10;		// 10 for manipulation
-  }
-  else
-  {
-    ROS_WARN("[start_teleop/Teleoperator] Control state not specified.");
   }
 
   // Set up primary hand
@@ -565,6 +558,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     std_msgs::String s;
     s.data = low_level_cmds::ABORT;
     pub_abort_.publish(s);
+
+    return;
   }
   else  // No need to abort
   {
@@ -577,9 +572,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   ////////////////////////////////////
   //  Handle all commands except ABORT
   ////////////////////////////////////
+
+  // Normal temoto motions are OK if a preplanned sequence isn't running
   if (executing_preplanned_sequence_==true)
     ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
-  else  // Normal temoto motions are OK if a preplanned sequence isn't running
+  else
   {
     if (voice_command.cmd_string == "robot please plan")
     {
@@ -618,8 +615,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
       switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
       // if service request successful, change the value of control perspective in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) )
-      	using_natural_control_ = true;
+      tf_change_client_.call( switch_human2robot_tf );
+      using_natural_control_ = true;
     }
     else if (voice_command.cmd_string == "inverted control mode")
     {
@@ -627,9 +624,9 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
       switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
-      // if service request successful, change the value of control perspective in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) )
-      	using_natural_control_ = false;
+
+      tf_change_client_.call( switch_human2robot_tf );
+      using_natural_control_ = false;
     }
     else if (voice_command.cmd_string == "free directions")
     {
@@ -652,27 +649,26 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Ignoring hand rotation/orientation ...");
       orientation_locked_ = true;
     }
-    else if (voice_command.cmd_string == "manipulation" && control_state_ != 2)	// Switch over to manipulation (MoveIt!) mode
+    else if (voice_command.cmd_string == "manipulation")	// Switch over to manipulation (MoveIt!) mode
     { 
       ROS_INFO("Going into MANIPULATION mode  ...");
       AMP_HAND_MOTION_ = 10;
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.navigate = false;	// request a change of control mode
       switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
-      // if service request successful, change the value of control mode in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) )
-      	navigate_to_goal_ = false;
+      tf_change_client_.call( switch_human2robot_tf );
+      navigate_to_goal_ = false;
     }
-    else if (voice_command.cmd_string == "navigation" && control_state_ != 1)	// Switch over to navigation mode
+    else if (voice_command.cmd_string == "navigation")	// Switch over to navigation mode
     { 
       ROS_INFO("Going into NAVIGATION mode  ...");
       AMP_HAND_MOTION_ = 100;
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.navigate = true;	// request a change of control mode
-      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
-      // if service request successful, change the value of control mode in this node
-      if ( tf_change_client_.call( switch_human2robot_tf ) )
-      	navigate_to_goal_ = true;
+      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;
+
+      tf_change_client_.call( switch_human2robot_tf );
+      navigate_to_goal_ = true;
     }
     else if (voice_command.cmd_string == "close hand")  // Close the gripper - a preplanned sequence
     {
@@ -765,7 +761,7 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Rate node_rate(60);
+  ros::Rate node_rate(60.);
   
   // Instance of Teleoperator
   Teleoperator temoto_teleop(n);
@@ -780,7 +776,7 @@ int main(int argc, char **argv)
   ros::service::waitForService("temoto/change_human2robot_tf");
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 
-  // Setup ROS subscribers
+  // Setup ROS publishers/subscribers
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
@@ -798,8 +794,6 @@ int main(int argc, char **argv)
   ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
 
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
-  
-  ROS_INFO("Starting teleoperation ...");
   
   while ( ros::ok() )
   {

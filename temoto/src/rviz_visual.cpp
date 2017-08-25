@@ -275,21 +275,21 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Setting markers in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
-    /* ==  ARROW  ============================================ */
+    // ==  ARROW  ============================================ //
     // Displacement arrow is not needed in NAVIGATION mode, so make it invisible.
     displacement_arrow_.color.a = 0;
     
     // Publish displacement_arrow_
     marker_publisher.publish( displacement_arrow_ );
     
-    /* ==  ACTIVE RANGE BOX  ================================= */
+    // ==  ACTIVE RANGE BOX  ================================= //
     // Active range box is not needed in NAVIGATION mode, so make it invisible.
     active_range_box_.color.a = 0;
     
     // Publish active_range_box_
     marker_publisher.publish( active_range_box_ );   
     
-    /* ==  HAND POSE BOX MARKER  ============================= */
+    // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
     cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
     cmd_pose_marker_.scale.x = 0.5;
@@ -307,7 +307,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     marker_publisher.publish( cmd_pose_marker_ );
 
-    /* ==  TEXT LABEL  ======================================= */
+    // ==  TEXT LABEL  ======================================= //
     // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
     std::vector<geometry_msgs::Point> temp;
     geometry_msgs::Point zero_point;
@@ -465,7 +465,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
     pov_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
-    adjust_camera_ = false;						// set adjust_camera 'false'     
+    adjust_camera_ = false;						// set adjust_camera 'false'
   }
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
