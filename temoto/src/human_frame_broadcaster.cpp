@@ -111,7 +111,7 @@ int main(int argc, char **argv)
   tf::Transform hand_frame_to_robot;
 
   while ( ros::ok() )
-  {  
+  {
     // IF human input is to be used for navigating robot base
     if ( g_navigation_control )
     {

@@ -190,7 +190,7 @@ int main(int argc, char **argv)
   // ROS NodeHandle for accessing private parameters
   ros::NodeHandle pn("~");
   
-  ros::Rate node_rate(100);
+  ros::Rate node_rate(60);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan(), which would get stuck otherwise. Might be a bug.
   ros::AsyncSpinner spinner(0);
@@ -207,11 +207,6 @@ int main(int argc, char **argv)
   ROS_INFO("[move_robot/main] Retrieved '%s' from parameter server as a movegroup name.", move_group_name.c_str());
   
   MoveRobotInterface moveIF(move_group_name);
-
-  // For frame transformations
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-  geometry_msgs::TransformStamped transform_stamped;
   
   // FYI
   ROS_INFO("[move_robot/main] Planning frame: %s", moveIF.movegroup_.getPlanningFrame().c_str());
@@ -228,8 +223,23 @@ int main(int argc, char **argv)
   // Set up publisher for the end effector location
   ros::Publisher pub_end_effector = n.advertise<geometry_msgs::PoseStamped>( "temoto/end_effector_pose", 1 );
 
+  // For frame transformations
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
+  geometry_msgs::TransformStamped transform_stamped;
   geometry_msgs::PoseStamped current_pose;
 
+  // Wait for the moveGroup to initialize
+  ros::Duration(2.).sleep();  // TODO: a better way
+/*
+  while ( current_pose.header.frame_id == "" )
+  {
+    ros::Duration(0.1).sleep();
+    current_pose = moveIF.movegroup_.getCurrentPose();
+  }
+*/
+
+  // MAIN LOOP
   while ( ros::ok() )
   {
     // check if there has been a service request for a new move
@@ -238,23 +248,37 @@ int main(int argc, char **argv)
       moveIF.requestMove();			// plan and execute move using move_group
       moveIF.new_move_requested_ = false;	// set request flag to false
     }
-    
+
     // get and publish current end effector pose. Ensure it's in base_link frame
     current_pose = moveIF.movegroup_.getCurrentPose();
-    try{
-      // The 'erase' removes the leading slash
-      transform_stamped = tfBuffer.lookupTransform("base_link", current_pose.header.frame_id.erase(0,1), ros::Time(0));
-    }
-    catch (tf2::TransformException &ex) {
-      ROS_WARN("%s",ex.what());
-      ros::Duration(1.0).sleep();
-      continue;
-    }
-    tf2::doTransform(current_pose, current_pose, transform_stamped);
+
+    if ( current_pose.header.frame_id != "base_link" )
+    {
+      // Check for and remove a leading slash
+      std::string frame = current_pose.header.frame_id;
+      if ( frame[0] == '/' )
+      {
+        frame.erase(0,1);
+        current_pose.header.frame_id = frame;
+      }
+
+      try
+      {
+        transform_stamped = tfBuffer.lookupTransform("base_link", frame, ros::Time(0));
+        tf2::doTransform(current_pose, current_pose, transform_stamped);
+      }
+      catch (tf2::TransformException &ex) 
+      {
+        ROS_WARN("%s",ex.what());
+        ros::Duration(1.0).sleep();
+        continue;
+      }
+    }  // if not already in base_link
+
+    //ROS_INFO_STREAM(current_pose);
     pub_end_effector.publish( current_pose );
-    
+   
     ros::spinOnce();
-    // sleep to meet the node_rate frequency
     node_rate.sleep();
     
   } // end while

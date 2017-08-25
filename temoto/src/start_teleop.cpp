@@ -135,6 +135,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   if (navigate_to_goal_) // if in NAVIGATION mode
   {
+/*
     // If operator requested ABORT
     if (action_type == low_level_cmds::ABORT)
     {
@@ -207,6 +208,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       }
       return;
     } // else if (action_type == "go")
+*/
   } // if (navigate_to_goal_)
   // =================================================
   // === Calling MoveRobotInterface ==================
@@ -304,7 +306,7 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
 void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
 {
   // Ensure incoming data is in the right frame
-  if (current_pose_.header.frame_id != "base_link")
+  if ( current_pose_.header.frame_id != "base_link" )
   {
     ROS_WARN("[start_teleop] The current pose is not being published in the base_link frame.");
     return;
@@ -338,8 +340,12 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
   geometry_msgs::Vector3Stamped incoming_position_cmd;
   incoming_position_cmd.header.frame_id = "hand_marker";
   incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-  transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(3.0));
-  transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+  if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.05)) )
+    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+  else
+  {
+    //ROS_WARN("TF between base_link and hand_marker timed out.");
+  }
 
   absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
   absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;

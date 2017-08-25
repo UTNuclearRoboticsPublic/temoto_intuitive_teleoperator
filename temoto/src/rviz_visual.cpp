@@ -168,7 +168,7 @@ void Visuals::initDistanceAsText()
   return;
 } // end Visuals::initDistanceAsText()
 
-/** Creates the initial marker that visualizes hand pose as a flattened box. */
+/** Creates the initial marker that visualizes hand pose */
 void Visuals::initHandPoseMarker()
 {
   cmd_pose_marker_.header.frame_id = "base_link";
@@ -257,7 +257,7 @@ std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & two
   {
     units = " m";
   }
-  // use the number of fractional digits specified by presion to put distance into stringstream and add units.
+  // use the number of fractional digits specified by precision to put distance into stringstream and add units.
   std::ostringstream sstream;
   sstream << std::fixed << std::setprecision(precision) << distance << units;
 
@@ -342,28 +342,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     
     displacement_arrow_.color.a = 1;					// the arrow is visibly solid
 
-/*
-    // A tweak for extreme close-ups to make the arrow out of scale but more informative
-    if (latest_status_.scale_by < 0.01 && camera_is_aligned_ )// only when the rviz camera is in the front
-    {    
-      displacement_arrow_.scale.x = 0.0001;				// make the shaft thinner
-      displacement_arrow_.scale.y = 0.0003;				// make the arrow head thinner
-      displacement_arrow_.color.a = 0.6;				// and make the arrow a bit transparent
-    }
-
-    // Change arrow's appearance when camera is on the top, looking down
-    if (!camera_is_aligned_ && !latest_status_.position_unlimited)	// if camera is on the top and facing down, the arrow marker must be made more visible
-    {
-      displacement_arrow_.scale.x = 0.15;				// shaft is now quite fat
-      displacement_arrow_.scale.y = 0.18;				// head is also made large
-      displacement_arrow_.color.a = 0.4;				// the arrow marker is translucent
-    }
-
-    if (latest_status_.position_unlimited) 
-      displacement_arrow_.color.g = 0.0;	// if hand position input is unresricted, paint the arrow red 
-    else 
-      displacement_arrow_.color.g = 0.5;	// else, the arrow is orange
-*/
     // Publish displacement_arrow_
     marker_publisher.publish( displacement_arrow_ );
 
@@ -430,7 +408,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     if (!latest_status_.orientation_free) cmd_pose_marker_.color.a = 0;	// make the marker invisible
     else cmd_pose_marker_.color.a = 1;
 
-    // Publish cmd_pose_marker_
     marker_publisher.publish( cmd_pose_marker_ );
 
     // Add a frame to the hand pose marker. Useful to view in RViz.
