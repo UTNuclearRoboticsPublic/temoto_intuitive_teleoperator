@@ -160,8 +160,6 @@ void MoveRobotInterface::calculate_linear_tols(geometry_msgs::PoseStamped curr_p
   if ( delta_position < min_position_tolerance_ )
     delta_position = min_position_tolerance_;
 
-  ROS_INFO_STREAM( "Position tol: " << delta_position );
-
   movegroup_.setGoalPositionTolerance( delta_position );
 
   return;
@@ -177,8 +175,6 @@ void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose
 
   if ( delta_orientation < min_orientation_tolerance_ )
     delta_orientation = min_orientation_tolerance_;
-
-  ROS_INFO_STREAM( "Orient tol: " << delta_orientation );
 
   movegroup_.setGoalOrientationTolerance( delta_orientation );
 
