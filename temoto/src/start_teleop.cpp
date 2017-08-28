@@ -57,12 +57,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   bool absolute_pose_input;
   pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
 
-
-  using_natural_control_ = true;	// always start in natural control perspective
-  orientation_locked_ = false;
-  position_limited_ = true;
-  position_fwd_only_ = false;
-  secondary_hand_before_ = false;
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   absolute_pose_input_ = absolute_pose_input;
 
@@ -78,8 +72,8 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   else
   {
     // The SpaceNav controller is more sensitive than the LeapMotion
-    pos_scale_ = 0.001;
-    rot_scale_ = 0.004;
+    pos_scale_ = 0.005;
+    rot_scale_ = 0.01;
   }
   
 
@@ -94,17 +88,17 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
   {
-    navigate_to_goal_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
+    in_nav_mode_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (navigate && !manipulate_)
   {
-    navigate_to_goal_ = true;		// if only navigation is enabled, navigate_to_goal_ is TRUE
+    in_nav_mode_ = true;		// if only navigation is enabled, in_nav_mode_ is TRUE
     AMP_HAND_MOTION_ = 100;		// 100 for navigation
   }
   else if (manipulate_ && !navigate)
   {
-    navigate_to_goal_ = false;		// if only manipulation is enabled, navigate_to_goal_ is FALSE
+    in_nav_mode_ = false;		// if only manipulation is enabled, in_nav_mode_ is FALSE
     AMP_HAND_MOTION_ = 10;		// 10 for manipulation
   }
 
@@ -133,7 +127,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   // === Calling NavigateRobotInterface ==============
   // =================================================
-  if (navigate_to_goal_) // if in NAVIGATION mode
+  if (in_nav_mode_) // if in NAVIGATION mode
   {
 /*
     // If operator requested ABORT
@@ -209,11 +203,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       return;
     } // else if (action_type == "go")
 */
-  } // if (navigate_to_goal_)
+  } // if (in_nav_mode_)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if ( !navigate_to_goal_ )    // If Teleoperator is in MANIPULATION (MoveIt!) mode
+  else if ( !in_nav_mode_ )    // If Teleoperator is in MANIPULATION (MoveIt!) mode
   {  
     // Adjust orientation for inverted control mode
     if ( !using_natural_control_)
@@ -250,7 +244,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
 // void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target)
 void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target)
 {
-  if ( !navigate_to_goal_ )			// currenly implemented for only MoveRobotInterface
+  if ( !in_nav_mode_ )			// currenly implemented for only MoveRobotInterface
   {
     temoto::Goal motion;			// create a service request
     motion.request.action_type = action_type;	// set action_type
@@ -300,7 +294,7 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
 }
 
 /** Callback function for relative position commands.
- *  Add the new command to the current RViz marker.
+ *  Add the new command to the current RViz marker pose.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
  */
 void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
@@ -312,44 +306,116 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
     return;
   }
 
-  // ORIENTATION
-  // new incremental rpy command
-  incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-  incremental_orientation_cmd_.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-  incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
-
-  tf::Quaternion q_previous_cmd, q_incremental;
-  q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
-
-  // Add the incremental command to the previously commanded orientation
-  quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-  q_previous_cmd *= q_incremental;  // Calculate the new orientation
-  q_previous_cmd.normalize();
-  quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
-  // POSITION
-
-  // Integrate the incremental cmd. It persists even if the robot moves
-  incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
-  incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
-  incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
-
-  // Incoming position cmds are in the hand_marker frame
-  // So convert them to base_link like everything else
-
-  geometry_msgs::Vector3Stamped incoming_position_cmd;
-  incoming_position_cmd.header.frame_id = "hand_marker";
-  incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-  if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.05)) )
-    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-  else
+  // Should we reset the command integrations?
+  // Can be used to reset the hand marker, or when switching betw. manip & nav modes
+  if (reset_integrated_cmds_)
   {
-    //ROS_WARN("TF between base_link and hand_marker timed out.");
+    absolute_pose_cmd_.pose.orientation.x = 0.; absolute_pose_cmd_.pose.orientation.y = 0.; absolute_pose_cmd_.pose.orientation.z = 0.; absolute_pose_cmd_.pose.orientation.w = 1.;
+
+    absolute_pose_cmd_.pose.position.x = 0.; absolute_pose_cmd_.pose.position.y = 0.; absolute_pose_cmd_.pose.position.z = 0.;
+
+    incremental_orientation_cmd_.x = 0.; incremental_orientation_cmd_.y = 0.; incremental_orientation_cmd_.z = 0.;
+    incremental_position_cmd_.x = 0.; incremental_position_cmd_.y = 0.; incremental_position_cmd_.z = 0.;
+
+    // Reset the flag
+    reset_integrated_cmds_ = false;
   }
 
-  absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
-  absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
-  absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+  /////////////
+  // NAVIGATION
+  /////////////
+  if ( in_nav_mode_ )
+  {
+    // ORIENTATION
+    // new incremental yaw command
+    // For nav mode, we want to stay in the plane ==> ignore roll & pitch
+    incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+
+    // POSITION
+    // Ignore Z (out of plane)
+
+    // Integrate the incremental cmd. It persists even if the robot moves
+    incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+    incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+
+    // Incoming position cmds are in the hand_marker frame
+    // So convert them to base_link like everything else
+
+    geometry_msgs::Vector3Stamped incoming_position_cmd;
+    incoming_position_cmd.header.frame_id = "hand_marker";
+    incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+    if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+/*    else
+    {
+      ROS_WARN("TF between base_link and hand_marker timed out.");
+    }
+*/
+    // Ignore Z
+    incoming_position_cmd.vector.z = 0.;
+
+    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0).
+    absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;
+  }
+
+
+  ///////////////
+  // MANIPULATION
+  ///////////////
+  if ( !in_nav_mode_ )
+  {
+    // ORIENTATION
+    // new incremental rpy command
+    incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
+    incremental_orientation_cmd_.y = rot_scale_*pose_cmd.axes[4];  // about y axis
+    incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+    // POSITION
+
+    // Integrate the incremental cmd. It persists even if the robot moves
+    incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+    incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+    incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
+    // Incoming position cmds are in the hand_marker frame
+    // So convert them to base_link like everything else
+
+    geometry_msgs::Vector3Stamped incoming_position_cmd;
+    incoming_position_cmd.header.frame_id = "hand_marker";
+    incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+    if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+/*    else
+    {
+      ROS_WARN("TF between base_link and hand_marker timed out.");
+    }
+*/
+
+    absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+  }
 
   return;
 } // end processIncrementalPoseCmd
@@ -416,7 +482,7 @@ void Teleoperator::processAbsolutePoseCmd(leap_motion_controller::Set leap_data)
   scaled_pose.pose.orientation = primary_hand.orientation;
   
   // Applying relevant limitations to direction and/or orientation
-  if (navigate_to_goal_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
+  if (in_nav_mode_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
   {
     scaled_pose.pose.position.y = 0;
     // preserve only pitch (rotation around UP vector) of hand orientation
@@ -619,7 +685,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Using natural control perspective ...");
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
-      switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+      switch_human2robot_tf.request.navigate = in_nav_mode_;	// preserve current navigation/manipulation mode
       // if service request successful, change the value of control perspective in this node
       tf_change_client_.call( switch_human2robot_tf );
       using_natural_control_ = true;
@@ -629,7 +695,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Using inverted control perspective ...");
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
-      switch_human2robot_tf.request.navigate = navigate_to_goal_;	// preserve current navigation/manipulation mode
+      switch_human2robot_tf.request.navigate = in_nav_mode_;	// preserve current navigation/manipulation mode
 
       tf_change_client_.call( switch_human2robot_tf );
       using_natural_control_ = false;
@@ -655,26 +721,40 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Ignoring hand rotation/orientation ...");
       orientation_locked_ = true;
     }
-    else if (voice_command.cmd_string == "manipulation")	// Switch over to manipulation (MoveIt!) mode
-    { 
-      ROS_INFO("Going into MANIPULATION mode  ...");
-      AMP_HAND_MOTION_ = 10;
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.navigate = false;	// request a change of control mode
-      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
-      tf_change_client_.call( switch_human2robot_tf );
-      navigate_to_goal_ = false;
+    else if ( voice_command.cmd_string == "manipulation" )	// Switch over to manipulation (MoveIt!) mode
+    {
+      // If not already in manipulation mode
+      if ( in_nav_mode_==true )
+      {
+        reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
+        ROS_INFO("Going into MANIPULATION mode  ...");
+        AMP_HAND_MOTION_ = 10;
+        temoto::ChangeTf switch_human2robot_tf;
+        switch_human2robot_tf.request.navigate = false;	// request a change of control mode
+        switch_human2robot_tf.request.first_person_perspective = using_natural_control_;	// preserve current control perspective
+        tf_change_client_.call( switch_human2robot_tf );
+        in_nav_mode_ = false;
+      }
+      else
+        ROS_INFO("Already in manipulation mode.");
     }
-    else if (voice_command.cmd_string == "navigation")	// Switch over to navigation mode
-    { 
-      ROS_INFO("Going into NAVIGATION mode  ...");
-      AMP_HAND_MOTION_ = 100;
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.navigate = true;	// request a change of control mode
-      switch_human2robot_tf.request.first_person_perspective = using_natural_control_;
+    else if ( voice_command.cmd_string == "navigation" )	// Switch over to navigation mode
+    {
+      // If not already in nav mode
+      if ( in_nav_mode_==false )
+      {
+        reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
+        ROS_INFO("Going into NAVIGATION mode  ...");
+        AMP_HAND_MOTION_ = 100;
+        temoto::ChangeTf switch_human2robot_tf;
+        switch_human2robot_tf.request.navigate = true;	// request a change of control mode
+        switch_human2robot_tf.request.first_person_perspective = using_natural_control_;
 
-      tf_change_client_.call( switch_human2robot_tf );
-      navigate_to_goal_ = true;
+        tf_change_client_.call( switch_human2robot_tf );
+        in_nav_mode_ = true;
+      }
+      else
+        ROS_INFO("Already in navigation mode.");
     }
     else if (voice_command.cmd_string == "close hand")  // Close the gripper - a preplanned sequence
     {
@@ -734,7 +814,7 @@ void Teleoperator::triggerROSAction(temoto::Command& voice_command)
   preplanned_sequence_client_.sendGoal(goal);
 }
 
-/** Puts all the latest private variable values into temoto/status message.
+/** Puts the latest private variable values into temoto/status message.
  *  This is used in marker publication.
  *  @return temoto::Status message.
  */
@@ -754,7 +834,7 @@ temoto::Status Teleoperator::setStatus()
     //ROS_INFO_STREAM(current_pose_.header.frame_id);
     //ROS_WARN("[start_teleop] The current robot pose is not being reported in base_link.");
   status.position_forward_only = position_fwd_only_;
-  status.in_navigation_mode = navigate_to_goal_;
+  status.in_navigation_mode = in_nav_mode_;
 
   return status;
 } // end setStatus()
@@ -783,15 +863,15 @@ int main(int argc, char **argv)
   temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
 
   // Setup ROS publishers/subscribers
-  ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 10, &Teleoperator::processPowermate, &temoto_teleop);
+  ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
   if (temoto_teleop.absolute_pose_input_)
   {
-    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 10,  &Teleoperator::processAbsolutePoseCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsolutePoseCmd, &temoto_teleop);
   }
   else  // incremental pose cmds
-    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 10,  &Teleoperator::processIncrementalPoseCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processIncrementalPoseCmd, &temoto_teleop);
 
   ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
 

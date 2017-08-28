@@ -291,8 +291,9 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
     cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    cmd_pose_marker_.scale.x = 0.5;
-    cmd_pose_marker_.scale.z = 1.0; 
+    cmd_pose_marker_.scale.x = 1.0;
+    cmd_pose_marker_.scale.y = 0.5;
+    cmd_pose_marker_.scale.z = 0.1; 
 
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;

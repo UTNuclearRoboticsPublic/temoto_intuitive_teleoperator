@@ -134,14 +134,15 @@ private:
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
   // INVERTED control: the human operator is facing the robot so that left and right are inverted.
-  bool using_natural_control_;		///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
-  bool orientation_locked_;		///< Hand orientation info is to be ignored if TRUE.
-  bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
-  bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool secondary_hand_before_;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsolutePoseCmd(..).
-  bool navigate_to_goal_;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
+  bool using_natural_control_ = true;		///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
+  bool orientation_locked_ = false;		///< Hand orientation info is to be ignored if TRUE.
+  bool position_limited_ = true;		///< Hand position is restricted to a specific direction/plane if TRUE.
+  bool position_fwd_only_ = false;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
+  bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsolutePoseCmd(..).
+  bool in_nav_mode_;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool primary_hand_is_left_;		///< TRUE unless user specified right hand as the primary hand.
-  bool executing_preplanned_sequence_ = false;
+  bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
+  bool reset_integrated_cmds_ = false;	///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
   ros::Publisher pub_abort_;
