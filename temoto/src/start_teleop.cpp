@@ -72,7 +72,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   else
   {
     // The SpaceNav controller is more sensitive than the LeapMotion
-    pos_scale_ = 0.005;
+    pos_scale_ = 0.008;
     rot_scale_ = 0.01;
   }
   
@@ -364,7 +364,7 @@ void Teleoperator::processIncrementalPoseCmd(sensor_msgs::Joy pose_cmd)
     // Ignore Z
     incoming_position_cmd.vector.z = 0.;
 
-    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0).
+    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
     absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
     absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
     absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;

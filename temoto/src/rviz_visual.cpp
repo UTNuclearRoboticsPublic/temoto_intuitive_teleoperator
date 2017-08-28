@@ -291,16 +291,18 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
     cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    cmd_pose_marker_.scale.x = 1.0;
+    cmd_pose_marker_.scale.x = 1.0;  // Shaft diameter
     cmd_pose_marker_.scale.y = 0.5;
-    cmd_pose_marker_.scale.z = 0.1; 
+    cmd_pose_marker_.scale.z = 0.1;
 
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
     
     // Paint the marker based on restricted motion latest_status
-    if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
+    if (latest_status_.orientation_free)
+      cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
+    else
+      cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
 
     // In NAVIGATION, the hand pose marker must always be visible
     cmd_pose_marker_.color.a = 1;
@@ -309,14 +311,16 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // ==  TEXT LABEL  ======================================= //
     // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
+
     std::vector<geometry_msgs::Point> temp;
     geometry_msgs::Point zero_point;
     temp.push_back(zero_point);
-    temp.push_back(latest_status_.commanded_pose.pose.position);
+    temp.push_back(cmd_pose_marker_.pose.position);
     distance_as_text_.text = getDistanceString(temp);			// get the linear distance from zero to hand position end point as string
-    distance_as_text_.scale.z = 0.05 + latest_status_.scale_by/8;	// scale the display text based on scale_by value
-    distance_as_text_.pose.position = temp[1];				// text is placed at the hand position
-    distance_as_text_.pose.position.y = 1; 				// raise text to the top 1 m
+    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by*3.;	// scale the display text based on scale_by value
+    distance_as_text_.pose.position = cmd_pose_marker_.pose.position;   // text is placed at the hand position
+    distance_as_text_.pose.position.z = 1;				// raise text above the robot
+    distance_as_text_.header.frame_id = cmd_pose_marker_.header.frame_id;
 
     marker_publisher.publish( distance_as_text_ );			// publish info_text visualization_marker; this is picked up by rivz
   }
@@ -365,15 +369,10 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
     // Get the distance between start and end point as string
     distance_as_text_.text = getDistanceString( displacement_arrow_.points );
-          distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
-    if (!latest_status_.in_natural_control_mode)			// INVERTED CONTROL MODE
-    {
-      distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-    }
-    else								// NATURAL CONTROL MODE
-    {
-      distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-    }
+    distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
+    
+    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
+
     // A tweak for when the camera is on the top facing down; lift text above the arrow
     if (!camera_is_aligned_) distance_as_text_.pose.position.y = 0.7*displacement_arrow_.scale.y; // lift text to the top of arrows head
     // A tweak for bringing the text in front of the hand pose orientation marker for better visibility
@@ -430,8 +429,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
-    //ROS_INFO("NAVIGATION/NATURAL: Switching to top view.");
-
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
@@ -439,10 +436,11 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Camera is positioned directly above the origin of base_link
     point_of_view_.eye.point.x = 0;
     point_of_view_.eye.point.y = 0;
-    point_of_view_.eye.point.z = 2 + 10*latest_status_.scale_by;	// Never closer than 2 m, max distance at 12 m
+    point_of_view_.eye.point.z = 12. + 10.*latest_status_.scale_by;	// Never closer than 2 m, max distance at 12 m
 
     // Focus camera at the origin of base_link
     point_of_view_.focus.point.x = 0;
+    point_of_view_.focus.point.y = 0;
 
     latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
     pov_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
@@ -502,7 +500,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 		point_of_view_.up.vector.x = 0;
 
 		// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x + EYE_DISPLACEMENT_FRONT_;  // + 1.5*latest_status_.scale_by;
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x + EYE_DISPLACEMENT_FRONT_;
 		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// move camera to align with end effector along the y-axis
 		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z;				// move camera to align with end effector along the z-axis
 
