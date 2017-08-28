@@ -196,7 +196,6 @@ void Visuals::initHandPoseMarker()
     cmd_pose_marker_.scale.z = 0.001;
   }
 
-  cmd_pose_marker_.color.a = 0.1;
   // Orange.
   cmd_pose_marker_.color.r = 1.0;
   cmd_pose_marker_.color.g = 0.5;
@@ -384,8 +383,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
 
     /* ==  HAND POSE MARKER  ================================= */
+    cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
     cmd_pose_marker_.mesh_resource = manip_stl_;
+    cmd_pose_marker_.scale.x = 0.001;
+    cmd_pose_marker_.scale.y = 0.001;
+    cmd_pose_marker_.scale.z = 0.001;
 
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;

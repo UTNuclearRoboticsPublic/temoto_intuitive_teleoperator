@@ -102,7 +102,7 @@ public:
 
 private:
   // ___ INITIALIZERS ___
-  
+
   /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
   void initDisplacementArrow();
   
