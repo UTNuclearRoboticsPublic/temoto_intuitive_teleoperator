@@ -1,21 +1,24 @@
-
 #include "temoto/preplanned_sequences/turn_handle_clockwise.h"
 
 // Put the UR5 in force_mode and turn the handle 90 degrees
 int turn_handle_clockwise::turn_handle_clockwise()
 {
-  ros::NodeHandle* nhPtr = &turn_handle_clockwise::nh; // To pass to other functions
+  ros::NodeHandle nh;
+  ros::NodeHandle* nhPtr = &nh; // To pass to other functions
 
-  turn_handle_clockwise::enable_compliance();
+  // arm compliance object. Sends ur commands on this topic
+  ur_script_compliance right("/right_ur5_controller/right_ur5_URScript");
+
+  turn_handle_clockwise::enable_compliance(right);
 
   // Rotate the end effector, as specified in yaml file
-  turn_handle_clockwise::rotate();
+  turn_handle_clockwise::rotate(nhPtr);
 
   return 0;
 }
 
 // Enable compliance
-void turn_handle_clockwise::enable_compliance()
+void turn_handle_clockwise::enable_compliance(ur_script_compliance& right)
 {
   // Put the robot in force mode
   // This will be compliant in all directions with a target wrench of 0
@@ -25,42 +28,31 @@ void turn_handle_clockwise::enable_compliance()
   int type = 1;  // Force frame transform
   std::vector<float> limits {0.8, 0.8, 0.8, 1.571, 1.571, 1.571};  // Displacement limits
 
-  turn_handle_clockwise::right.enable_force_mode_( force_frame, selection_vector, target_wrench, type, limits );
+  right.enable_force_mode_( force_frame, selection_vector, target_wrench, type, limits );
 }
 
 // Rotate as dictated by the yaml file
-int turn_handle_clockwise::rotate()
+int turn_handle_clockwise::rotate(ros::NodeHandle* nhPtr)
 {
   // Set up the MoveGroup
-  moveit::planning_interface::MoveGroup::Plan move_plan;
-  turn_handle_clockwise::move_group.setPlannerId("RRTConnectkConfigDefault");
-  turn_handle_clockwise::move_group.setMaxVelocityScalingFactor( 0.1 );
-  turn_handle_clockwise::move_group.setGoalPositionTolerance(0.02);
-  turn_handle_clockwise::move_group.setGoalOrientationTolerance(0.05);
+  moveit::planning_interface::MoveGroupInterface move_group("right_ur5");
+  moveit::planning_interface::MoveGroupInterface::Plan move_plan;
+  move_group.setPlannerId("RRTConnectkConfigDefault");
+  move_group.setMaxVelocityScalingFactor( 0.1 );
+  move_group.setGoalPositionTolerance(0.02);
+  move_group.setGoalOrientationTolerance(0.05);
 
   // Get the robot's current position
-  // Sometimes getCurrentPose is incorrect, so check it.
-  // May need a sleep after creating the MoveGroup
   geometry_msgs::PoseStamped pose;
-  geometry_msgs::PoseStamped secondPose;
-
-CHECK_POSE:
   pose = move_group.getCurrentPose();
-  secondPose = move_group.getCurrentPose();
-  if ( 
-    ( fabs(pose.pose.position.x-secondPose.pose.position.x) > 0.001 ) ||
-    ( fabs(pose.pose.position.y-secondPose.pose.position.y) > 0.001 ) ||
-    ( fabs(pose.pose.position.z-secondPose.pose.position.z) > 0.001 )
-    )
-    goto CHECK_POSE;
 
-  std::vector<double> rpy = turn_handle_clockwise::move_group.getCurrentRPY();
+  std::vector<double> rpy = move_group.getCurrentRPY();
 
   // Get the desired deltas from a yaml file. Add to the current position.
   // The launch file saves the first delta as a list to /temoto_preplanned_motions/turn_handle_clockwise/delta1
   // e.g. [0, 0, 0, -1.57, 0, 0]
   std::vector<double> delta1;
-  turn_handle_clockwise::nh.getParam("/temoto_preplanned_motions/turn_handle_clockwise/delta1", delta1);
+  nhPtr->getParam("/temoto_preplanned_motions/turn_handle_clockwise/delta1", delta1);
 
   pose.pose.position.x += delta1.at(0);
   pose.pose.position.y += delta1.at(1);
@@ -75,15 +67,20 @@ CHECK_POSE:
   // Move
   std::vector<geometry_msgs::Pose> waypoints;
   waypoints.push_back(pose.pose);
-  double fraction = turn_handle_clockwise::move_group.computeCartesianPath(waypoints,
+  double fraction = move_group.computeCartesianPath(waypoints,
                                              0.01,  // eef_step
                                              3.0,   // jump_threshold
                                              move_plan.trajectory_);
-  if ( !turn_handle_clockwise::move_group.execute(move_plan) )
+  if ( !move_group.execute(move_plan) )
   {
     ROS_WARN("Motion failed. Exiting.");
     return 1;
   }
+/*
+  move_group.clearPoseTargets();
+  move_group.setPoseTarget(pose);
+  move_group.move();
+*/
 
   return 0;
 }

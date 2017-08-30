@@ -129,7 +129,6 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   if (in_nav_mode_) // if in NAVIGATION mode
   {
-/*
     // If operator requested ABORT
     if (action_type == low_level_cmds::ABORT)
     {
@@ -147,62 +146,45 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     } // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
     else if (action_type == low_level_cmds::GO)
-    {  
-      // ------------------------- DEBUG START {
+    {
       double lm_roll, lm_pitch, lm_yaw;
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in current_cmd_frame: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
-	      motion.request.goal.pose.orientation.x, motion.request.goal.pose.orientation.y, motion.request.goal.pose.orientation.z, motion.request.goal.pose.orientation.w);
+
       tf::Quaternion quat_current_cmd_frame;
       tf::quaternionMsgToTF(motion.request.goal.pose.orientation, quat_current_cmd_frame);
       tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in current_cmd_frame: ROLL=%.3f, PITCH=%.3f, YAW=%.3f", lm_roll, lm_pitch, lm_yaw);
-      // } ----------------------- END DEBUG
       
       // Translate current_cmd_frame pose to base_link
       geometry_msgs::PoseStamped goal_in_baselink;
       // absolute_pose_cmd_ is given in current_cmd_frame frame and shall be transformed into base_link
       transform_listener_.transformPose("base_link", motion.request.goal, goal_in_baselink);
     
-      // ------------------------- DEBUG START {
-      double bl_roll, bl_pitch, bl_yaw;
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in base_link: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
-	      goal_in_baselink.pose.orientation.x, goal_in_baselink.pose.orientation.y, goal_in_baselink.pose.orientation.z, goal_in_baselink.pose.orientation.w);
 
+      double bl_roll, bl_pitch, bl_yaw;
       // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
       tf::Quaternion quat_base_link;
       tf::quaternionMsgToTF(goal_in_baselink.pose.orientation, quat_base_link);
 
       // the tf::Quaternion has a method to acess roll pitch and yaw
       tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);  
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target RPY in base_link Roll=%.3f, Pitch=%.3f, Yaw=%.3f", bl_roll, bl_pitch, bl_yaw);
-      // } ----------------------- END DEBUG 
       
       // TODO Figure it out!!
       // I still don't understand why the transformPose() is not doing this but ...
       // ... I set hand pitch from current_cmd_frame frame as the yaw in base_link frame,
       // i.e., set rotation around UP in current_cmd_frame as rotation around UP in base_link.
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Setting rotation around UP directly");
       quat_base_link.setRPY(0, 0, lm_pitch);
       quat_base_link.normalize();
       tf::quaternionTFToMsg(quat_base_link, goal_in_baselink.pose.orientation);
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Target QUAT in base_link: x=%.3f, y=%.3f, z=%.3f, w=%.3f", 
-	      goal_in_baselink.pose.orientation.x, goal_in_baselink.pose.orientation.y, goal_in_baselink.pose.orientation.z, goal_in_baselink.pose.orientation.w);
-
+      
       // Set goal_in_baselink as the target goal
       motion.request.goal = goal_in_baselink;
       
       // make a service request to navigate_robot_srv
-      if ( navigate_robot_client_.call( motion ) )
-      {
-	      ROS_INFO("[start_teleop/callRobotMotionInterface] Successfully called temoto/navigate_robot_srv");
-      }
-      else
+      if ( !navigate_robot_client_.call( motion ) )
       {
 	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
       return;
     } // else if (action_type == "go")
-*/
   } // if (in_nav_mode_)
   // =================================================
   // === Calling MoveRobotInterface ==================
@@ -538,12 +520,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
   {
     if (powermate.is_pressed)			// if the push button has been pressed
     {
-      ROS_INFO("[start_teleop] Griffin Powermate knob has been pressed");
-      callRobotMotionInterface("ROBOT PLAN AND GO");		// makes the service request to move the robot; requests plan&execute
-    }
-    else					// if the push button has been depressed
-    {
-      ROS_INFO("[start_teleop] Griffin Powermate knob has been depressed");
+      callRobotMotionInterface(low_level_cmds::EXECUTE);		// makes the service request to move the robot, according to prior plan
     }
     return;
   }
@@ -762,9 +739,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);
-
-      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
-      executing_preplanned_sequence_ = true;
     }
     else if(voice_command.cmd_string == "open hand")  // Open the gripper - a preplanned sequence
     {
@@ -772,9 +746,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);
-
-      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
-      executing_preplanned_sequence_ = true;
     }
     else if (voice_command.cmd_string == "turn handle clockwise")  // Start this pre-planned motion
     {
@@ -782,9 +753,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);
-
-      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
-      executing_preplanned_sequence_ = true;
     }
     else if (voice_command.cmd_string == "turn handle counterclockwise") // Start this pre-planned motion
     {
@@ -792,9 +760,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);
-
-      // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
-      executing_preplanned_sequence_ = true;
     }
   
     else
@@ -810,8 +775,14 @@ void Teleoperator::triggerROSAction(temoto::Command& voice_command)
 {
   temoto::PreplannedSequenceGoal goal;
   goal.sequence_name = voice_command.cmd_string;
-  preplanned_sequence_client_.waitForServer();
+  //while ( !preplanned_sequence_client_.waitForServer( ros::Duration(1.) ))
+  //{
+  //  ROS_INFO_STREAM("[start_teleop] Waiting for the preplanned action server.");
+  //}
   preplanned_sequence_client_.sendGoal(goal);
+
+  // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
+  executing_preplanned_sequence_ = true;
 }
 
 /** Puts the latest private variable values into temoto/status message.

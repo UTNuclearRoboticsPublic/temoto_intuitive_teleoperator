@@ -24,7 +24,6 @@
   </node>
 
 
-
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" >
     <param name="input_voice_topic" type="str" value="stt/spoken_text" />
   </node>
@@ -41,7 +40,7 @@
 
 
   <!-- Navigation interface for move_base -->
-  <!-- <node name="navigate_robot" pkg="temoto" type="navigate_robot" /> -->
+  <node name="navigate_robot" pkg="temoto" type="navigate_robot" />
 
   
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e">
@@ -72,6 +71,6 @@
 
 
   <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences"/> 
+  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen"/> 
   
 </launch>
