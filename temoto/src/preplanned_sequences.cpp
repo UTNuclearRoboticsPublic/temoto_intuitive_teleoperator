@@ -47,10 +47,8 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     close_hand::close_hand();
   else if (goal->sequence_name == "open hand")
     open_hand::open_hand();
-  else if (goal->sequence_name == "turn handle clockwise")
-    turn_handle_clockwise::turn_handle_clockwise();
-  else if (goal->sequence_name == "turn handle counterclockwise")
-    turn_handle_counterclockwise::turn_handle_counterclockwise();
+  else if (goal->sequence_name == "enable compliance")
+    enable_compliance::enable_compliance();
 
   // Action server: signal that the sequence is done
   result_.success = true;

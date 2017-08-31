@@ -600,6 +600,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   {
     ROS_INFO("Switching out of jog mode");
     in_jog_mode_ = false;
+    cartesianT_or_jointsF_ = true;
 
     return;
   }
@@ -765,16 +766,9 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);
     }
-    else if (voice_command.cmd_string == "turn handle clockwise")  // Start this pre-planned motion
+    else if (voice_command.cmd_string == "enable compliance")  // Enable compliance for UR robots
     {
-      ROS_INFO("Turning the handle clockwise ...");
-
-      // Trigger the Action
-      Teleoperator::triggerROSAction(voice_command);
-    }
-    else if (voice_command.cmd_string == "turn handle counterclockwise") // Start this pre-planned motion
-    {
-      ROS_INFO("Turning the handle counterclockwise ...");
+      ROS_INFO("Enabling UR compliance ...");
 
       // Trigger the Action
       Teleoperator::triggerROSAction(voice_command);

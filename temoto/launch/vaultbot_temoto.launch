@@ -67,7 +67,7 @@
 
 
   <!-- Load preplanned motions from yaml file -->
-  <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" />
+  <!-- <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" /> -->
 
 
   <!-- A server to execute the preplanned sequences -->
