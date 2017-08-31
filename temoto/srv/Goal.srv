@@ -1,20 +1,14 @@
 string action_type
 
 # Goal pose
-geometry_msgs/PoseStamped goal
+geometry_msgs/PoseStamped goal_pose
+
+# Joint goal
+float64[] joint_deltas  # an array of doubles
 
 # Goal as a named target
 string named_target
 
-# Goal as Cartesian wayposes
-geometry_msgs/Pose[] cartesian_wayposes
-string cartesian_frame
-
-
-# Tolerances for target position, orientation, and joint values
-float32 tolerance_posit
-float32 tolerance_orien
-# float32 tolerance_joint
 ---
 # Fraction of successfully computed Cartesian path
 float32 cartesian_fraction

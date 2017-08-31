@@ -45,9 +45,7 @@
  */
 bool NavigateRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 					   temoto::Goal::Response &res)
-{
-//  ROS_INFO("[temoto/navigate_robot] New service update requested.");
-  
+{ 
   // check first if abort navigation has been requested.
   if (req.action_type == low_level_cmds::ABORT )
   {
@@ -57,7 +55,7 @@ bool NavigateRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   // get goal pose and set new_navgoal_requested_ TRUE
   else
   {
-    navigation_goal_stamped_ = req.goal;
+    navigation_goal_stamped_ = req.goal_pose;
     new_navgoal_requested_ = true;
     return true;
   }

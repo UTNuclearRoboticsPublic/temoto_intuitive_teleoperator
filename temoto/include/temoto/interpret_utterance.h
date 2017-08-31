@@ -86,6 +86,8 @@ public:
     {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
+    {"jog mode"},		// send small motions commands immediately
+    {"stop jogging"},		// stop jogging
 
     // Preplanned sequences: these will interrupt other Temoto commands (except abort)
     // They can be generally any C++ file

@@ -37,7 +37,7 @@
 #include "temoto/move_robot.h"
 
 /** This method is executed when temoto/move_robot_service service is called.
- *  It updates target_pose_stamped based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.
+ *  It updates the target member variable based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.
  *  @param req temoto::Goal service request.
  *  @param res temoto::Goal service response.
  *  @return always true.
@@ -45,16 +45,18 @@
 bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
 				       temoto::Goal::Response &res)
 {
-  // sets the action associated to target pose
+  // sets the action associated with target pose, e.g. low_level_cmds::PLAN
   req_action_type_ = req.action_type;
   
-  target_pose_stamped_ = req.goal;
-    
-  // check for named target
-  use_named_target_ = false;					// by default do not use named_target.
-  named_target_ = req.named_target;				// get named_target from the service request.
+  target_pose_stamped_ = req.goal_pose;
 
-  if (!named_target_.empty()) use_named_target_ = true;	// if a named target was specified, set use_named_target_ to true.
+  joint_deltas_.clear();
+  for( int i=0; i< req.joint_deltas.size(); i++)
+  {
+    joint_deltas_.push_back( req.joint_deltas.at(i) );
+  }
+    					// by default do not use named_target.
+  named_target_ = req.named_target;				// get named_target from the service request.
     
   // Set new_move_requested_ TRUE for main() to see it
   new_move_requested_ = true;
@@ -80,8 +82,11 @@ void MoveRobotInterface::requestMove()
   ROS_INFO("[move_robot/requestMove] Current pose (orien x, y, z, w): (%f, %f, %f, %f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
 */
  
-  // Use either named or pose target (named target takes the priority over regular pose target).
-  if (use_named_target_)						// if use_named_target is true
+  ////////////////////////////////////////////////////////////////////////////////
+  // Use a named, joint, or pose target. (whichever was populated in the Goal msg)
+  // Named target:
+  ////////////////////////////////////////////////////////////////////////////////
+  if (named_target_ != "")
   {
     if ( movegroup_.setNamedTarget(named_target_) )		// check if setting named target was successful
     {
@@ -90,8 +95,12 @@ void MoveRobotInterface::requestMove()
     }
     else
       ROS_INFO("[move_robot/requestMove] Using NAMED TARGET for planning and/or moving.");
-  } // end if (use_named_target_)
-  else
+  }
+
+  //////////////
+  // Pose target
+  //////////////
+  else if ( target_pose_stamped_.header.frame_id != "" )  // The Goal msg had a pose target
   {
     //ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
@@ -103,6 +112,27 @@ void MoveRobotInterface::requestMove()
     else
       ROS_INFO("[move_robot/requestMove] Using POSE TARGET for planning and/or moving.");
   }
+
+  ///////////////
+  // Joint target
+  ///////////////
+  else if ( joint_deltas_.size() != 0 )  // The Goal msg had a joint target
+  {
+    // Get the current joints
+    std::vector<double> joints = movegroup_.getCurrentJointValues();
+
+    // Add the deltas (another std::vector<double>)
+    for (int i=0; i<joint_deltas_.size(); i++)
+      joints.at(i) += joint_deltas_.at(i);
+
+    // Move to the new target joints
+    movegroup_.setJointValueTarget(joints);
+    movegroup_.move();
+
+    return;
+  }
+
+  // Continue with MoveGroup stuff for Cartesian moves
 
   // Set goal tolerance based on the actual shift from current position to target position.
   // Apply minimums, e.g. we can't control motion down to the nanometer level.
@@ -275,7 +305,6 @@ int main(int argc, char **argv)
       }
     }  // if not already in base_link
 
-    //ROS_INFO_STREAM(current_pose);
     pub_end_effector.publish( current_pose );
    
     ros::spinOnce();
