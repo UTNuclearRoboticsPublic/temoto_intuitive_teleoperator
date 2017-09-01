@@ -93,7 +93,8 @@ public:
     // They can be generally any C++ file
     {"close hand"},		// close gripper, a preplanned sequence
     {"open hand"},		// open gripper, a preplanned sequence
-    {"enable compliance"}	// for UR robots
+    {"enable compliance"},	// for UR robots
+    {"robot please approach"}   // move the robot base and arm to reach the marker pose
   };
 
   ros::NodeHandle n_;

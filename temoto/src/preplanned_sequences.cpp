@@ -49,6 +49,8 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     open_hand::open_hand();
   else if (goal->sequence_name == "enable compliance")
     enable_compliance::enable_compliance();
+  else if (goal->sequence_name == "robot please approach")
+    robot_approach do_the_approach;
 
   // Action server: signal that the sequence is done
   result_.success = true;

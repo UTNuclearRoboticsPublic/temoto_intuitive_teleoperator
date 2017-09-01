@@ -71,6 +71,9 @@
 
 
   <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen"/> 
+  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen"/>
+
+  <!-- Move the robot base to reach a pose -->
+  <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch"/>
   
 </launch>

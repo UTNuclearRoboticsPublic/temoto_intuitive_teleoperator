@@ -757,21 +757,28 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Closing the gripper ...");
 
       // Trigger the Action
-      Teleoperator::triggerROSAction(voice_command);
+      Teleoperator::triggerSequence(voice_command);
     }
     else if(voice_command.cmd_string == "open hand")  // Open the gripper - a preplanned sequence
     {
       ROS_INFO("Opening the gripper ...");
 
       // Trigger the Action
-      Teleoperator::triggerROSAction(voice_command);
+      Teleoperator::triggerSequence(voice_command);
     }
     else if (voice_command.cmd_string == "enable compliance")  // Enable compliance for UR robots
     {
       ROS_INFO("Enabling UR compliance ...");
 
       // Trigger the Action
-      Teleoperator::triggerROSAction(voice_command);
+      Teleoperator::triggerSequence(voice_command);
+    }
+    else if (voice_command.cmd_string == "robot please approach")  // Move the robot base and arm to reach the marker pose
+    {
+      ROS_INFO("Approaching ...");
+
+      // Trigger the Action
+      Teleoperator::triggerSequence(voice_command);
     }
   
     else
@@ -783,7 +790,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   return;
 }
 
-void Teleoperator::triggerROSAction(temoto::Command& voice_command)
+void Teleoperator::triggerSequence(temoto::Command& voice_command)
 {
   temoto::PreplannedSequenceGoal goal;
   goal.sequence_name = voice_command.cmd_string;

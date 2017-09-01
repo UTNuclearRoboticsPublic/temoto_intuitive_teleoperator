@@ -17,6 +17,7 @@ find_package(catkin REQUIRED
   leap_motion_controller
   message_generation
   move_base_msgs
+  move_base_to_manip
   moveit_core
   moveit_ros_planning_interface
   roscpp
@@ -122,7 +123,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs roscpp rospy std_msgs geometry_msgs ur_script_compliance
+ CATKIN_DEPENDS actionlib_msgs move_base_to_manip roscpp rospy std_msgs geometry_msgs ur_script_compliance
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )
@@ -140,19 +141,26 @@ include_directories(
 )
 
 ## Declare a C++ library
+# Preplanned sequences:
+
+add_library(close_hand src/preplanned_sequences/close_hand.cpp)
+target_link_libraries(close_hand ${catkin_LIBRARIES})
+
+add_library(enable_compliance src/preplanned_sequences/enable_compliance.cpp)
+target_link_libraries(enable_compliance ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
+
+add_library(open_hand src/preplanned_sequences/open_hand.cpp)
+target_link_libraries(open_hand ${catkin_LIBRARIES})
+
+add_library(robot_approach src/preplanned_sequences/robot_approach.cpp)
+target_link_libraries(robot_approach ${catkin_LIBRARIES})
+add_dependencies(robot_approach temoto_generate_messages_cpp)
+
+# Temoto common:
 
 add_library(temoto_common src/temoto_common.cpp)
 target_link_libraries(temoto_common ${catkin_LIBRARIES})
 add_dependencies(temoto_common temoto_generate_messages_cpp)
-
-add_library(close_hand src/preplanned_sequences/close_hand.cpp)
-target_link_libraries(close_hand ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
-
-add_library(open_hand src/preplanned_sequences/open_hand.cpp)
-target_link_libraries(open_hand ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
-
-add_library(enable_compliance src/preplanned_sequences/enable_compliance.cpp)
-target_link_libraries(enable_compliance ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
 
 ## Declare a C++ executable
 
@@ -181,7 +189,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance robot_approach)
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

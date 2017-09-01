@@ -96,7 +96,7 @@ public:
   
   void processVoiceCommand(temoto::Command voice_command);
 
-  void triggerROSAction(temoto::Command& voice_command);
+  void triggerSequence(temoto::Command& voice_command);
   
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
