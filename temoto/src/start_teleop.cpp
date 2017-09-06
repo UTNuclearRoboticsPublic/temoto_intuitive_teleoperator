@@ -211,6 +211,10 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   {
     ROS_INFO("[start_teleop/callRobotMotionInterface] Request unavailable for current list of robot interfaces.");
   }
+
+  // Reset the hand marker to be at the EE
+  reset_integrated_cmds_ = true;
+
   return;
 } // end callRobotMotionInterface
 
