@@ -1,10 +1,11 @@
 <launch>
 
   <!-- /////////////////////////////// -->
-  <!-- CHOOSE HARDWARE OR SOFTWARE     -->
+  <!-- CHOOSE HARDWARE OR SIMULATION   -->
   <!-- /////////////////////////////// -->
 
   <!-- ////  HARDWARE  //// -->
+
   <include file="$(find ur_bringup)/launch/ur5_bringup.launch">
     <arg name="robot_ip" value="192.168.1.15" />
   </include>
@@ -12,14 +13,32 @@
   <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" />
 
 
-  <!-- ////  SOFTWARE  //// -->
+  <!-- ////  SIMULATION  //// -->
 <!--
-  <include file="$(find ur_gazebo)/launch/ur5.launch" />
-
-  <include file="$(find ur5_moveit_config)/launch/ur5_moveit_planning_execution.launch" >
-   <arg name="sim" value="true" />
+  <include file="$(find ur5_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
   </include>
--->  
+
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true" output="screen" />
+
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="/use_gui" value="false"/>
+    <rosparam param="/source_list">[/move_group/fake_controller_joint_states]</rosparam>
+    <!-- <rosparam command="load" file="$(find ur5_moveit_config)/config/initial_states.yaml" /> -->
+  </node>
+
+  <arg name="debug" default="false" />
+  <include file="$(find ur5_moveit_config)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="true"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+-->
+
+ 
 
   <!-- //////////////////  -->
   <!-- BRING TEMOTO ONLINE -->  
