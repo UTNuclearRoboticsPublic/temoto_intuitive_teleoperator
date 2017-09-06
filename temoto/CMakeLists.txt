@@ -17,7 +17,6 @@ find_package(catkin REQUIRED
   leap_motion_controller
   message_generation
   move_base_msgs
-  move_base_to_manip
   moveit_core
   moveit_ros_planning_interface
   roscpp
@@ -123,7 +122,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs move_base_to_manip roscpp rospy std_msgs geometry_msgs ur_script_compliance
+ CATKIN_DEPENDS actionlib_msgs roscpp rospy std_msgs geometry_msgs ur_script_compliance
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )
@@ -217,11 +216,11 @@ add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 # )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+#  install(DIRECTORY include/${PROJECT_NAME}/
+#    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#    FILES_MATCHING PATTERN "*.h"
+#    PATTERN ".svn" EXCLUDE
+#  )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
