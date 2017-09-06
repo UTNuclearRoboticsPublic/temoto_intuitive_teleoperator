@@ -26,7 +26,10 @@
   <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
     <param name="/use_gui" value="false"/>
     <rosparam param="/source_list">[/move_group/fake_controller_joint_states]</rosparam>
+
+-->
     <!-- <rosparam command="load" file="$(find ur5_moveit_config)/config/initial_states.yaml" /> -->
+<!--
   </node>
 
   <arg name="debug" default="false" />
