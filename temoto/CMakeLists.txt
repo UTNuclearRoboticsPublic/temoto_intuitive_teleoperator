@@ -148,6 +148,9 @@ target_link_libraries(close_hand ${catkin_LIBRARIES})
 add_library(enable_compliance src/preplanned_sequences/enable_compliance.cpp)
 target_link_libraries(enable_compliance ${catkin_LIBRARIES} ${ur_script_compliance_LIBRARIES})
 
+add_library(go_to_laser_scan src/preplanned_sequences/go_to_laser_scan.cpp)
+target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
+
 add_library(open_hand src/preplanned_sequences/open_hand.cpp)
 target_link_libraries(open_hand ${catkin_LIBRARIES})
 
@@ -188,7 +191,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance robot_approach)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach)
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

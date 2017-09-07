@@ -675,6 +675,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Planning to home ...");
       callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
     }
+    else if (voice_command.cmd_string == "robot plan home")
+    {
+      ROS_INFO("Planning to home ...");
+      callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
+    }    
     else if (voice_command.cmd_string == "robot please go home")
     {
       ROS_INFO("Planning and moving to home ...");
@@ -780,6 +785,13 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     else if (voice_command.cmd_string == "robot please approach")  // Move the robot base and arm to reach the marker pose
     {
       ROS_INFO("Approaching ...");
+
+      // Trigger the Action
+      Teleoperator::triggerSequence(voice_command);
+    }
+    else if (voice_command.cmd_string == "go to laser scan")  // Move the left arm to a pose for a laser scan
+    {
+      ROS_INFO("Moving to a pose for laser scanning ...");
 
       // Trigger the Action
       Teleoperator::triggerSequence(voice_command);
