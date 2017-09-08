@@ -10,6 +10,7 @@
 // temoto includes
 #include "temoto/preplanned_sequences/close_hand.h"
 #include "temoto/preplanned_sequences/enable_compliance.h"
+#include "temoto/preplanned_sequences/go_to_laser_scan.h"
 #include "temoto/preplanned_sequences/open_hand.h"
 #include "temoto/preplanned_sequences/robot_approach.h"
 #include "temoto/low_level_cmds.h"

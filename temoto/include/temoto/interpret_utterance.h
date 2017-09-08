@@ -94,7 +94,8 @@ public:
     {"close hand"},		// close gripper, a preplanned sequence
     {"open hand"},		// open gripper, a preplanned sequence
     {"enable compliance"},	// for UR robots
-    {"robot please approach"}   // move the robot base and arm to reach the marker pose
+    {"robot please approach"},  // move the robot base and arm to reach the marker pose
+    {"go to laser scan"}	// move the left arm to a pose for a laser scan
   };
 
   ros::NodeHandle n_;
