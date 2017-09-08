@@ -13,6 +13,7 @@
 #include "temoto/preplanned_sequences/go_to_laser_scan.h"
 #include "temoto/preplanned_sequences/open_hand.h"
 #include "temoto/preplanned_sequences/robot_approach.h"
+#include "temoto/preplanned_sequences/robot_please_scan.h"
 #include "temoto/low_level_cmds.h"
 #include "temoto/PreplannedSequenceAction.h"  // ROS Action. This is how the preplanned sequence gets triggered
 
