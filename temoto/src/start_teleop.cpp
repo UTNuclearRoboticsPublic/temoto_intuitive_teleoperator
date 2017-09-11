@@ -796,6 +796,13 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       // Trigger the Action
       Teleoperator::triggerSequence(voice_command);
     }
+    else if (voice_command.cmd_string == "robot please scan")  // start a lidar scan
+    {
+      ROS_INFO("Beginning a lidar scan ...");
+
+      // Trigger the Action
+      Teleoperator::triggerSequence(voice_command);
+    }
   
     else
     {

@@ -24,6 +24,9 @@ find_package(catkin REQUIRED
   std_msgs
   tf
   view_controller_msgs
+  laser_stitcher
+  pcl_processing_server
+  pcl_ros
 )
 
 find_package (ur_script_compliance REQUIRED)
@@ -158,6 +161,10 @@ add_library(robot_approach src/preplanned_sequences/robot_approach.cpp)
 target_link_libraries(robot_approach ${catkin_LIBRARIES})
 add_dependencies(robot_approach temoto_generate_messages_cpp)
 
+add_library(robot_please_scan src/preplanned_sequences/robot_please_scan.cpp)
+target_link_libraries(robot_please_scan ${catkin_LIBRARIES})
+
+
 # Temoto common:
 
 add_library(temoto_common src/temoto_common.cpp)
@@ -191,7 +198,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach robot_please_scan)
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

@@ -71,9 +71,44 @@
 
 
   <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen"/>
+  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen" />
 
   <!-- Move the robot base to reach a pose -->
-  <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch"/>
+  <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
+
+  <!-- Hokuyo lidar -->
+  <include file="$(find urg_node)/launch/urg_lidar.launch"/>
   
+  <arg name="postprocessing_file_name" default="handle_turning_demo_postprocess"/>
+  <arg name="laser_stitcher_yaml_file" default="handle_turning_demo_ur5"/>
+
+  <!-- Laser Stitcher Stuff -->
+  <rosparam  command="load"  file="$(find laser_stitcher)/data/lidar_ur5_manager/$(arg laser_stitcher_yaml_file).yaml"/>
+  <rosparam  command="load"  file="$(find laser_stitcher)/data/postprocessing/$(arg postprocessing_file_name).yaml"/>
+
+  <node
+      name    = "laser_stitcher"
+      pkg     = "laser_stitcher"
+      type    = "laser_stitcher"
+      args    = ""
+      output  = "screen"
+    >
+    </node>
+  <node
+      name    = "lidar_ur5_manager"
+      pkg     = "laser_stitcher"
+      type    = "lidar_ur5_manager"
+      args    = ""
+      output  = "screen"
+    >
+    </node>
+  <node
+      name    = "pcl_processing_server"
+      pkg     = "pcl_processing_server"
+      type    = "pcl_processing_server"
+      args    = ""
+      output  = "screen"
+    >
+  </node>
+
 </launch>
