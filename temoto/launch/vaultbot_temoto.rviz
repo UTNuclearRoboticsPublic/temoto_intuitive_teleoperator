@@ -726,15 +726,6 @@ Visualization Manager:
           Value: false
         camera_ee_link:
           Value: false
-<<<<<<< HEAD
-        camera_ee_rgb_frame:
-          Value: false
-        camera_ee_rgb_optical_frame:
-          Value: false
-        camera_ee_rgb_optical_frame_rotated:
-          Value: true
-=======
->>>>>>> ea0c40d2ff9a6ee0f6d1cb9907f4cb3fdfb2e1e9
         current_cmd_frame:
           Value: false
         floorplane_link:
@@ -823,92 +814,6 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-<<<<<<< HEAD
-        map:
-          odom:
-            base_link:
-              base_footprint:
-                floorplane_link:
-                  {}
-              bulkhead_link:
-                SICK_LMS291_link:
-                  laser_scan_link:
-                    {}
-                left_ur5_base_link:
-                  left_ur5_base:
-                    {}
-                  left_ur5_shoulder_link:
-                    left_ur5_upper_arm_link:
-                      left_ur5_forearm_link:
-                        left_ur5_wrist_1_link:
-                          left_ur5_wrist_2_link:
-                            left_ur5_wrist_3_link:
-                              left_ur5_ee_link:
-                                hokuyo_lidar:
-                                  {}
-                                left_ur5_eef_frame_code:
-                                  {}
-                                left_ur5_eef_frame_interactive:
-                                  {}
-                                left_ur5_r200_tower_mount_link:
-                                  {}
-                              left_ur5_tool0:
-                                {}
-                  left_ur5_tool0_controller:
-                    {}
-                right_ur5_base_link:
-                  right_ur5_base:
-                    {}
-                  right_ur5_shoulder_link:
-                    right_ur5_upper_arm_link:
-                      right_ur5_forearm_link:
-                        right_ur5_wrist_1_link:
-                          right_ur5_wrist_2_link:
-                            right_ur5_wrist_3_link:
-                              right_ur5_ee_link:
-                                right_ur5_r200_mount_link:
-                                  camera_ee_link:
-                                    camera_ee_depth_frame:
-                                      camera_ee_depth_optical_frame:
-                                        {}
-                                    camera_ee_ir2_frame:
-                                      camera_ee_ir2_optical_frame:
-                                        {}
-                                    camera_ee_ir_frame:
-                                      camera_ee_ir_optical_frame:
-                                        {}
-                                    camera_ee_rgb_frame:
-                                      camera_ee_rgb_optical_frame:
-                                        camera_ee_rgb_optical_frame_rotated:
-                                          {}
-                                  right_ur5_2_finger_140_gripper_link:
-                                    {}
-                                temoto_end_effector:
-                                  {}
-                              right_ur5_tool0:
-                                {}
-                  right_ur5_tool0_controller:
-                    {}
-              current_cmd_frame:
-                {}
-              front_bumper_link:
-                {}
-              front_left_wheel_link:
-                {}
-              front_right_wheel_link:
-                {}
-              hand_marker:
-                {}
-              imu_link:
-                {}
-              inertial_link:
-                {}
-              rear_bumper_link:
-                {}
-              rear_left_wheel_link:
-                {}
-              rear_right_wheel_link:
-=======
         base_link:
           base_footprint:
             floorplane_link:
@@ -916,7 +821,6 @@ Visualization Manager:
           bulkhead_link:
             SICK_LMS291_link:
               laser_scan_link:
->>>>>>> ea0c40d2ff9a6ee0f6d1cb9907f4cb3fdfb2e1e9
                 {}
             left_ur5_base_link:
               left_ur5_base:
@@ -1119,26 +1023,13 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-<<<<<<< HEAD
-      Distance: 1.58392012
-=======
       Distance: 3.29985142
->>>>>>> ea0c40d2ff9a6ee0f6d1cb9907f4cb3fdfb2e1e9
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-<<<<<<< HEAD
-        X: -1.34067512
-        Y: -0.724943817
-        Z: 0.721206605
-      Focus:
-        X: 0.148616195
-        Y: -0.666777909
-        Z: 0.185081124
-=======
         X: -2.71586037
         Y: -0.301974893
         Z: 0.592346072
@@ -1147,7 +1038,6 @@ Visualization Manager:
         Y: -0.855023146
         Z: 0.326685995
       Invert Z Axis: false
->>>>>>> ea0c40d2ff9a6ee0f6d1cb9907f4cb3fdfb2e1e9
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View
