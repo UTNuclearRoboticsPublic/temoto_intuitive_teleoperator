@@ -55,6 +55,8 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     go_to_laser_scan::go_to_laser_scan(n_);
   else if (goal->sequence_name == "robot please scan")
     robot_please_scan scan;
+  else if (goal->sequence_name == "robot push button")
+    robot_push_button push_it;
 
   // Action server: signal that the sequence is done
   result_.success = true;

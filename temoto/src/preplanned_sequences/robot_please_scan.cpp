@@ -20,6 +20,7 @@ robot_please_scan::robot_please_scan()
 
 	ros::Duration(2.0).sleep();
 
+	ROS_INFO_STREAM("[LaserStitcherClient] Attempting first scan.");
 	while( ros::ok() )
 	{
 		

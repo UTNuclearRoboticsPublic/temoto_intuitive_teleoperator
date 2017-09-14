@@ -125,7 +125,7 @@ Visualization Manager:
       Size (Pixels): 3
       Size (m): 0.0500000007
       Style: Points
-      Topic: /depth/points
+      Topic: /camera_ee/depth/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
@@ -741,6 +741,8 @@ Visualization Manager:
           Value: false
         camera_ee_rgb_optical_frame:
           Value: false
+        camera_ee_rgb_optical_frame_rotated:
+          Value: true
         current_cmd_frame:
           Value: false
         floorplane_link:
@@ -894,7 +896,8 @@ Visualization Manager:
                                         {}
                                     camera_ee_rgb_frame:
                                       camera_ee_rgb_optical_frame:
-                                        {}
+                                        camera_ee_rgb_optical_frame_rotated:
+                                          {}
                                   right_ur5_2_finger_140_gripper_link:
                                     {}
                                 temoto_end_effector:
@@ -1067,20 +1070,20 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 5.79039097
+      Distance: 1.58392012
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -4.93122673
-        Y: -0.209284425
-        Z: 3.54019332
+        X: -1.34067512
+        Y: -0.724943817
+        Z: 0.721206605
       Focus:
-        X: 3.6239624e-05
-        Y: 2.1904707e-06
-        Z: 0.512409687
+        X: 0.148616195
+        Y: -0.666777909
+        Z: 0.185081124
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View

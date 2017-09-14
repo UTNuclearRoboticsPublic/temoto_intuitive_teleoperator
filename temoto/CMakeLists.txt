@@ -24,9 +24,13 @@ find_package(catkin REQUIRED
   std_msgs
   tf
   view_controller_msgs
+
+  # For preplanned actions
   laser_stitcher
+  move_base_to_manip
   pcl_processing_server
   pcl_ros
+  vaultbot_irp
 )
 
 find_package (ur_script_compliance REQUIRED)
@@ -164,6 +168,10 @@ add_dependencies(robot_approach temoto_generate_messages_cpp)
 add_library(robot_please_scan src/preplanned_sequences/robot_please_scan.cpp)
 target_link_libraries(robot_please_scan ${catkin_LIBRARIES})
 
+add_library(robot_push_button src/preplanned_sequences/robot_push_button.cpp)
+target_link_libraries(robot_push_button ${catkin_LIBRARIES})
+add_dependencies(robot_push_button temoto_generate_messages_cpp)
+
 
 # Temoto common:
 
@@ -198,7 +206,7 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach robot_please_scan)
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach robot_please_scan robot_push_button)
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
@@ -210,6 +218,8 @@ add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+
+catkin_install_python(PROGRAMS nodes/level_tf DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination

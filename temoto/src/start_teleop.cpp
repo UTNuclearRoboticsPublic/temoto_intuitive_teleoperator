@@ -163,7 +163,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       tf::Quaternion quat_base_link;
       tf::quaternionMsgToTF(goal_in_baselink.pose.orientation, quat_base_link);
 
-      // the tf::Quaternion has a method to acess roll pitch and yaw
+      // the tf::Quaternion has a method to access roll, pitch, and yaw
       tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);  
       
       // TODO Figure it out!!
@@ -803,6 +803,13 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       // Trigger the Action
       Teleoperator::triggerSequence(voice_command);
     }
+    else if (voice_command.cmd_string == "robot push button")  // start a lidar scan
+    {
+      ROS_INFO("Pushing a button ...");
+
+      // Trigger the Action
+      Teleoperator::triggerSequence(voice_command);
+    }
   
     else
     {
@@ -843,9 +850,12 @@ temoto::Status Teleoperator::setStatus()
   status.orientation_free = !orientation_locked_;
   status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
+  //ROS_INFO_STREAM("[start_teleop] Commanded pose: " << absolute_pose_cmd_ );
   //if (current_pose_.header.frame_id != "/base_link")
-    //ROS_INFO_STREAM(current_pose_.header.frame_id);
-    //ROS_WARN("[start_teleop] The current robot pose is not being reported in base_link.");
+  //{
+  //  ROS_INFO_STREAM(current_pose_.header.frame_id);
+  //  ROS_WARN("[start_teleop] The current robot pose is not being reported in base_link.");
+  //}
   status.position_forward_only = position_fwd_only_;
   status.in_navigation_mode = navT_or_manipF_;
 

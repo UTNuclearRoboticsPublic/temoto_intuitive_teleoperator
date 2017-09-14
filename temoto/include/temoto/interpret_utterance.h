@@ -96,6 +96,7 @@ public:
     {"enable compliance"},	// for UR robots
     {"robot please approach"},  // move the robot base and arm to reach the marker pose
     {"go to laser scan"},	// move the left arm to a pose for a laser scan
+    {"robot push button"},	// make a small motion to push a button
     {"robot please scan"}	// do a lidar scan
   };
 
