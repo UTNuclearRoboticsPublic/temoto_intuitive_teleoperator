@@ -418,6 +418,7 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
  *  KEY_TAP gesture detection is currenly unimplemented.
  *  @param leap_data temoto::Leapmsg published by leap_motion node
  */
+/*
 void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
 {
   // First, set up primary and secondary hand.
@@ -513,7 +514,7 @@ void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
 
   return;
 } // end processAbsoluteCmd
-
+*/
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
@@ -891,7 +892,8 @@ int main(int argc, char **argv)
   ros::Subscriber sub_pose_cmd;
   if (temoto_teleop.absolute_pose_input_)
   {
-    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsoluteCmd, &temoto_teleop);
+    ROS_WARN("[start_teleop] Absolute pose cmds aren't currently implemented.");
+    //sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsoluteCmd, &temoto_teleop);
   }
   else  // incremental pose cmds
     sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processIncrementalCmd, &temoto_teleop);

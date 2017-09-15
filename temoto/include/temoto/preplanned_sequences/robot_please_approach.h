@@ -1,6 +1,6 @@
 
-#ifndef ROBOT_PUSH_BUTTON_H
-#define ROBOT_PUSH_BUTTON_H
+#ifndef ROBOT_PLEASE_APPROACH_H
+#define ROBOT_PLEASE_APPROACH_H
 
 #include <actionlib/client/simple_action_client.h>
 #include "geometry_msgs/PointStamped.h"
@@ -8,11 +8,11 @@
 #include "ros/ros.h"
 #include "tf/transform_listener.h"
 
-class robot_push_button
+class robot_please_approach
 {
 public:
   // ___ CONSTRUCTOR ___
-  robot_push_button();
+  robot_please_approach();
 
 private:
   ros::NodeHandle n_;

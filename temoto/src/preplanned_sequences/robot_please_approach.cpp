@@ -1,9 +1,9 @@
-#include "temoto/preplanned_sequences/robot_push_button.h"
+#include "temoto/preplanned_sequences/robot_please_approach.h"
 
-robot_push_button::robot_push_button()
+robot_please_approach::robot_please_approach()
 {
   ROS_INFO_STREAM("----------------------------");
-  ROS_INFO_STREAM("[robot_push_button] Select a point in RViz");
+  ROS_INFO_STREAM("[robot_please_approach] Select a point in RViz");
   ROS_INFO_STREAM("----------------------------");
 
   // Should start from a position that's roughly in front of the target pose.
@@ -11,14 +11,14 @@ robot_push_button::robot_push_button()
   /////////////////////////////////////////////////////////////////////
   // Select the button's pose in RViz. It's published on /clicked_point
   /////////////////////////////////////////////////////////////////////
-  ros::Subscriber sub = n_.subscribe("/clicked_point", 1, &robot_push_button::clicked_pt_cb, this);
+  ros::Subscriber sub = n_.subscribe("/clicked_point", 1, &robot_please_approach::clicked_pt_cb, this);
 
   // wait for user to select a point.
   // The cb makes sure it's in a global frame (map)
   while ( button_pose_.header.frame_id == "" )
   {
   	ros::Duration(1.).sleep();
-  	ROS_INFO_STREAM("[robot_push_button] Select a point in RViz");
+  	ROS_INFO_STREAM("[robot_please_approach] Select a point in RViz");
   }
 
 
@@ -41,7 +41,7 @@ robot_push_button::robot_push_button()
 
   move_base_to_manip::desired_poseGoal mbtm_goal;
   mbtm_goal.desired_pose = approach_pose_;
-  ROS_INFO("[robot_push_button] Sending pose goal...");
+  ROS_INFO("[robot_please_approach] Sending pose goal...");
   ROS_INFO_STREAM(mbtm_goal);
   ac.sendGoal(mbtm_goal);
 
@@ -49,7 +49,7 @@ robot_push_button::robot_push_button()
   if ( ac.waitForResult(ros::Duration(30.0)) != true )
   {
     actionlib::SimpleClientGoalState state = ac.getState();
-    ROS_INFO("[robot_push_button] Action finished: %s",state.toString().c_str());
+    ROS_INFO("[robot_please_approach] Action finished: %s",state.toString().c_str());
   }
 
 
@@ -64,7 +64,7 @@ robot_push_button::robot_push_button()
   while ( button_pose_.header.frame_id == "" )
   {
   	ros::Duration(1.).sleep();
-  	ROS_INFO_STREAM("[robot_push_button] Select a point in RViz");
+  	ROS_INFO_STREAM("[robot_please_approach] Select a point in RViz");
   }
 
   approach_pose_ = button_pose_;
@@ -73,10 +73,10 @@ robot_push_button::robot_push_button()
 
   // move there
 
-  ROS_INFO_STREAM("[robot_push_button] Moving the arm to the approach pose");
+  ROS_INFO_STREAM("[robot_please_approach] Moving the arm to the approach pose");
 
   goal.desired_pose = approach_pose_;
-  ROS_INFO("[robot_push_button] Sending pose goal...");
+  ROS_INFO("[robot_please_approach] Sending pose goal...");
   ROS_INFO_STREAM(goal);
   ac.sendGoal(goal);
 
@@ -84,7 +84,7 @@ robot_push_button::robot_push_button()
   if ( ac.waitForResult(ros::Duration(30.0)) != true )
   {
     actionlib::SimpleClientGoalState state = ac.getState();
-    ROS_INFO("[robot_push_button] Action finished: %s",state.toString().c_str());
+    ROS_INFO("[robot_please_approach] Action finished: %s",state.toString().c_str());
   }
 */
 
@@ -96,7 +96,7 @@ robot_push_button::robot_push_button()
   goal_pose.pose.position.x += x_offset_;
 
   mbtm_goal.desired_pose = approach_pose_;
-  ROS_INFO("[robot_push_button] Sending pose goal...");
+  ROS_INFO("[robot_please_approach] Sending pose goal...");
   ROS_INFO_STREAM(mbtm_goal);
   ac.sendGoal(mbtm_goal);
 
@@ -104,18 +104,18 @@ robot_push_button::robot_push_button()
   if ( ac.waitForResult(ros::Duration(30.0)) != true )
   {
     actionlib::SimpleClientGoalState state = ac.getState();
-    ROS_INFO("[robot_push_button] Action finished: %s",state.toString().c_str());
+    ROS_INFO("[robot_please_approach] Action finished: %s",state.toString().c_str());
   }
 
   //////////////////////////////
   // Move back to the start pose
   //////////////////////////////
 
-  ROS_INFO_STREAM("[robot_push_button] returning");
+  ROS_INFO_STREAM("[robot_please_approach] returning");
 }
 
 // Callback for when a pt is clicked in RViz
-void robot_push_button::clicked_pt_cb(const geometry_msgs::PointStamped::ConstPtr& button_point)
+void robot_please_approach::clicked_pt_cb(const geometry_msgs::PointStamped::ConstPtr& button_point)
 {
   geometry_msgs::PointStamped ps;
   ps.header = button_point->header;

@@ -14,9 +14,9 @@ find_package(catkin REQUIRED
   grasp_interface
   griffin_powermate
   keyboard_reader
-  leap_motion_controller
   message_generation
   move_base_msgs
+  move_base_to_manip
   moveit_core
   moveit_ros_planning_interface
   roscpp
@@ -27,10 +27,8 @@ find_package(catkin REQUIRED
 
   # For preplanned actions
   laser_stitcher
-  move_base_to_manip
   pcl_processing_server
   pcl_ros
-  vaultbot_irp
 )
 
 find_package (ur_script_compliance REQUIRED)
@@ -161,16 +159,12 @@ target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
 add_library(open_hand src/preplanned_sequences/open_hand.cpp)
 target_link_libraries(open_hand ${catkin_LIBRARIES})
 
-add_library(robot_approach src/preplanned_sequences/robot_approach.cpp)
-target_link_libraries(robot_approach ${catkin_LIBRARIES})
-add_dependencies(robot_approach temoto_generate_messages_cpp)
+add_library(robot_please_approach src/preplanned_sequences/robot_please_approach.cpp)
+target_link_libraries(robot_please_approach ${catkin_LIBRARIES})
+add_dependencies(robot_please_approach temoto_generate_messages_cpp)
 
 add_library(robot_please_scan src/preplanned_sequences/robot_please_scan.cpp)
 target_link_libraries(robot_please_scan ${catkin_LIBRARIES})
-
-add_library(robot_push_button src/preplanned_sequences/robot_push_button.cpp)
-target_link_libraries(robot_push_button ${catkin_LIBRARIES})
-add_dependencies(robot_push_button temoto_generate_messages_cpp)
 
 
 # Temoto common:
@@ -206,7 +200,8 @@ target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_approach robot_please_scan robot_push_button)
+add_dependencies(preplanned_sequences ${catkin_EXPORTED_TARGETS} )
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_please_approach robot_please_scan )
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

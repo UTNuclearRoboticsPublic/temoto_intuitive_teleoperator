@@ -46,7 +46,6 @@
   <build_depend>geometry_msgs</build_depend>
   <build_depend>griffin_powermate</build_depend>
   <build_depend>grasp_interface</build_depend>
-  <build_depend>leap_motion_controller</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>moveit_core</build_depend>
   <build_depend>moveit_ros_planning_interface</build_depend>
@@ -65,7 +64,6 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>grasp_interface</run_depend>
   <run_depend>griffin_powermate</run_depend>
-  <run_depend>leap_motion_controller</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>moveit_core</run_depend>
   <run_depend>moveit_ros_planning_interface</run_depend>
