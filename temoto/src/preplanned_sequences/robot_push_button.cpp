@@ -13,7 +13,8 @@ robot_push_button::robot_push_button()
   /////////////////////////////////////////////////////////////////////
   ros::Subscriber sub = n_.subscribe("/clicked_point", 1, &robot_push_button::clicked_pt_cb, this);
 
-  // wait for user to push a button
+  // wait for user to select a point.
+  // The cb makes sure it's in a global frame (map)
   while ( button_pose_.header.frame_id == "" )
   {
   	ros::Duration(1.).sleep();
@@ -30,7 +31,7 @@ robot_push_button::robot_push_button()
 
   ///////////////////////////////////////////////////
   // Approach the selected pose w/ move_base_to_manip
-  // It will get close but maybe not completely there
+  // It will get close but probably not completely there
   ///////////////////////////////////////////////////
 
   actionlib::SimpleActionClient<move_base_to_manip::desired_poseAction> ac("move_base_to_manip", true);
@@ -44,10 +45,11 @@ robot_push_button::robot_push_button()
   ac.sendGoal(goal);
 
 
-  ///////////////////////////////////
-  // Plan a move to the approach pose
-  ///////////////////////////////////
+  ////////////////////////////////////////
+  // Plan an arm move to the approach pose
+  ////////////////////////////////////////
 
+  ROS_INFO_STREAM("[robot_push_button] Moving the arm to the approach pose");
   ros::ServiceClient client = n_.serviceClient<vaultbot_irp::move_to_given_pose>("/arm_services/move_to_given_pose");
 
   vaultbot_irp::move_to_given_pose srv;
@@ -56,7 +58,7 @@ robot_push_button::robot_push_button()
 
   if (!client.call(srv))
   {
-    ROS_WARN("[arm_services] Could not call /arm_services/move_to_left_laser_scan");
+    ROS_WARN("[arm_services] Could not call /arm_services/move_to_given_pose");
   }
 
 
@@ -79,12 +81,12 @@ void robot_push_button::clicked_pt_cb(const geometry_msgs::PointStamped::ConstPt
   ps.header = button_point->header;
   ps.point = button_point->point;
 
-  // Make sure it's in the base_link frame
+  // Make sure it's in the map frame
   tf::StampedTransform transform;
   try{
-  	listener_.waitForTransform(button_point->header.frame_id, "/base_link",
+  	listener_.waitForTransform(button_point->header.frame_id, "/map",
                               ros::Time::now(), ros::Duration(3.0));
-    listener_.lookupTransform(button_point->header.frame_id, "/base_link",  
+    listener_.lookupTransform(button_point->header.frame_id, "/map",  
                                ros::Time(0), transform);
     }
   catch (tf::TransformException ex){
