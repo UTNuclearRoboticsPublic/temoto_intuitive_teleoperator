@@ -113,4 +113,7 @@
     >
   </node>
 
+  <!-- Microphone audio -->
+  <include file="$(find audio_play)/launch/play.launch"/>  
+
 </launch>
