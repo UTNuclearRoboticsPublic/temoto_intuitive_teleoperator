@@ -142,6 +142,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${ur_script_compliance_INCLUDE_DIRS}
+  ${move_base_to_manip_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -160,8 +161,8 @@ add_library(open_hand src/preplanned_sequences/open_hand.cpp)
 target_link_libraries(open_hand ${catkin_LIBRARIES})
 
 add_library(robot_please_approach src/preplanned_sequences/robot_please_approach.cpp)
-target_link_libraries(robot_please_approach ${catkin_LIBRARIES})
-add_dependencies(robot_please_approach temoto_generate_messages_cpp)
+target_link_libraries(robot_please_approach ${catkin_LIBRARIES} ${move_base_to_manip_LIBRARIES})
+add_dependencies(robot_please_approach temoto_generate_messages_cpp move_base_to_manip)
 
 add_library(robot_please_scan src/preplanned_sequences/robot_please_scan.cpp)
 target_link_libraries(robot_please_scan ${catkin_LIBRARIES})
