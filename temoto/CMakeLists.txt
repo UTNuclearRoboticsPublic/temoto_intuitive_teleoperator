@@ -167,6 +167,9 @@ add_dependencies(robot_please_approach temoto_generate_messages_cpp move_base_to
 add_library(robot_please_scan src/preplanned_sequences/robot_please_scan.cpp)
 target_link_libraries(robot_please_scan ${catkin_LIBRARIES})
 
+add_library(robot_push_button src/preplanned_sequences/robot_push_button.cpp)
+target_link_libraries(robot_push_button ${catkin_LIBRARIES})
+
 
 # Temoto common:
 
@@ -202,7 +205,7 @@ add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
 add_dependencies(preplanned_sequences ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_please_approach robot_please_scan )
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_please_approach robot_please_scan robot_push_button )
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
