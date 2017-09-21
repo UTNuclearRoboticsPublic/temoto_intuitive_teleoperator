@@ -114,6 +114,9 @@
   </node>
 
   <!-- Microphone audio -->
-  <include file="$(find audio_play)/launch/play.launch"/>  
+  <include file="$(find audio_play)/launch/play.launch"/>
+
+  <!-- launch Xbox teleop -->
+  <include file="$(find husky_control)/launch/teleop.launch" />
 
 </launch>
