@@ -27,7 +27,7 @@ find_package(catkin REQUIRED
 
   # For preplanned actions
   laser_stitcher
-  pcl_processing_server
+  pointcloud_processing_server
   pcl_ros
 )
 

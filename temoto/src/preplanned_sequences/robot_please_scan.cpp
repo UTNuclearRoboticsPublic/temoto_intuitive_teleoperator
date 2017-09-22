@@ -4,7 +4,7 @@ robot_please_scan::robot_please_scan()
 {  
 	ros::NodeHandle nh;
 	ros::ServiceClient scanning_client = nh.serviceClient<laser_stitcher::stationary_scan>("laser_stitcher/stationary_scan");
-	ros::ServiceClient client = nh.serviceClient<pcl_processing_server::pcl_process>("pcl_service");
+	ros::ServiceClient client = nh.serviceClient<pointcloud_processing_server::pointcloud_process>("pointcloud_service");
 	ros::Publisher final_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("laser_stitcher/final_cloud", 1);
 
 	std::string postprocessing_file_name;
@@ -33,9 +33,9 @@ robot_please_scan::robot_please_scan()
 		break;
 	}
 
-	pcl_processing_server::pcl_process postprocess;
+	pointcloud_processing_server::pointcloud_process postprocess;
 	postprocess.request.pointcloud = scan_srv.response.output_cloud;
-	PCLTaskCreation::processFromYAML(&postprocess, postprocessing_file_name, "pcl_process");
+	PointcloudTaskCreation::processFromYAML(&postprocess, postprocessing_file_name, "pointcloud_process");
 
 	while(!client.call(postprocess))
 	{
