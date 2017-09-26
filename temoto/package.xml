@@ -58,7 +58,7 @@
   <build_depend>view_controller_msgs</build_depend>
   <build_depend>visualization_msgs</build_depend>
   <build_depend>tf</build_depend>
-  <build_depend>ur_script_compliance</build_depend>
+  <build_depend>ur_script_interface</build_depend>
 
   <run_depend>actionlib</run_depend>
   <run_depend>actionlib_msgs</run_depend>
@@ -77,7 +77,7 @@
   <run_depend>std_msgs</run_depend>
   <run_depend>std_srvs</run_depend>
   <run_depend>tf</run_depend>
-  <run_depend>ur_script_compliance</run_depend>
+  <run_depend>ur_script_interface</run_depend>
   <run_depend>visualization_msgs</run_depend>
   <run_depend>view_controller_msgs</run_depend>
   
