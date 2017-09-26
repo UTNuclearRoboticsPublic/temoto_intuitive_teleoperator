@@ -79,7 +79,7 @@
     <arg name="config" value="true"/>
   </include>
 
-  <include file="$(find speech_to_text)/launch/speech_to_text.launch" />
+  <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" />
   
 </launch>
 
