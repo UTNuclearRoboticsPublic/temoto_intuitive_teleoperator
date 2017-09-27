@@ -1,9 +1,9 @@
 [submodule "griffin_powermate"]
 	path = griffin_powermate
 	url = https://github.com/UTNuclearRoboticsPublic/griffin_powermate.git
-[submodule "ur_script_interface"]
-	path = ur_script_interface
-	url = https://github.com/UTNuclearRobotics/ur_script_interface.git
 [submodule "keyboard_reader"]
 	path = keyboard_reader
 	url = https://github.com/UTNuclearRoboticsPublic/keyboard_reader.git
+[submodule "ur_script_interface"]
+	path = ur_script_interface
+	url = https://github.com/UTNuclearRoboticsPublic/ur_script_interface.git
