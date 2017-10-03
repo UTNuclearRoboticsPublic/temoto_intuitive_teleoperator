@@ -120,12 +120,18 @@
 
   <!-- Audible warnings -->
   <!-- Note: namespaces aren't working with MoveGroupInterface -->
-  <node name="singularity_warning_left" pkg="vaultbot_warnings" type="singularity_warning" respawn="true">
+  <node name="singularity_warning_left" pkg="vaultbot_warnings" type="arm_warnings" output="screen" respawn="true">
     <param name="move_group_name" type="str" value="left_ur5" />
+    <param name="condition_threshold" type="double" value="50.0" />
+    <param name="minimum_joint_rad" type="double" value="-3.141" />
+    <param name="maximum_joint_rad" type="double" value="3.141" />
   </node>
 
-  <node name="singularity_warning_right" pkg="vaultbot_warnings" type="singularity_warning" respawn="true">
+  <node name="singularity_warning_right" pkg="vaultbot_warnings" type="arm_warnings" output="screen" respawn="true">
     <param name="move_group_name" type="str" value="right_ur5_temoto" />
+    <param name="condition_threshold" type="double" value="50.0" />
+    <param name="rad_min_" type="double" value="-3.141" />
+    <param name="rad_max_" type="double" value="3.141" />
   </node>
 
 

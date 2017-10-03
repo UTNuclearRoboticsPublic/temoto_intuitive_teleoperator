@@ -9,6 +9,7 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
         - /MotionPlanning1/Planned Path1
+        - /TF1/Frames1
       Splitter Ratio: 0.680510998
     Tree Height: 321
   - Class: rviz/Selection
@@ -403,22 +404,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_f200_mount_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_f200_surrogate:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           right_ur5_forearm_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_shoulder_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_sr300_mount_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_sr300_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -657,22 +658,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_f200_mount_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_f200_surrogate:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           right_ur5_forearm_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_shoulder_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_sr300_mount_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_sr300_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -746,8 +747,6 @@ Visualization Manager:
           Value: false
         hand_marker:
           Value: true
-        hokuyo_lidar:
-          Value: false
         imu_link:
           Value: false
         inertial_link:
@@ -794,13 +793,13 @@ Visualization Manager:
           Value: false
         right_ur5_ee_link:
           Value: false
-        right_ur5_f200_mount_link:
-          Value: false
-        right_ur5_f200_surrogate:
-          Value: false
         right_ur5_forearm_link:
           Value: false
         right_ur5_shoulder_link:
+          Value: false
+        right_ur5_sr300_mount_link:
+          Value: false
+        right_ur5_sr300_surrogate:
           Value: false
         right_ur5_tool0:
           Value: false
@@ -842,8 +841,6 @@ Visualization Manager:
                       left_ur5_wrist_2_link:
                         left_ur5_wrist_3_link:
                           left_ur5_ee_link:
-                            hokuyo_lidar:
-                              {}
                             left_ur5_eef_frame_code:
                               {}
                             left_ur5_eef_frame_interactive:
@@ -864,11 +861,10 @@ Visualization Manager:
                           right_ur5_ee_link:
                             right_ur5_2_finger_140_gripper_link:
                               {}
-                            right_ur5_f200_mount_link:
+                            right_ur5_sr300_mount_link:
                               camera_ee_link:
-                                {}
-                            right_ur5_f200_surrogate:
-                              {}
+                                right_ur5_sr300_surrogate:
+                                  {}
                             temoto_end_effector:
                               {}
                           right_ur5_tool0:
@@ -1035,20 +1031,20 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 3.92173219
+      Distance: 1.41421354
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -1.58425665
-        Y: 0.519979656
-        Z: 3.30400181
+        X: -0.157130837
+        Y: -0.855049431
+        Z: 1.32679915
       Focus:
-        X: 0.874183178
-        Y: -0.685824931
-        Z: 0.496495247
+        X: 0.842869163
+        Y: -0.855049372
+        Z: 0.326799124
       Invert Z Axis: false
       Maintain Vertical Axis: true
       Mouse Enabled: true
