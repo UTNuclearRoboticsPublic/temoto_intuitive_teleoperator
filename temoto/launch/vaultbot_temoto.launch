@@ -79,12 +79,13 @@
   <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
 
   <!-- Hokuyo lidar -->
-  <include file="$(find urg_node)/launch/urg_lidar.launch"/>
-  
+  <!-- <include file="$(find urg_node)/launch/urg_lidar.launch"/> -->
+
+  <!-- Laser Stitcher Stuff -->
+<!--
   <arg name="postprocessing_file_name" default="handle_turning_demo_postprocess"/>
   <arg name="laser_stitcher_yaml_file" default="handle_turning_demo_ur5"/>
 
-  <!-- Laser Stitcher Stuff -->
   <rosparam  command="load"  file="$(find laser_stitcher)/data/lidar_ur5_manager/$(arg laser_stitcher_yaml_file).yaml"/>
   <rosparam  command="load"  file="$(find laser_stitcher)/data/postprocessing/$(arg postprocessing_file_name).yaml"/>
 
@@ -112,9 +113,21 @@
       output  = "screen"
     >
   </node>
+-->
 
   <!-- Microphone audio -->
   <include file="$(find audio_play)/launch/play.launch"/>
+
+  <!-- Audible warnings -->
+  <!-- Note: namespaces aren't working with MoveGroupInterface -->
+  <node name="singularity_warning_left" pkg="vaultbot_warnings" type="singularity_warning" respawn="true">
+    <param name="move_group_name" type="str" value="left_ur5" />
+  </node>
+
+  <node name="singularity_warning_right" pkg="vaultbot_warnings" type="singularity_warning" respawn="true">
+    <param name="move_group_name" type="str" value="right_ur5_temoto" />
+  </node>
+
 
   <!-- launch Xbox teleop -->
   <include file="$(find husky_control)/launch/teleop.launch" />
