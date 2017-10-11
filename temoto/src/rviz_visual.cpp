@@ -556,12 +556,15 @@ int main(int argc, char **argv)
   ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
 
   // Wait for initial end-effector position to set camera position
+
   while ((rviz_visuals.latest_status_.end_effector_pose.pose.position.x==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.y==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.z==0) )
   {
     ROS_WARN("[rviz_visual] Waiting for the initial end effector pose.");
+    ROS_WARN("[rviz_visual] For distributed systems, are your clocks synched?");
     ros::spinOnce();
     ros::Duration(1.).sleep();
   }
+
   rviz_visuals.crunch(pub_marker, pub_pov_camera);
  
   // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
