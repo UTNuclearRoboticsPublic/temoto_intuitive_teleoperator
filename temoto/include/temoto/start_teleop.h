@@ -106,7 +106,6 @@ public:
   bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately
-  bool cartesianT_or_jointsF_ = true;		///< If true, interpret inputs as Cartesian cmds.
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
 
@@ -135,6 +134,9 @@ private:
   geometry_msgs::Vector3 incremental_position_cmd_;
   geometry_msgs::Vector3 incremental_orientation_cmd_;
 
+  // The jogger takes TwistStamped msgs
+  geometry_msgs::TwistStamped jog_twist_cmd_;
+
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
   // INVERTED control: the human operator is facing the robot so that left and right are inverted.
@@ -145,10 +147,9 @@ private:
   bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsoluteCmd(..).
   bool primary_hand_is_left_;			///< TRUE unless user specified right hand as the primary hand.
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
-  std::vector<double> joint_deltas_ = {0., 0., 0., 0., 0., 0.};	///< Used in jogging joints
 
   // ROS publishers
-  ros::Publisher pub_abort_;
+  ros::Publisher pub_abort_, pub_jog_cmds_;
 
   // ROS services/actions
   actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence

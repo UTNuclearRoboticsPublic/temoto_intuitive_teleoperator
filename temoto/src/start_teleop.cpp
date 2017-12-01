@@ -58,11 +58,15 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
 
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
+  // TODO: parameterize this topic
+  pub_jog_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/right_ur5_controller/jog_arm_server/delta_jog_cmds", 1);
   absolute_pose_input_ = absolute_pose_input;
 
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
+
+  jog_twist_cmd_.header.frame_id = "hand_marker";
 
   if (absolute_pose_input)
   {
@@ -122,10 +126,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   temoto::Goal motion;	
   motion.request.action_type = action_type;	// set action_type
 
-  if ( cartesianT_or_jointsF_ )
-    motion.request.goal_pose = absolute_pose_cmd_;  // Cartesian goal
-  else  
-    motion.request.joint_deltas = joint_deltas_;    // Joint jog goal
+  motion.request.goal_pose = absolute_pose_cmd_;
 
   // =================================================
   // === Calling NavigateRobotInterface ==============
@@ -188,24 +189,34 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if ( !navT_or_manipF_ )    // If Teleoperator is in MANIPULATION (MoveIt!) mode
-  {  
-    // Adjust orientation for inverted control mode
-    if ( !naturalT_or_invertedF_control_)
+  else if ( !navT_or_manipF_ )    // If Teleoperator is in MANIPULATION mode
+  { 
+    // Jogging
+    if (in_jog_mode_)
     {
-      // rotate orientation 180 around UP-vector
-      motion.request.goal_pose.pose.orientation = oneEightyAroundOperatorUp( motion.request.goal_pose.pose.orientation ) ;
+      pub_jog_cmds_.publish(jog_twist_cmd_);
+      return;
     }
-       
-    // Call temoto/move_robot_service
-    if ( !move_robot_client_.call( motion ) )
+    // Point-to-point motion
+    else
     {
-      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/move_robot_service");
+      // Adjust orientation for inverted control mode
+      if ( !naturalT_or_invertedF_control_)
+      {
+        // rotate orientation 180 around UP-vector
+        motion.request.goal_pose.pose.orientation = oneEightyAroundOperatorUp( motion.request.goal_pose.pose.orientation ) ;
+      }
+         
+      // Call temoto/move_robot_service
+      if ( !move_robot_client_.call( motion ) )
+      {
+        ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/move_robot_service");
+      }
+      return;
     }
-    return;
   }
   // =================================================
-  // === Unexpected case =============================
+  // === Unexpected case == NEITHER NAV NOR MANIP ====
   // =================================================
   else
   {
@@ -355,9 +366,21 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
   ///////////////
   // MANIPULATION
   ///////////////
-  if ( !navT_or_manipF_ )  // If in manipulation mode
+  if ( !navT_or_manipF_ )
   {
-    if ( cartesianT_or_jointsF_)  // If taking Cartesian commands
+    // Jogging
+    if (in_jog_mode_)
+    {
+      jog_twist_cmd_.header.stamp = ros::Time::now();
+      jog_twist_cmd_.twist.linear.x = pose_cmd.axes[0];
+      jog_twist_cmd_.twist.linear.y = 0.;
+      jog_twist_cmd_.twist.linear.z = 0.;
+      jog_twist_cmd_.twist.angular.x = 0.;
+      jog_twist_cmd_.twist.angular.y = 0.;
+      jog_twist_cmd_.twist.angular.z = 0.;
+    }
+    // Integrate for point-to-point motion
+    else
     {
       // ORIENTATION
       // new incremental rpy command
@@ -388,23 +411,11 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
       incoming_position_cmd.header.frame_id = "hand_marker";
       incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
       if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.02)) )
-      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-/*    else
-      {
-        ROS_WARN("TF between base_link and hand_marker timed out.");
-      }
-*/
+        transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
 
       absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
       absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
       absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
-    }
-    else  // Taking joint commands. For now, just jog the wrist
-    {
-      // Send the scaled SpaceNav Rot-Z to the move_robot node. (Scale it to rad)
-      // The move_robot node will get the current robot joints and add this command to them.
-
-      joint_deltas_ = { 0., 0., 0., 0., 0., 20.*rot_scale_*pose_cmd.axes[5] };
     }
   }
 
@@ -605,7 +616,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   {
     ROS_INFO("Switching out of jog mode");
     in_jog_mode_ = false;
-    cartesianT_or_jointsF_ = true;
 
     return;
   }
@@ -649,7 +659,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       ROS_INFO("Switching to jog mode");
       in_jog_mode_ = true;
-      cartesianT_or_jointsF_ = false;  // For now, jog mode ==> joints only
     }
     if (voice_command.cmd_string == "robot please plan")
     {
