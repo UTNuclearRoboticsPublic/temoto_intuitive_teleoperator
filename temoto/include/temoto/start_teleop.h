@@ -81,6 +81,8 @@ public:
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
   temoto::Status setStatus();
+
+  void setScale();
   
   //Callback functions
   
@@ -105,7 +107,7 @@ public:
   bool manipulate_ = true;		/// Is manipulation enabled?
   bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
-  bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately
+  bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
 
@@ -149,7 +151,7 @@ private:
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
-  ros::Publisher pub_abort_, pub_jog_cmds_;
+  ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
 
   // ROS services/actions
   actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence
