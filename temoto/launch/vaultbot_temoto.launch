@@ -83,4 +83,7 @@
   <!-- launch Xbox teleop -->
   <include file="$(find husky_control)/launch/teleop.launch" />
 
+  <!-- Arm jogging -->
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch"/>
+
 </launch>

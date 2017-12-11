@@ -59,7 +59,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
-  pub_jog_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/right_ur5_controller/jog_arm_server/delta_jog_cmds", 1);
+  pub_jog_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   absolute_pose_input_ = absolute_pose_input;
 
   absolute_pose_cmd_.header.frame_id = "base_link";
@@ -373,11 +373,11 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
     {
       jog_twist_cmd_.header.stamp = ros::Time::now();
       jog_twist_cmd_.twist.linear.x = pose_cmd.axes[0];
-      jog_twist_cmd_.twist.linear.y = 0.;
-      jog_twist_cmd_.twist.linear.z = 0.;
-      jog_twist_cmd_.twist.angular.x = 0.;
-      jog_twist_cmd_.twist.angular.y = 0.;
-      jog_twist_cmd_.twist.angular.z = 0.;
+      jog_twist_cmd_.twist.linear.y = pose_cmd.axes[1];
+      jog_twist_cmd_.twist.linear.z = pose_cmd.axes[2];
+      jog_twist_cmd_.twist.angular.x = pose_cmd.axes[3];
+      jog_twist_cmd_.twist.angular.y = pose_cmd.axes[4];
+      jog_twist_cmd_.twist.angular.z = pose_cmd.axes[5];
     }
     // Integrate for point-to-point motion
     else
