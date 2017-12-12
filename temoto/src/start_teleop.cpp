@@ -164,13 +164,9 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       tf::quaternionMsgToTF(goal_in_baselink.pose.orientation, quat_base_link);
 
       // the tf::Quaternion has a method to access roll, pitch, and yaw
-      tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);  
+      tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);
       
-      // TODO Figure it out!!
-      // I still don't understand why the transformPose() is not doing this but ...
-      // ... I set hand pitch from current_cmd_frame frame as the yaw in base_link frame,
-      // i.e., set rotation around UP in current_cmd_frame as rotation around UP in base_link.
-      quat_base_link.setRPY(0, 0, lm_pitch);
+      quat_base_link.setRPY(0., 0., bl_yaw);
       quat_base_link.normalize();
       tf::quaternionTFToMsg(quat_base_link, goal_in_baselink.pose.orientation);
       
@@ -345,7 +341,6 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
     q_previous_cmd *= q_incremental;  // Calculate the new orientation
     q_previous_cmd.normalize();
     quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
 
     // POSITION
     // Ignore Z (out of plane)
