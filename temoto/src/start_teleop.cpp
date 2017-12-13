@@ -67,7 +67,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
 
-  jog_twist_cmd_.header.frame_id = "hand_marker";
+  jog_twist_cmd_.header.frame_id = "temoto_end_effector";
 
   // Set initial scale on incoming commands
   setScale();
