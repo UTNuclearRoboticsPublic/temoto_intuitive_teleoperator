@@ -86,4 +86,6 @@
   <!-- Arm jogging -->
   <include file="$(find vaultbot_drivers)/launch/jog_arms.launch"/>
 
+  <node name="osvr_server" pkg="rviz_plugin_osvr" type="start_osvr_server.sh" />
+
 </launch>

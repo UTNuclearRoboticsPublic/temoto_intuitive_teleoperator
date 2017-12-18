@@ -142,6 +142,12 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // Jogging
       if (in_jog_mode_)
       {
+        // It feels better to control yaw via left-right motion on the SpaceNav
+        if( !absolute_pose_input_ )
+        {
+          jog_twist_cmd_.twist.angular.z = jog_twist_cmd_.twist.linear.y;
+        }
+
         pub_jog_base_cmds_.publish(jog_twist_cmd_.twist);
         return;
       }
