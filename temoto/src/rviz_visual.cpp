@@ -271,7 +271,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // ==  VISUALIZATION MARKERS  =================================
   // ============================================================
 
-  // Setting markers in NAVIGATION mode
+  // Setting markers & frames in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
     // ==  ARROW  ============================================ //
@@ -323,8 +323,11 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     distance_as_text_.header.frame_id = cmd_pose_marker_.header.frame_id;
 
     marker_publisher.publish( distance_as_text_ );			// publish info_text visualization_marker; this is picked up by rivz
+
+    // Attach the leap_motion frame to base_link
+    tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
   }
-  // Setting markers in MANIPULATION mode
+  // Setting markers & frames in MANIPULATION mode
   else
   {
     /* ==  ARROW  ============================================ */
@@ -414,9 +417,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     marker_publisher.publish( cmd_pose_marker_ );
 
     // Add a frame to the hand pose marker. Useful to view in RViz.
-    hand_marker_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-    hand_marker_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-    tf_br_.sendTransform(tf::StampedTransform(hand_marker_tf_, ros::Time::now(), "base_link", "hand_marker"));
+    spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
+    spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
+    tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+
+    // Attach the leap_motion frame to robot EE
+    tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
 
   } // end setting markers in MANIPULATION mode
     

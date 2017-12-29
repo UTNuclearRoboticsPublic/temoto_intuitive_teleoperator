@@ -137,7 +137,7 @@ int main(int argc, char **argv)
         hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );  // set current_cmd_frame about base_link
       }
 
-      // The origin shifts to the end effector.
+      // The origin shifts to the end effector
       hand_frame_to_robot.setOrigin( tf::Vector3(latest_status.end_effector_pose.pose.position.x, latest_status.end_effector_pose.pose.position.y, latest_status.end_effector_pose.pose.position.z) );
 
       // Broadcast the new transform

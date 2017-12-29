@@ -80,6 +80,10 @@ public:
     adjust_camera_ = true;
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
+
+    // Y i forward for the LeapMotion controller
+    leap_motion_tf_.setOrigin( tf::Vector3(0., 0., 0.) );
+    leap_motion_tf_.setRotation(  tf::Quaternion( 0.7071, -0.7071, 0., 0.)  );
   };
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
@@ -163,7 +167,8 @@ private:
 
   /** Show the hand marker frame in RViz **/
   tf::TransformBroadcaster tf_br_;
-  tf::Transform hand_marker_tf_;
+  tf::Transform spacenav_tf_;
+  tf::Transform leap_motion_tf_;
 
   /** ROS transform listener **/
   tf::TransformListener tf_listener_;

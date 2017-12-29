@@ -50,7 +50,8 @@
     <param name="navigate" type="bool" value="true" />
     <param name="manipulate" type="bool" value="true" />
     <param name="absolute_pose_input" type="bool" value="false" />   <!-- The spacemouse sends incremental commands -->
-    <param name="temoto_pose_cmd_topic" type="str" value="spacenav/joy" />  <!-- Commands on this topic -->
+    <param name="temoto_pose_cmd_topic" type="str" value="spacenav/joy" />
+    <!-- <param name="temoto_pose_cmd_topic" type="str" value="leap_motion_output" /> -->
   </node>
 
 

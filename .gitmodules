@@ -7,3 +7,6 @@
 [submodule "ur_script_interface"]
 	path = ur_script_interface
 	url = https://github.com/UTNuclearRoboticsPublic/ur_script_interface.git
+[submodule "leap_motion_controller"]
+	path = leap_motion_controller
+	url = https://github.com/UTNuclearRoboticsPublic/leap_motion_controller.git

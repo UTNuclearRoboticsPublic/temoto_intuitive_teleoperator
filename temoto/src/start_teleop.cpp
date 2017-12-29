@@ -355,17 +355,17 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
     incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
     incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
 
-    // Incoming position cmds are in the hand_marker frame
+    // Incoming position cmds are in the spacenav frame
     // So convert them to base_link like everything else
 
     geometry_msgs::Vector3Stamped incoming_position_cmd;
-    incoming_position_cmd.header.frame_id = "hand_marker";
+    incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
     transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
 /*    else
     {
-      ROS_WARN("TF between base_link and hand_marker timed out.");
+      ROS_WARN("TF between base_link and spacenav timed out.");
     }
 */
     // Ignore Z
@@ -407,13 +407,13 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
     incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
     incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
 
-    // Incoming position cmds are in the hand_marker frame
+    // Incoming position cmds are in the spacenav frame
     // So convert them to base_link like everything else
 
     geometry_msgs::Vector3Stamped incoming_position_cmd;
-    incoming_position_cmd.header.frame_id = "hand_marker";
+    incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("hand_marker", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
       transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
 
     absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
@@ -431,7 +431,6 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
  *  KEY_TAP gesture detection is currenly unimplemented.
  *  @param leap_data temoto::Leapmsg published by leap_motion node
  */
-/*
 void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
 {
   // First, set up primary and secondary hand.
@@ -467,14 +466,14 @@ void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
   
 
   // Leap Motion Controller uses different coordinate orientation from the ROS standard for SIA5:
-  //				SIA5	LEAP
+  //		        SIA5	LEAP
   //		forward 	x	z
-  //		right		y	x
-  //		down		z	y
+  //		right		  y	x
+  //		down		  z	y
 
   // *** Following calculations are done in "current_cmd_frame" frame, i.e. incoming leap_data pose is relative to current_cmd_frame frame.
 
-  // Working variable for potential target pole calculated from the hand pose coming from Leap Motion Controller (i.e. stamped to current_cmd_frame frame).
+  // Working variable for potential target pose calculated from the hand pose coming from Leap Motion Controller (i.e. stamped to current_cmd_frame frame).
   geometry_msgs::PoseStamped scaled_pose;
   // Header is copied without a change.
   scaled_pose.header = leap_data.header;
@@ -523,11 +522,12 @@ void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
   // Setting properly scaled and limited pose as the absolute_pose_cmd_
   absolute_pose_cmd_.pose = scaled_pose.pose;
   absolute_pose_cmd_.header.frame_id = leap_data.header.frame_id;
-  absolute_pose_cmd_.header.stamp = ros::Time(0);//ros::Time::now();
+  absolute_pose_cmd_.header.stamp = ros::Time(0);
+
+  ROS_INFO_STREAM(absolute_pose_cmd_);
 
   return;
 } // end processAbsoluteCmd
-*/
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
@@ -963,8 +963,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_pose_cmd;
   if (temoto_teleop.absolute_pose_input_)
   {
-    ROS_WARN("[start_teleop] Absolute pose cmds aren't currently implemented.");
-    //sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsoluteCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsoluteCmd, &temoto_teleop);
   }
   else  // incremental pose cmds
     sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processIncrementalCmd, &temoto_teleop);

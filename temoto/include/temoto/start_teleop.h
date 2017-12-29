@@ -49,7 +49,7 @@
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
-//#include "leap_motion_controller/Set.h"
+#include "leap_motion_controller/Set.h"
 #include "griffin_powermate/PowermateEvent.h"
 
 // Other includes
@@ -86,7 +86,7 @@ public:
   
   //Callback functions
   
-  //void processAbsoluteCmd(leap_motion_controller::Set leap_data);
+  void processAbsoluteCmd(leap_motion_controller::Set leap_data);
 
   void processIncrementalCmd(sensor_msgs::Joy pose_cmd);
   
