@@ -61,7 +61,7 @@
 
 
   <!-- Open an rqt window for camera feeds -->
-  <node name="rqt_image_panel" pkg="vaultbot_irp" type="rqt_image_panel.sh" />
+  <node name="rqt_image_panel" pkg="vaultbot_drivers" type="rqt_image_panel.sh" />
 
 
   <!-- Start soundplay_node that is responsible for voice synthesis -->

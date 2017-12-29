@@ -11,7 +11,6 @@ find_package(catkin REQUIRED
   actionlib_msgs
   genmsg
   geometry_msgs
-  grasp_interface
   griffin_powermate
   keyboard_reader
   message_generation
@@ -19,6 +18,7 @@ find_package(catkin REQUIRED
   move_base_to_manip
   moveit_core
   moveit_ros_planning_interface
+  robotiq_c_model_control
   roscpp
   rospy
   std_msgs
@@ -127,7 +127,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs roscpp rospy std_msgs geometry_msgs ur_script_interface
+ CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs ur_script_interface
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )

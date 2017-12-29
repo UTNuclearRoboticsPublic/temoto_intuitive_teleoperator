@@ -29,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -322,14 +322,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_eef_frame_code:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          left_ur5_eef_frame_interactive:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           left_ur5_forearm_link:
             Alpha: 1
             Show Axes: false
@@ -447,6 +439,11 @@ Visualization Manager:
             Show Trail: false
             Value: true
           right_ur5_wrist_3_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          sensor_mast:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -580,14 +577,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_eef_frame_code:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          left_ur5_eef_frame_interactive:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           left_ur5_forearm_link:
             Alpha: 1
             Show Axes: false
@@ -709,6 +698,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          sensor_mast:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           temoto_end_effector:
             Alpha: 1
             Show Axes: false
@@ -754,6 +748,8 @@ Visualization Manager:
           Value: false
         hand_marker:
           Value: true
+        hokuyo_lidar:
+          Value: true
         imu_link:
           Value: false
         inertial_link:
@@ -765,10 +761,6 @@ Visualization Manager:
         left_ur5_base_link:
           Value: false
         left_ur5_ee_link:
-          Value: false
-        left_ur5_eef_frame_code:
-          Value: false
-        left_ur5_eef_frame_interactive:
           Value: false
         left_ur5_forearm_link:
           Value: false
@@ -830,6 +822,8 @@ Visualization Manager:
           Value: false
         scanmatcher_frame:
           Value: false
+        sensor_mast:
+          Value: false
         temoto_end_effector:
           Value: false
         top_chassis_link:
@@ -862,9 +856,7 @@ Visualization Manager:
                           left_ur5_wrist_2_link:
                             left_ur5_wrist_3_link:
                               left_ur5_ee_link:
-                                left_ur5_eef_frame_code:
-                                  {}
-                                left_ur5_eef_frame_interactive:
+                                hokuyo_lidar:
                                   {}
                                 left_ur5_r200_tower_mount_link:
                                   {}
@@ -916,6 +908,8 @@ Visualization Manager:
                 {}
               rear_right_wheel_link:
                 {}
+              sensor_mast:
+                {}
               top_chassis_link:
                 {}
               user_rail_link:
@@ -929,9 +923,6 @@ Visualization Manager:
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        active_range_box: true
-        displacement_arrow: true
-        distance_as_text: true
         hand_pose_marker: true
       Queue Size: 100
       Value: true
@@ -1038,6 +1029,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
+    Default Light: true
     Fixed Frame: base_link
     Frame Rate: 30
   Name: root
@@ -1060,20 +1052,20 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 3.93317461
+      Distance: 4.39233112
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -2.30067348
-        Y: 0.0458158255
-        Z: 3.21073675
+        X: -2.29174328
+        Y: -0.429753661
+        Z: 4.10429668
       Focus:
-        X: 0.480502248
-        Y: 0.045816645
-        Z: 0.429563552
+        X: 0.814104021
+        Y: -0.429753542
+        Z: 0.998449683
       Invert Z Axis: false
       Maintain Vertical Axis: true
       Mouse Enabled: true
