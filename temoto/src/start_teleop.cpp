@@ -45,23 +45,24 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   ros::NodeHandle pn("~");
 
   std::string primary_hand;
-  pn.param<std::string>("primary_hand", primary_hand, "left");
-  pn.param<std::string>("temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
+  pn.param<std::string>("/temoto/primary_hand", primary_hand, "left");
+  pn.param<std::string>("/temoto/temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
 
   // By default navigation is turned OFF
   bool navigate;
-  pn.param<bool>("navigate", navigate, false);
+  pn.param<bool>("/temoto/navigate", navigate, false);
   // By default manipulation is turned ON
-  pn.param<bool>("manipulate", manipulate_, true);
-  // Absolute or incremental pose input (e.g. SpaceMouse is incremental, LeapMotion is absolute)
-  bool absolute_pose_input;
-  pn.param<bool>("absolute_pose_input", absolute_pose_input, false);
+  pn.param<bool>("/temoto/manipulate", manipulate_, true);
+  // What pose input device?
+  pn.param<bool>("/temoto/leap_input", leap_input_, false);
+  pn.param<bool>("/temoto/spacenav_input", spacenav_input_, false);
+  if (spacenav_input_ == leap_input_)
+    ROS_ERROR_STREAM("[start_teleop/Teleoperator()] 1 and only 1 pose input device can be enabled.");
 
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
   pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
-  absolute_pose_input_ = absolute_pose_input;
 
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
@@ -143,7 +144,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       if (in_jog_mode_)
       {
         // It feels better to control yaw via left-right motion on the SpaceNav
-        if( !absolute_pose_input_ )
+        if( spacenav_input_ )
         {
           jog_twist_cmd_.twist.angular.z = jog_twist_cmd_.twist.linear.y;
         }
@@ -290,7 +291,7 @@ geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaterni
  *  Add the new command to the current RViz marker pose.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
  */
-void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
+void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
 {
   // Ensure incoming data is in the right frame
   if ( current_pose_.header.frame_id != "base_link" )
@@ -422,7 +423,7 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
   }
 
   return;
-} // end processIncrementalCmd
+} // end processJoyCmd
 
 /** Callback function for absolute position commands.
  *  For now, this is based on a LeapMotion controller.
@@ -431,7 +432,7 @@ void Teleoperator::processIncrementalCmd(sensor_msgs::Joy pose_cmd)
  *  KEY_TAP gesture detection is currenly unimplemented.
  *  @param leap_data temoto::Leapmsg published by leap_motion node
  */
-void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
+void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
 {
   // First, set up primary and secondary hand.
   geometry_msgs::Pose primary_hand;
@@ -527,7 +528,7 @@ void Teleoperator::processAbsoluteCmd(leap_motion_controller::Set leap_data)
   ROS_INFO_STREAM(absolute_pose_cmd_);
 
   return;
-} // end processAbsoluteCmd
+} // end processLeapCmd
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
@@ -898,7 +899,7 @@ temoto::Status Teleoperator::setStatus()
 void Teleoperator::setScale()
 {
   // No scaling seems to be needed with LeapMotion
-  if (absolute_pose_input_)
+  if (leap_input_)
   {
     pos_scale_ = 1.;
     rot_scale_ = 1.;
@@ -942,7 +943,7 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Rate node_rate(60.);
+  ros::Rate node_rate(30.);
   
   // Instance of Teleoperator
   Teleoperator temoto_teleop(n);
@@ -961,12 +962,12 @@ int main(int argc, char **argv)
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
-  if (temoto_teleop.absolute_pose_input_)
+  if (temoto_teleop.leap_input_)
   {
-    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processAbsoluteCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processLeapCmd, &temoto_teleop);
   }
   else  // incremental pose cmds
-    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processIncrementalCmd, &temoto_teleop);
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, &temoto_teleop);
 
   ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
 

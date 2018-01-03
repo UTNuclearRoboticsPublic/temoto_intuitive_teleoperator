@@ -86,9 +86,9 @@ public:
   
   //Callback functions
   
-  void processAbsoluteCmd(leap_motion_controller::Set leap_data);
+  void processLeapCmd(leap_motion_controller::Set leap_data);
 
-  void processIncrementalCmd(sensor_msgs::Joy pose_cmd);
+  void processJoyCmd(sensor_msgs::Joy pose_cmd);
   
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
   
@@ -110,6 +110,8 @@ public:
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
+  bool leap_input_ = false;
+  bool spacenav_input_ = true;
 
 private:
   /// Local TransformListener for transforming poses
@@ -146,7 +148,7 @@ private:
   bool orientation_locked_ = false;		///< Hand orientation info is to be ignored if TRUE.
   bool position_limited_ = true;		///< Hand position is restricted to a specific direction/plane if TRUE.
   bool position_fwd_only_ = false;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processAbsoluteCmd(..).
+  bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processLeapCmd(..).
   bool primary_hand_is_left_;			///< TRUE unless user specified right hand as the primary hand.
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 

@@ -113,7 +113,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "navigate_robot");
   ros::NodeHandle n;
-  ros::Rate node_rate(60);
+  ros::Rate node_rate(30);
 
   // Instance of NavigateRobotInterface
   NavigateRobotInterface navigateIF("move_base");

@@ -26,15 +26,15 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-/** @file rviz_visual.cpp
+/** @file graphics_and_frames.cpp
  * 
- *  @brief Node that handles visual markers and point-of-view camera in RViz for
- *         temoto teleoperation.
+ *  @brief Node that handles RViz graphics and tf frames for the controllers. It's useful to do
+ *  both in the same place because both graphics and tf frames depend on knowing the hand pose.
  * 
  *  @author karl.kruusamae(at)utexas.edu
  */
 
-#include "temoto/rviz_visual.h"
+#include "temoto/graphics_and_frames.h"
 
 /** Callback function for /temoto/status.
  *  Looks for any changes that would require re-adjustment of the point-of-view camera.
@@ -311,7 +311,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // ==  TEXT LABEL  ======================================= //
     // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
-
+/*
     std::vector<geometry_msgs::Point> temp;
     geometry_msgs::Point zero_point;
     temp.push_back(zero_point);
@@ -323,14 +323,19 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     distance_as_text_.header.frame_id = cmd_pose_marker_.header.frame_id;
 
     marker_publisher.publish( distance_as_text_ );			// publish info_text visualization_marker; this is picked up by rivz
+    */
 
     // Attach the leap_motion frame to base_link
-    tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
+    if (leap_input_)
+    {
+      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
+    }
   }
   // Setting markers & frames in MANIPULATION mode
   else
   {
-    /* ==  ARROW  ============================================ */
+    /*
+    // ==  ARROW  ============================================ /
     // Update arrow marker properties and make hand tracking visible in RViz
     // Arrow marker is described in current_cmd_frame frame.
     // The arrow start point is always (0.0.0)
@@ -352,7 +357,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Publish displacement_arrow_
     marker_publisher.publish( displacement_arrow_ );
 
-    /* ==  ACTIVE RANGE BOX  ================================= */
+    // ==  ACTIVE RANGE BOX  ================================= //
     // Use the same origin/pivot point as the start point of the arrow marker
     active_range_box_.pose.position = displacement_arrow_.points[0];
     // Dimensions of the box are also based on the arrow
@@ -368,7 +373,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Publish the active_range_box_
     marker_publisher.publish( active_range_box_ );
       
-    /* ==  TEXT LABEL  ======================================= */
+    // ==  TEXT LABEL  ======================================= //
     // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
     // Get the distance between start and end point as string
     distance_as_text_.text = getDistanceString( displacement_arrow_.points );
@@ -383,9 +388,9 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Publish distance_as_text_
     marker_publisher.publish( distance_as_text_ );
+  */
 
-
-    /* ==  HAND POSE MARKER  ================================= */
+    // ==  HAND POSE MARKER  ================================= //
     cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
     cmd_pose_marker_.mesh_resource = manip_stl_;
@@ -416,13 +421,19 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     marker_publisher.publish( cmd_pose_marker_ );
 
-    // Add a frame to the hand pose marker. Useful to view in RViz.
-    spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-    spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-    tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+    // Add the spacenav frame
+    if (!leap_input_)
+    {
+      spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
+      spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
+      tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+    }
 
     // Attach the leap_motion frame to robot EE
-    tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
+    if (leap_input_)
+    {
+      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
+    }
 
   } // end setting markers in MANIPULATION mode
     
@@ -548,7 +559,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   
   // Setting the node rate (Hz)
-  ros::Rate node_rate(60);
+  ros::Rate node_rate(30);
 
   Visuals rviz_visuals;
   

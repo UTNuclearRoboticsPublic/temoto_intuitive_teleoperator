@@ -188,9 +188,9 @@ add_executable(start_teleop src/start_teleop.cpp)
 target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common)
 add_dependencies(start_teleop temoto_generate_messages_cpp)
 
-add_executable(rviz_visual src/rviz_visual.cpp)
-target_link_libraries(rviz_visual ${catkin_LIBRARIES} temoto_common)
-add_dependencies(rviz_visual temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
+add_executable(graphics_and_frames src/graphics_and_frames.cpp)
+target_link_libraries(graphics_and_frames ${catkin_LIBRARIES} temoto_common)
+add_dependencies(graphics_and_frames temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(interpret_utterance src/interpret_utterance.cpp)
 target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)

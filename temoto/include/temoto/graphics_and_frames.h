@@ -68,6 +68,8 @@ public:
     pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
     pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
+    
+    pn.param<bool>("/temoto/leap_input", leap_input_, false);
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
@@ -125,6 +127,9 @@ private:
   std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
+
+  // LeapMotion or SpaceNav?
+  bool leap_input_;
 
   /** STL files for the hand markers. */
   std::string manip_stl_;;
