@@ -1,6 +1,6 @@
 <launch>
 
-  <!-- Load temoto frames for vaultbot -->
+  <!-- Load temoto parameters -->
   <rosparam command="load" file="$(find temoto)/config/vaultbot.yaml" />
  
 
@@ -21,9 +21,7 @@
   
 
   <!-- Bring up some temoto core components -->
-  <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" >
-      <param name="manip_stl" type="str" value="package://temoto_support/meshes/2_finger_140_gripper_marker.stl" />
-  </node>
+  <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
 
 
   <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" >

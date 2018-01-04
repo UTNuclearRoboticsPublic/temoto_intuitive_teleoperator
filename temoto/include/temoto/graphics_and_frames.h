@@ -62,13 +62,13 @@ public:
 
     // Get the STL's for the manip/nav hand markers from launch file, if any
     std::string manip_stl;
-    pn.param<std::string>("manip_stl", manip_stl_, "");
+    pn.param<std::string>("/temoto/manip_stl", manip_stl_, "");
 
     // Get all the relevant frame names from parameter server
     pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
     pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
-    
+
     pn.param<bool>("/temoto/leap_input", leap_input_, false);
 
     // Initialize point-of-view camera placement and all the required markers
@@ -83,9 +83,9 @@ public:
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
 
-    // Y i forward for the LeapMotion controller
+    // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
     leap_motion_tf_.setOrigin( tf::Vector3(0., 0., 0.) );
-    leap_motion_tf_.setRotation(  tf::Quaternion( 0.7071, -0.7071, 0., 0.)  );
+    leap_motion_tf_.setRotation(  tf::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
   };
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */

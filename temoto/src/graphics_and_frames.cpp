@@ -274,6 +274,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Setting markers & frames in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
+    /*
     // ==  ARROW  ============================================ //
     // Displacement arrow is not needed in NAVIGATION mode, so make it invisible.
     displacement_arrow_.color.a = 0;
@@ -287,6 +288,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     
     // Publish active_range_box_
     marker_publisher.publish( active_range_box_ );   
+    */
     
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
@@ -399,6 +401,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     cmd_pose_marker_.scale.z = 0.001;
 
     // Hand pose marker
+    cmd_pose_marker_.header = latest_status_.commanded_pose.header;
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
     if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE

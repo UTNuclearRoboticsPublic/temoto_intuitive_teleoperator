@@ -466,11 +466,11 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   else if (secondary_hand_is_present == false) secondary_hand_before_ = false;		// if secondary hand is not detected, set secondary_hand_before_ FALSE;
   
 
-  // Leap Motion Controller uses different coordinate orientation from the ROS standard for SIA5:
-  //		        SIA5	LEAP
-  //		forward 	x	z
-  //		right		  y	x
-  //		down		  z	y
+  // Leap Motion Controller coordinate orientation:
+  //		        LEAP
+  //		forward  -z
+  //		right		 x
+  //		up   		 y
 
   // *** Following calculations are done in "current_cmd_frame" frame, i.e. incoming leap_data pose is relative to current_cmd_frame frame.
 
@@ -479,13 +479,14 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   // Header is copied without a change.
   scaled_pose.header = leap_data.header;
   // Reads the position of primary palm in meters, amplifies to translate default motion; scales to dynamically adjust range; offsets for better usability.
-  scaled_pose.pose.position.x = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
-  scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
-  scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
-  
+  //scaled_pose.pose.position.x = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
+  //scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
+  //scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
+  scaled_pose.pose.position = primary_hand.position;
+
   // Orientation of primary palm is copied unaltered, i.e., is not scaled
   scaled_pose.pose.orientation = primary_hand.orientation;
-  
+
   // Applying relevant limitations to direction and/or orientation
   if (navT_or_manipF_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
   {
@@ -513,19 +514,21 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   }
   
     // == Additional explanation of the above coordinates and origins ==
-    // For navigation, current_cmd_frame is attached to base_link.
-    // For manipulation, current_cmd_frame is attached to the end effector.
-    // This switch occurs in human_frame_broadcaster.cpp
+    // For navigation, leap_motion_frame is attached to base_link.
+    // For manipulation, leap_motion_frame is attached to the end effector.
+    // This switch occurs in graphics_and_frames.cpp
     // Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
     // Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
     // Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
 
+
   // Setting properly scaled and limited pose as the absolute_pose_cmd_
   absolute_pose_cmd_.pose = scaled_pose.pose;
-  absolute_pose_cmd_.header.frame_id = leap_data.header.frame_id;
+  absolute_pose_cmd_.header.frame_id = scaled_pose.header.frame_id; //leap_data.header.frame_id;
   absolute_pose_cmd_.header.stamp = ros::Time(0);
 
-  ROS_INFO_STREAM(absolute_pose_cmd_);
+  // Still in leap_motion frame here.
+  //ROS_INFO_STREAM(absolute_pose_cmd_);
 
   return;
 } // end processLeapCmd
