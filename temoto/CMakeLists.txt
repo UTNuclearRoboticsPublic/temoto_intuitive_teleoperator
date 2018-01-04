@@ -32,8 +32,6 @@ find_package(catkin REQUIRED
   pcl_ros
 )
 
-find_package (ur_script_interface REQUIRED)
-
 ## System dependencies are found with CMake's conventions
 # find_package(
 # Boost REQUIRED COMPONENTS system
@@ -128,7 +126,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs ur_script_interface
+ CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )
@@ -142,7 +140,6 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${ur_script_interface_INCLUDE_DIRS}
   ${move_base_to_manip_INCLUDE_DIRS}
 )
 
@@ -151,9 +148,6 @@ include_directories(
 
 add_library(close_hand src/preplanned_sequences/close_hand.cpp)
 target_link_libraries(close_hand ${catkin_LIBRARIES})
-
-add_library(enable_compliance src/preplanned_sequences/enable_compliance.cpp)
-target_link_libraries(enable_compliance ${catkin_LIBRARIES} ${ur_script_interface_LIBRARIES})
 
 add_library(go_to_laser_scan src/preplanned_sequences/go_to_laser_scan.cpp)
 target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
@@ -206,7 +200,7 @@ add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
 add_dependencies(preplanned_sequences ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand enable_compliance go_to_laser_scan robot_please_approach robot_please_scan robot_push_button )
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand go_to_laser_scan robot_please_approach robot_please_scan robot_push_button )
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

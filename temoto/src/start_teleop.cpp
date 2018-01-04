@@ -210,6 +210,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       }
          
       // Call temoto/move_robot_service
+      ROS_ERROR_STREAM("[start_teleop/callRobotMotionInterface] motion service call: " << motion.request.goal_pose);
       if ( !move_robot_client_.call( motion ) )
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/move_robot_service");
@@ -479,10 +480,9 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   // Header is copied without a change.
   scaled_pose.header = leap_data.header;
   // Reads the position of primary palm in meters, amplifies to translate default motion; scales to dynamically adjust range; offsets for better usability.
-  //scaled_pose.pose.position.x = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
-  //scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
-  //scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
-  scaled_pose.pose.position = primary_hand.position;
+  scaled_pose.pose.position.x = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
+  scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
+  scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
 
   // Orientation of primary palm is copied unaltered, i.e., is not scaled
   scaled_pose.pose.orientation = primary_hand.orientation;
@@ -524,11 +524,8 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
 
   // Setting properly scaled and limited pose as the absolute_pose_cmd_
   absolute_pose_cmd_.pose = scaled_pose.pose;
-  absolute_pose_cmd_.header.frame_id = scaled_pose.header.frame_id; //leap_data.header.frame_id;
+  absolute_pose_cmd_.header.frame_id = scaled_pose.header.frame_id;
   absolute_pose_cmd_.header.stamp = ros::Time(0);
-
-  // Still in leap_motion frame here.
-  //ROS_INFO_STREAM(absolute_pose_cmd_);
 
   return;
 } // end processLeapCmd

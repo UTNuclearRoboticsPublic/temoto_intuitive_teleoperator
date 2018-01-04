@@ -47,8 +47,6 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     close_hand::close_hand();
   else if (goal->sequence_name == "open hand")
     open_hand::open_hand();
-  else if (goal->sequence_name == "enable compliance")
-    enable_compliance::enable_compliance();
   else if (goal->sequence_name == "robot please approach")
     robot_please_approach do_the_approach;
   else if (goal->sequence_name == "go to laser scan")

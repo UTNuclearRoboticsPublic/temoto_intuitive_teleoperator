@@ -4,13 +4,15 @@ temoto_frames:
   mobile_base: "base_link"
 temoto:
   # LeapMotion or SpaceNav
-  leap_input: falst
-  spacenav_input: true
+  leap_input: true
+  spacenav_input: false
   primary_hand: "left"
+  temoto_pose_cmd_topic: "leap_motion_output" # "spacenav/joy"
 
    # navigate or manipulate
   navigate: false
   manipulate: true
 
-  temoto_pose_cmd_topic: "spacenav/joy" # "leap_motion_output"
   manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
+  input_voice_topic: "stt/spoken_text"
+  movegroup: "right_ur5_temoto"

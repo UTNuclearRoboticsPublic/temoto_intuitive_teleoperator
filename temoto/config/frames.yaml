@@ -1,4 +1,0 @@
-temoto_frames:
-  human_input: "current_cmd_frame"
-  end_effector: "temoto_end_effector"
-  mobile_base: "base_link"

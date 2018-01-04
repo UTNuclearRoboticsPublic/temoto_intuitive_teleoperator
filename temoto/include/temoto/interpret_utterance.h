@@ -56,7 +56,7 @@ public:
     ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
       
     // Get params from launch file
-    pn.param<std::string>("input_voice_topic", input_voice_topic_, "stt/spoken_text");
+    pn.param<std::string>("temoto/input_voice_topic", input_voice_topic_, "stt/spoken_text");
   
     // Subscribe to speech recognizer
     sub_utterances_ = n_.subscribe<std_msgs::String>(input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, this);

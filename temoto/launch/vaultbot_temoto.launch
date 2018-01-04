@@ -1,19 +1,26 @@
 <launch>
 
+  <!--                 -->
+  <!--  CONFIGURATION  -->
+  <!--                 -->
+
   <!-- Load temoto parameters -->
   <rosparam command="load" file="$(find temoto)/config/vaultbot.yaml" />
- 
+
+    <!-- LeapMotion or SpaceMouse? -->
+  <!-- <include file="$(find spacenav_node)/launch/classic.launch"/> -->
+  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
+
+  <!--                 -->
+  <!--                 -->
+  <!--                 -->
+  
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
   <!-- rosrun temoto kb_fake_voice_commander -->
   <!-- rosrun keyboard_reader keyboard_event_publisher -->
   <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" />
-
-
-  <!-- LeapMotion or SpaceMouse? -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/>
-  <!-- <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" /> -->
 
 
   <!-- Bring up Griffin Powermate -->
@@ -24,9 +31,7 @@
   <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
 
 
-  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" >
-    <param name="input_voice_topic" type="str" value="stt/spoken_text" />
-  </node>
+  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
 
 
   <!-- Specify the frame of incoming commands -->
@@ -34,9 +39,7 @@
   
 
   <!-- MoveIt interface for right_ur5 -->
-  <node name="move_robot" pkg="temoto" type="move_robot" output="screen" >
-    <param name="movegroup" value="right_ur5_temoto" />
-  </node>
+  <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
 
 
   <!-- Navigation interface for move_base -->

@@ -50,6 +50,8 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   
   target_pose_stamped_ = req.goal_pose;
 
+  ROS_ERROR_STREAM( "[move_robot/serviceUpdate] target_pose_stamped_: " << target_pose_stamped_ );
+
   joint_deltas_.clear();
   for( int i=0; i< req.joint_deltas.size(); i++)
   {
@@ -217,8 +219,6 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "move_robot");
   // ROS Nodehandle for normal things
   ros::NodeHandle n;
-  // ROS NodeHandle for accessing private parameters
-  ros::NodeHandle pn("~");
   
   ros::Rate node_rate(60);
 
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
   
   // get user-specified name for the movegroup as a private parameter
   std::string move_group_name;
-  pn.getParam("movegroup", move_group_name);
+  n.getParam("temoto/movegroup", move_group_name);
   if ( move_group_name.empty() )
   {
     ROS_ERROR("[move_robot/main] No movegroup name was specified. Aborting.");
