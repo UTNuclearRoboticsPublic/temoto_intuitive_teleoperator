@@ -41,21 +41,18 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
  : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
   //, q_incremental_(0., 0., 0., 1.) // initially, add no rotation. New incremental rotation commands from e.g. the SpaceMouse will be added here.
 {
-  // Get parameters from ROS param server
-  ros::NodeHandle pn("~");
-
   std::string primary_hand;
-  pn.param<std::string>("/temoto/primary_hand", primary_hand, "left");
-  pn.param<std::string>("/temoto/temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
+  n.param<std::string>("/temoto/primary_hand", primary_hand, "left");
+  n.param<std::string>("/temoto/temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
 
   // By default navigation is turned OFF
   bool navigate;
-  pn.param<bool>("/temoto/navigate", navigate, false);
+  n.param<bool>("/temoto/navigate", navigate, false);
   // By default manipulation is turned ON
-  pn.param<bool>("/temoto/manipulate", manipulate_, true);
+  n.param<bool>("/temoto/manipulate", manipulate_, true);
   // What pose input device?
-  pn.param<bool>("/temoto/leap_input", leap_input_, false);
-  pn.param<bool>("/temoto/spacenav_input", spacenav_input_, false);
+  n.param<bool>("/temoto/leap_input", leap_input_, false);
+  n.param<bool>("/temoto/spacenav_input", spacenav_input_, false);
   if (spacenav_input_ == leap_input_)
     ROS_ERROR_STREAM("[start_teleop/Teleoperator()] 1 and only 1 pose input device can be enabled.");
 
@@ -72,6 +69,10 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   // Set initial scale on incoming commands
   setScale();
+
+  // Free hand motion
+  position_limited_ = false;
+  position_fwd_only_ = false;
   
 
   // client for /temoto/move_robot_service
@@ -96,7 +97,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   else if (manipulate_ && !navigate)
   {
     navT_or_manipF_ = false;		// if only manipulation is enabled, navT_or_manipF_ is FALSE
-    AMP_HAND_MOTION_ = 10;		// 10 for manipulation
+    AMP_HAND_MOTION_ = 2;		// for manipulation
   }
 
   // Set up primary hand
@@ -210,7 +211,6 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       }
          
       // Call temoto/move_robot_service
-      ROS_ERROR_STREAM("[start_teleop/callRobotMotionInterface] motion service call: " << motion.request.goal_pose);
       if ( !move_robot_client_.call( motion ) )
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/move_robot_service");
@@ -433,6 +433,15 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
  *  KEY_TAP gesture detection is currenly unimplemented.
  *  @param leap_data temoto::Leapmsg published by leap_motion node
  */
+
+// == Explanation of the frames ==
+// For navigation, leap_motion_frame is attached to base_link.
+// For manipulation, leap_motion_frame is attached to the end effector.
+// This switch occurs in graphics_and_frames.cpp
+// Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
+// Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
+// Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
+
 void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
 {
   // First, set up primary and secondary hand.
@@ -484,8 +493,25 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
   scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
 
-  // Orientation of primary palm is copied unaltered, i.e., is not scaled
-  scaled_pose.pose.orientation = primary_hand.orientation;
+
+  ////////////////////////////////////////////
+  // ORIENTATION
+  // of primary palm is not scaled
+  ////////////////////////////////////////////
+
+  // Extract the rpy from the command and save it to be applied after coordinate frame is corrected
+  tf::Quaternion q_cmd(primary_hand.orientation.x, primary_hand.orientation.y, primary_hand.orientation.z, primary_hand.orientation.w);
+
+  // Set orientation to match SpaceNav frame, no user-commanded rotation applied yet.
+  scaled_pose.pose.orientation.x = -0.5; scaled_pose.pose.orientation.y = 0.5; scaled_pose.pose.orientation.z = 0.5; scaled_pose.pose.orientation.w = 0.5;
+
+  // Appy the user-commanded rpy
+  tf::Quaternion q_orig, q_new;
+  quaternionMsgToTF(scaled_pose.pose.orientation , q_orig);  // Get the unmodified orientation of 'scaled_pose'
+  q_new = q_cmd*q_orig;  // Calculate the new orientation
+  q_new.normalize();
+  quaternionTFToMsg(q_new, scaled_pose.pose.orientation);  // Stuff the new rotation back into the pose. This requires conversion into a msg type 
+
 
   // Applying relevant limitations to direction and/or orientation
   if (navT_or_manipF_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
@@ -512,15 +538,6 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
     scaled_pose.pose.orientation.z = 0;
     scaled_pose.pose.orientation.w = 1;
   }
-  
-    // == Additional explanation of the above coordinates and origins ==
-    // For navigation, leap_motion_frame is attached to base_link.
-    // For manipulation, leap_motion_frame is attached to the end effector.
-    // This switch occurs in graphics_and_frames.cpp
-    // Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
-    // Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
-    // Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
-
 
   // Setting properly scaled and limited pose as the absolute_pose_cmd_
   absolute_pose_cmd_.pose = scaled_pose.pose;
@@ -667,7 +684,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into MANIPULATION mode  ...");
-      AMP_HAND_MOTION_ = 10;
+      AMP_HAND_MOTION_ = 2;
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.navigate = false; // request a change of control mode
       switch_human2robot_tf.request.first_person_perspective = naturalT_or_invertedF_control_;  // preserve current control perspective

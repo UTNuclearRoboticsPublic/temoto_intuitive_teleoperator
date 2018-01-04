@@ -50,8 +50,6 @@ bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   
   target_pose_stamped_ = req.goal_pose;
 
-  ROS_ERROR_STREAM( "[move_robot/serviceUpdate] target_pose_stamped_: " << target_pose_stamped_ );
-
   joint_deltas_.clear();
   for( int i=0; i< req.joint_deltas.size(); i++)
   {
