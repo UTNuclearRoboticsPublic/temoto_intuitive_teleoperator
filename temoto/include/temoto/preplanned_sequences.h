@@ -38,6 +38,8 @@ class preplanned_sequence {
       // Listen for abort commands
       abort_sub_ = n_.subscribe("temoto/abort", 1, &preplanned_sequence::abort_cb_, this);
 
+      gripper_publisher_ = n_.advertise<robotiq_c_model_control::CModel_robot_output>("/CModelRobotOutput", 5);
+
       sequence_server_.start();
 
     }
@@ -51,6 +53,9 @@ class preplanned_sequence {
     ros::Subscriber abort_sub_;
     void abort_cb_(const std_msgs::String::ConstPtr& msg);
     bool abort_ = false;
+
+    // Some of the preplanned sequences require their own pubs/subs
+    ros::Publisher gripper_publisher_;
 };
 
 #endif

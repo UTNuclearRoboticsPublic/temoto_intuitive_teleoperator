@@ -1,12 +1,12 @@
-#ifndef OPEN_HAND_H
-#define OPEN_HAND_H
+#ifndef OPEN_GRIPPER_H
+#define OPEN_GRIPPER_H
 
 #include <robotiq_c_model_control/CModel_robot_output.h> // Include the RCGripper msg type
 #include <ros/ros.h>
 
-namespace open_hand
+namespace open_gripper
 {
-  int open_hand();
+  int open_gripper(ros::Publisher& gripper_publisher);
 }
 
 #endif

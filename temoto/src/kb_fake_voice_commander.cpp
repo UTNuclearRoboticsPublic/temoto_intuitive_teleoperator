@@ -44,20 +44,6 @@ public:
                 publish = true;
             }
 
-            // Natural perspective: "o" key
-            else if (kbCommand.key_code == 0x0018)
-            {
-                voiceCommand.data = "natural control mode";
-                publish = true;
-            }
-
-            // Inverted perspective: "i" key
-            else if (kbCommand.key_code == 0x0017)
-            {
-                voiceCommand.data = "inverted control mode";
-                publish = true;
-            }
-
             // Limit directions: "l" key
             else if (kbCommand.key_code == 0x0026)
             {
@@ -79,8 +65,8 @@ public:
                 publish = true;
             }
 
-            // Consider rotation: "c" key
-            else if (kbCommand.key_code == 0x002e)
+            // Consider rotation: "r" key
+            else if (kbCommand.key_code == 0x0013)
             {
                 voiceCommand.data = "consider rotation";
                 publish = true;
@@ -107,6 +93,20 @@ public:
                 publish = true;
             }
 
+            // Open gripper: "o" key
+            else if (kbCommand.key_code == 0x0018)
+            {
+                voiceCommand.data = "open gripper";
+                publish = true;
+            }
+
+            // Open gripper: "c" key
+            else if (kbCommand.key_code == 0x002e)
+            {
+                voiceCommand.data = "close gripper";
+                publish = true;
+            }
+
             if (publish)
             {
                 ROS_INFO("[fake voice commander] Publishing: %s", voiceCommand.data.c_str());
@@ -124,14 +124,14 @@ int main(int argc, char **argv)
     std::cout << std::endl << "* * * List of commands: * * *" << std::endl;
     std::cout << "* p - robot please plan" << std::endl;
     std::cout << "* e - robot please execute" << std::endl;
-    std::cout << "* o - natural control mode" << std::endl;
-    std::cout << "* i - inverted control mode" << std::endl;
     std::cout << "* l - limit directions" << std::endl;
     std::cout << "* f - free directions" << std::endl;
     std::cout << "* x - ignore rotation" << std::endl;
-    std::cout << "* c - consider rotation" << std::endl;
+    std::cout << "* r - consider rotation" << std::endl;
     std::cout << "* m - manipulation" << std::endl;
     std::cout << "* n - navigation" << std::endl;
+    std::cout << "* o - open gripper" << std::endl;
+    std::cout << "* c - close gripper" << std::endl;
     std::cout << "* * * * * * *" << std::endl << std::endl;
 
     ROS_INFO("Fake voice commander up and running");

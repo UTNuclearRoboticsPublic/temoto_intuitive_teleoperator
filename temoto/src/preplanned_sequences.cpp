@@ -44,9 +44,9 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
   result_.success = false;
 
   if (goal->sequence_name == "close gripper")
-    close_hand::close_hand();
+    close_gripper::close_gripper(gripper_publisher_);
   else if (goal->sequence_name == "open gripper")
-    open_hand::open_hand();
+    open_gripper::open_gripper(gripper_publisher_);
   else if (goal->sequence_name == "robot please approach")
     robot_please_approach do_the_approach;
   else if (goal->sequence_name == "go to laser scan")
