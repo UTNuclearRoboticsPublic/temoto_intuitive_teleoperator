@@ -8,9 +8,9 @@
 #include "ros/ros.h"
 
 // temoto includes
-#include "temoto/preplanned_sequences/close_hand.h"
+#include "temoto/preplanned_sequences/close_gripper.h"
 #include "temoto/preplanned_sequences/go_to_laser_scan.h"
-#include "temoto/preplanned_sequences/open_hand.h"
+#include "temoto/preplanned_sequences/open_gripper.h"
 #include "temoto/preplanned_sequences/robot_please_approach.h"
 #include "temoto/preplanned_sequences/robot_please_scan.h"
 #include "temoto/preplanned_sequences/robot_push_button.h"

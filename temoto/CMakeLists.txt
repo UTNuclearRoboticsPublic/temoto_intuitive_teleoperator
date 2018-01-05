@@ -146,14 +146,14 @@ include_directories(
 ## Declare a C++ library
 # Preplanned sequences:
 
-add_library(close_hand src/preplanned_sequences/close_hand.cpp)
-target_link_libraries(close_hand ${catkin_LIBRARIES})
+add_library(close_gripper src/preplanned_sequences/close_gripper.cpp)
+target_link_libraries(close_gripper ${catkin_LIBRARIES})
 
 add_library(go_to_laser_scan src/preplanned_sequences/go_to_laser_scan.cpp)
 target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
 
-add_library(open_hand src/preplanned_sequences/open_hand.cpp)
-target_link_libraries(open_hand ${catkin_LIBRARIES})
+add_library(open_gripper src/preplanned_sequences/open_gripper.cpp)
+target_link_libraries(open_gripper ${catkin_LIBRARIES})
 
 add_library(robot_please_approach src/preplanned_sequences/robot_please_approach.cpp)
 target_link_libraries(robot_please_approach ${catkin_LIBRARIES} ${move_base_to_manip_LIBRARIES})
@@ -200,7 +200,7 @@ add_dependencies(navigate_robot temoto_generate_messages_cpp)
 
 add_executable(preplanned_sequences src/preplanned_sequences.cpp)
 add_dependencies(preplanned_sequences ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_hand open_hand go_to_laser_scan robot_please_approach robot_please_scan robot_push_button )
+target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_gripper open_gripper go_to_laser_scan robot_please_approach robot_please_scan robot_push_button )
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		

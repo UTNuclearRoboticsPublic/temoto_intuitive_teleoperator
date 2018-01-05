@@ -91,9 +91,8 @@ public:
 
     // Preplanned sequences: these will interrupt other Temoto commands (except abort)
     // They can be generally any C++ file
-    {"close hand"},		// close gripper, a preplanned sequence
-    {"open hand"},		// open gripper, a preplanned sequence
-    {"enable compliance"},	// for UR robots
+    {"open gripper"},		// open gripper, a preplanned sequence
+    {"close gripper"},   // close gripper, a preplanned sequence
     {"robot please approach"},  // move the robot base and arm to reach the marker pose
     {"go to laser scan"},	// move the left arm to a pose for a laser scan
     {"robot push button"},	// make a small motion to push a button

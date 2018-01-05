@@ -177,24 +177,14 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.id = 0;
 
   if ( manip_stl_ == "" )  // No end-effector CAD model was specified.
-  {
-    ROS_WARN_STREAM("No end-effector CAD model was specified.");
-    cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
+    manip_stl_ = "package://temoto_support/meshes/manip_cube.stl";
 
-    cmd_pose_marker_.scale.x = 0.06;	// side
-    cmd_pose_marker_.scale.y = 0.02;	// thickness
-    cmd_pose_marker_.scale.z = 0.15;	// depth
-  }
-  else  // the user specified an end-effector CAD file
-  {
-    cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-    cmd_pose_marker_.mesh_resource = manip_stl_;
-    cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
-    cmd_pose_marker_.scale.x = 0.001;
-    cmd_pose_marker_.scale.y = 0.001;
-    cmd_pose_marker_.scale.z = 0.001;
-  }
+  cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
+  cmd_pose_marker_.mesh_resource = manip_stl_;
+  cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
+  cmd_pose_marker_.scale.x = 0.001;
+  cmd_pose_marker_.scale.y = 0.001;
+  cmd_pose_marker_.scale.z = 0.001;
 
   // Orange.
   cmd_pose_marker_.color.r = 1.0;

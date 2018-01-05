@@ -13,6 +13,6 @@ temoto:
   navigate: false
   manipulate: true
 
-  manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
+  manip_stl: "package://temoto_support/meshes/manip_cube.stl" #"package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
   input_voice_topic: "stt/spoken_text"
   movegroup: "right_ur5_temoto"

@@ -49,13 +49,13 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   temoto::Command latest_command;
   latest_command.ns = "temoto_voice_command";
   
-  // Print the output of pocketsphinx_recognizer
-  //ROS_INFO_STREAM("[interpret_utterance] I think you just said: " << s);
+  // Print the output of speech recognizer
+  //ROS_ERROR_STREAM("[interpret_utterance] I think you just said: " << utterance.data);
  
   // Compare the input utterance string to every string in command_list_.
   for(int it=0; it<command_list_.size(); ++it)
   {
-    if ( utterance.data.c_str() == command_list_.at(it)) {		// if valid voice command was found in utterance
+    if ( utterance.data == command_list_.at(it)) {		// if valid voice command was found in utterance
       latest_command.cmd_string = command_list_.at(it);		// take the command
       valid_command = true;
     } // end if
@@ -104,7 +104,11 @@ int main(int argc, char **argv)
   interpreter.sound_client_.say("Hello! I am ready to receive verbal instructions.");
 
   // wait for utterances
-  ros::spin();
+  while (ros::ok())
+  {
+    ros::Duration(0.1).sleep();
+    ros::spinOnce();
+  }
   
   return 0;
 } // end main

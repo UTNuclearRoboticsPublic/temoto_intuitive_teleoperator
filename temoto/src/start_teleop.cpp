@@ -819,21 +819,15 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       orientation_locked_ = true;
       return;
     }
-    else if (voice_command.cmd_string == "close hand")  // Close the gripper - a preplanned sequence
+    else if(voice_command.cmd_string == "close gripper")  // Close the gripper - a preplanned sequence
     {
       ROS_INFO("Closing the gripper ...");
       Teleoperator::triggerSequence(voice_command);
       return;
     }
-    else if(voice_command.cmd_string == "open hand")  // Open the gripper - a preplanned sequence
+    else if(voice_command.cmd_string == "open gripper")  // Open the gripper - a preplanned sequence
     {
       ROS_INFO("Opening the gripper ...");
-      Teleoperator::triggerSequence(voice_command);
-      return;
-    }
-    else if (voice_command.cmd_string == "enable compliance")  // Enable compliance for UR robots
-    {
-      ROS_INFO("Enabling UR compliance ...");
       Teleoperator::triggerSequence(voice_command);
       return;
     }
