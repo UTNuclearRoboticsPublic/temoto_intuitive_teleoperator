@@ -107,6 +107,20 @@ public:
                 publish = true;
             }
 
+            // Start joggign: "j" key
+            else if (kbCommand.key_code == 0x0024)
+            {
+                voiceCommand.data = "jog mode";
+                publish = true;
+            }
+
+            // Stop joggign: "s" key
+            else if (kbCommand.key_code == 0x001f)
+            {
+                voiceCommand.data = "stop jogging";
+                publish = true;
+            }
+
             if (publish)
             {
                 ROS_INFO("[fake voice commander] Publishing: %s", voiceCommand.data.c_str());

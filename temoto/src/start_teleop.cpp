@@ -97,7 +97,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   else if (manipulate_ && !navigate)
   {
     navT_or_manipF_ = false;		// if only manipulation is enabled, navT_or_manipF_ is FALSE
-    AMP_HAND_MOTION_ = 2;		// for manipulation
+    AMP_HAND_MOTION_ = 1;		// for manipulation
   }
 
   // Set up primary hand
@@ -684,7 +684,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into MANIPULATION mode  ...");
-      AMP_HAND_MOTION_ = 2;
+      AMP_HAND_MOTION_ = 1;
       temoto::ChangeTf switch_human2robot_tf;
       switch_human2robot_tf.request.navigate = false; // request a change of control mode
       switch_human2robot_tf.request.first_person_perspective = naturalT_or_invertedF_control_;  // preserve current control perspective
@@ -714,6 +714,20 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     }
     else
       ROS_INFO("Already in navigation mode.");
+    return;
+  }
+
+
+  if(voice_command.cmd_string == "close gripper")  // Close the gripper - a preplanned sequence
+  {
+    ROS_INFO("Closing the gripper ...");
+    Teleoperator::triggerSequence(voice_command);
+    return;
+  }
+  else if(voice_command.cmd_string == "open gripper")  // Open the gripper - a preplanned sequence
+  {
+    ROS_INFO("Opening the gripper ...");
+    Teleoperator::triggerSequence(voice_command);
     return;
   }
 
@@ -817,18 +831,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     {
       ROS_INFO("Ignoring hand rotation/orientation ...");
       orientation_locked_ = true;
-      return;
-    }
-    else if(voice_command.cmd_string == "close gripper")  // Close the gripper - a preplanned sequence
-    {
-      ROS_INFO("Closing the gripper ...");
-      Teleoperator::triggerSequence(voice_command);
-      return;
-    }
-    else if(voice_command.cmd_string == "open gripper")  // Open the gripper - a preplanned sequence
-    {
-      ROS_INFO("Opening the gripper ...");
-      Teleoperator::triggerSequence(voice_command);
       return;
     }
     else if (voice_command.cmd_string == "robot please approach")  // Move the robot base and arm to reach the marker pose
