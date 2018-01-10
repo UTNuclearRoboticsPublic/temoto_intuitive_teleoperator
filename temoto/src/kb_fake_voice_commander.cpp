@@ -30,8 +30,8 @@ public:
 
             // Run xmodmap -pk to display these
 
-            // Plan trajecory: "p" key
-            if (kbCommand.key_code == 0x0019 )
+            // Plan trajecory: "l" key
+            if (kbCommand.key_code == 0x0026 )
             {
                 voiceCommand.data = "robot please plan";
                 publish = true;
@@ -45,11 +45,11 @@ public:
             }
 
             // Limit directions: "l" key
-            else if (kbCommand.key_code == 0x0026)
-            {
-                voiceCommand.data = "limit directions";
-                publish = true;
-            }
+            //else if (kbCommand.key_code == 0x0026)
+            //{
+            //    voiceCommand.data = "limit directions";
+            //    publish = true;
+            //}
 
             // Limit directions: "f" key
             else if (kbCommand.key_code == 0x0021)
@@ -136,9 +136,9 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "fake_voice_commander");
 
     std::cout << std::endl << "* * * List of commands: * * *" << std::endl;
-    std::cout << "* p - robot please plan" << std::endl;
+    std::cout << "* l - robot please plan" << std::endl;
     std::cout << "* e - robot please execute" << std::endl;
-    std::cout << "* l - limit directions" << std::endl;
+    //std::cout << "* l - limit directions" << std::endl;
     std::cout << "* f - free directions" << std::endl;
     std::cout << "* x - ignore rotation" << std::endl;
     std::cout << "* r - consider rotation" << std::endl;

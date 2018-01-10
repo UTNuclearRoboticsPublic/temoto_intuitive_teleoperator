@@ -4,10 +4,10 @@ temoto_frames:
   mobile_base: "base_link"
 temoto:
   # LeapMotion or SpaceNav
-  leap_input: false
-  spacenav_input: true
+  leap_input: true
+  spacenav_input: false
   primary_hand: "left"
-  temoto_pose_cmd_topic: "spacenav/joy" #"leap_motion_output"
+  temoto_pose_cmd_topic: "leap_motion_output" #"spacenav/joy"
 
    # navigate or manipulate
   navigate: false
