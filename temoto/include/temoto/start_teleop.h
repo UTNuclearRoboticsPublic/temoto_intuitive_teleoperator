@@ -40,6 +40,7 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
 #include "tf/tf.h"
 #include "tf/transform_datatypes.h"
@@ -99,6 +100,8 @@ public:
   void processVoiceCommand(temoto::Command voice_command);
 
   void triggerSequence(temoto::Command& voice_command);
+
+  void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
   
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
@@ -154,6 +157,10 @@ private:
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
+
+  // Scale speed cmds when near obstacles
+  ros::Subscriber sub_nav_spd_;
+  double nav_speed_fraction_ = 1.;
 
   // ROS services/actions
   actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence

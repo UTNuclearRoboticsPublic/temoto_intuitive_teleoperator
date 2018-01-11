@@ -82,7 +82,6 @@ public:
   /** Asks for status from action server. */
   void checkNavigationStatus();
 
-
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;
    

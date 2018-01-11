@@ -61,6 +61,8 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
+  sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
+
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
@@ -149,6 +151,15 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
         {
           jog_twist_cmd_.twist.angular.z = jog_twist_cmd_.twist.linear.y;
         }
+
+        // Scale velocity if close to obstacle
+        jog_twist_cmd_.twist.linear.x *= nav_speed_fraction_;
+        jog_twist_cmd_.twist.linear.y *= nav_speed_fraction_;
+        jog_twist_cmd_.twist.linear.z *= nav_speed_fraction_;
+
+        jog_twist_cmd_.twist.angular.x *= nav_speed_fraction_;
+        jog_twist_cmd_.twist.angular.y *= nav_speed_fraction_;
+        jog_twist_cmd_.twist.angular.z *= nav_speed_fraction_;
 
         pub_jog_base_cmds_.publish(jog_twist_cmd_.twist);
         return;
@@ -589,6 +600,16 @@ void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector
   current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
   return;
 } // end processEndeffector()
+
+
+/** Callback function for /nav_collision_warning/spd_fraction
+ *  Scales teleoperated velocity cmds when an obstacle is close.
+ *  @param msg from the nav_collision_warning node
+ */
+void Teleoperator::nav_collision_cb(const std_msgs::Float64::ConstPtr& msg)
+{
+  nav_speed_fraction_ = msg->data;
+}
 
 
 /** Callback function for /temoto/preplanned_sequence/result
