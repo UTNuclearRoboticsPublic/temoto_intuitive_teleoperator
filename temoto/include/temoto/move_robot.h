@@ -56,6 +56,8 @@ class MoveRobotInterface {
     movegroup_(mg_name)
    {
      movegroup_.setPlannerId("RRTConnectkConfigDefault"/*"RRTstarkConfigDefault"*/);
+     movegroup_.setMaxVelocityScalingFactor(0.05);
+     movegroup_.setPlanningTime(1.9);
    };
    
    moveit::planning_interface::MoveGroup movegroup_;
