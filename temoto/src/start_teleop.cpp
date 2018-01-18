@@ -308,7 +308,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   // Ensure incoming data is in the right frame
   if ( current_pose_.header.frame_id != "base_link" )
   {
-    ROS_WARN("[start_teleop] The current pose is not being published in the base_link frame.");
+    ROS_WARN_THROTTLE(2, "[start_teleop] The current pose is not being published in the base_link frame.");
     return;
   }
 
