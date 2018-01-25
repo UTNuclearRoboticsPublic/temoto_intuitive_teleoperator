@@ -47,11 +47,13 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   // By default navigation is turned OFF
   bool navigate;
-  n.param<bool>("/temoto/navigate", navigate, false);
+  n.getParam("/temoto/navigate", navigate);
   // By default manipulation is turned ON
-  n.param<bool>("/temoto/manipulate", manipulate_, true);
+  n.getParam("/temoto/manipulate", manipulate_);
   // What pose input device?
-  n.param<bool>("/temoto/spacenav_input", spacenav_input_, false);
+  n.getParam("/temoto/spacenav_input", spacenav_input_);
+  // What end effector (frame)
+  n.getParam("/temoto_frames/end_effector", ee_name_);
 
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
@@ -64,7 +66,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
 
-  jog_twist_cmd_.header.frame_id = "temoto_end_effector";
+  jog_twist_cmd_.header.frame_id = ee_name_;
 
   // Set initial scale on incoming commands
   setScale();

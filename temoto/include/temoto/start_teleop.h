@@ -108,6 +108,7 @@ public:
   bool manipulate_ = true;		/// Is manipulation enabled?
   bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
+  std::string ee_name_;   /// Name of the end effector
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds

@@ -1,6 +1,6 @@
 temoto_frames:
   human_input: "current_cmd_frame"
-  end_effector: "temoto_end_effector"
+  end_effector: "right_ur5_temoto_ee"
   mobile_base: "base_link"
 temoto:
   spacenav_input: true
