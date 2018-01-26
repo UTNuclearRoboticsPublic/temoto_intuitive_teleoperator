@@ -61,11 +61,10 @@ public:
     ros::NodeHandle pn("~");
 
     // Get the STL's for the manip/nav hand markers from launch file, if any
-    std::string manip_stl;
     pn.param<std::string>("/temoto/manip_stl", manip_stl_, "");
 
     // Get all the relevant frame names from parameter server
-    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
+    pn.param<std::string>("/temoto_frames/human_input", current_cmd_frame_, "current_cmd_frame");
     pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
@@ -132,10 +131,10 @@ private:
   bool leap_input_;
 
   /** STL files for the hand markers. */
-  std::string manip_stl_;;
+  std::string manip_stl_;
   
   /** Human input frame. */
-  std::string human_frame_;
+  std::string current_cmd_frame_;
   
   /** Motion-planning control frame. */
   std::string eef_frame_;

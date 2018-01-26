@@ -50,7 +50,7 @@
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
-// #include "leap_motion_controller/Set.h"
+#include "leap_motion_controller/Set.h"
 #include "griffin_powermate/PowermateEvent.h"
 
 // Other includes
@@ -86,6 +86,8 @@ public:
   void setScale();
   
   //Callback functions
+  
+  void processLeapCmd(leap_motion_controller::Set leap_data);
 
   void processJoyCmd(sensor_msgs::Joy pose_cmd);
   
@@ -112,6 +114,7 @@ public:
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
+  bool leap_input_ = false;
   bool spacenav_input_ = true;
 
 private:

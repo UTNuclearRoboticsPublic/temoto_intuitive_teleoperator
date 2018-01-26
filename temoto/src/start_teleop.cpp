@@ -47,13 +47,14 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   // By default navigation is turned OFF
   bool navigate;
-  n.getParam("/temoto/navigate", navigate);
+  n.param<bool>("/temoto/navigate", navigate, false);
   // By default manipulation is turned ON
-  n.getParam("/temoto/manipulate", manipulate_);
+  n.param<bool>("/temoto/manipulate", manipulate_, true);
   // What pose input device?
-  n.getParam("/temoto/spacenav_input", spacenav_input_);
-  // What end effector (frame)
-  n.getParam("/temoto_frames/end_effector", ee_name_);
+  n.param<bool>("/temoto/leap_input", leap_input_, false);
+  n.param<bool>("/temoto/spacenav_input", spacenav_input_, false);
+  if (spacenav_input_ == leap_input_)
+    ROS_ERROR_STREAM("[start_teleop/Teleoperator()] 1 and only 1 pose input device can be enabled.");
 
   pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
@@ -436,6 +437,126 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   return;
 } // end processJoyCmd
 
+/** Callback function for absolute position commands.
+ *  For now, this is based on a LeapMotion controller.
+ *  It updates target pose based on latest left palm pose (any scaling and/or relevant limitations are also being applied).
+ *  Presence of the right hand is used to lock and unlock forward motion.
+ *  KEY_TAP gesture detection is currenly unimplemented.
+ *  @param leap_data temoto::Leapmsg published by leap_motion node
+ */
+
+// == Explanation of the frames ==
+// For navigation, leap_motion_frame is attached to base_link.
+// For manipulation, leap_motion_frame is attached to the end effector.
+// This switch occurs in graphics_and_frames.cpp
+// Scaling down drags the marker and the corresponding target position towards the actual origin of hand motion systems (i.e. Leap Motion Controller).
+// Leap Motion Controller has forward and left-right origins in the middle of the sensor display, which is OK, but up-down origin is on the keyboard.
+// Subtracting HEIGHT_OF_ZERO sets the up-down origin at HEIGHT_OF_ZERO above the keyboard and allows negative values which represent downward motion relative to end effector.
+
+void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
+{
+  // First, set up primary and secondary hand.
+  geometry_msgs::Pose primary_hand;
+  geometry_msgs::Pose secondary_hand;
+  bool primary_hand_is_present;
+  bool secondary_hand_is_present;
+  if ( primary_hand_is_left_ )
+  {
+    // copy left hand data to primary_hand and right hand data to secondary_hand
+    primary_hand = leap_data.left_hand.palm_pose.pose;
+    secondary_hand = leap_data.right_hand.palm_pose.pose;
+    primary_hand_is_present = leap_data.left_hand.is_present;
+    secondary_hand_is_present = leap_data.right_hand.is_present;
+  }
+  else
+  {
+    // copy right hand data to primary_hand and left hand data to secondary_hand
+    primary_hand = leap_data.right_hand.palm_pose.pose;
+    secondary_hand = leap_data.left_hand.palm_pose.pose;
+    primary_hand_is_present = leap_data.right_hand.is_present;
+    secondary_hand_is_present = leap_data.left_hand.is_present;
+  }
+  
+  // If position data is to be limited AND secondary hand is detected AND secondary hand wasn't there before, toggle position_fwd_only_.
+  if (position_limited_ && secondary_hand_is_present && !secondary_hand_before_)
+  {
+    (position_fwd_only_) ? position_fwd_only_ = false : position_fwd_only_ = true;	// toggles position_fwd_only value between TRUE and FALSE
+    secondary_hand_before_ = true;							// sets secondary_hand_before_ TRUE;
+    ROS_INFO("SECONDARY HAND DETECTED, position_fwd_only_ is now %d", position_fwd_only_);
+  }
+  else if (secondary_hand_is_present == false) secondary_hand_before_ = false;		// if secondary hand is not detected, set secondary_hand_before_ FALSE;
+  
+
+  // Leap Motion Controller coordinate orientation:
+  //		        LEAP
+  //		forward  -z
+  //		right		 x
+  //		up   		 y
+
+  // *** Following calculations are done in "current_cmd_frame" frame, i.e. incoming leap_data pose is relative to current_cmd_frame frame.
+
+  // Working variable for potential target pose calculated from the hand pose coming from Leap Motion Controller (i.e. stamped to current_cmd_frame frame).
+  geometry_msgs::PoseStamped scaled_pose;
+  // Header is copied without a change.
+  scaled_pose.header = leap_data.header;
+  // Reads the position of primary palm in meters, amplifies to translate default motion; scales to dynamically adjust range; offsets for better usability.
+  scaled_pose.pose.position.x = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.x - OFFSET_X_);
+  scaled_pose.pose.position.y = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.y - OFFSET_Y_);
+  scaled_pose.pose.position.z = pos_scale_*AMP_HAND_MOTION_*(primary_hand.position.z - OFFSET_Z_);
+
+
+  ////////////////////////////////////////////
+  // ORIENTATION
+  // of primary palm is not scaled
+  ////////////////////////////////////////////
+
+  // Extract the rpy from the command and save it to be applied after coordinate frame is corrected
+  tf::Quaternion q_cmd(primary_hand.orientation.x, primary_hand.orientation.y, primary_hand.orientation.z, primary_hand.orientation.w);
+
+  // Set orientation to match SpaceNav frame, no user-commanded rotation applied yet.
+  scaled_pose.pose.orientation.x = -0.5; scaled_pose.pose.orientation.y = 0.5; scaled_pose.pose.orientation.z = 0.5; scaled_pose.pose.orientation.w = 0.5;
+
+  // Appy the user-commanded rpy
+  tf::Quaternion q_orig, q_new;
+  quaternionMsgToTF(scaled_pose.pose.orientation , q_orig);  // Get the unmodified orientation of 'scaled_pose'
+  q_new = q_cmd*q_orig;  // Calculate the new orientation
+  q_new.normalize();
+  quaternionTFToMsg(q_new, scaled_pose.pose.orientation);  // Stuff the new rotation back into the pose. This requires conversion into a msg type 
+
+
+  // Applying relevant limitations to direction and/or orientation
+  if (navT_or_manipF_ && primary_hand_is_present)				// if in navigation mode, UP-DOWN motion of the hand is to be ignored
+  {
+    scaled_pose.pose.position.y = 0;
+    // preserve only pitch (rotation around UP vector) of hand orientation
+    scaled_pose.pose.orientation = extractOnlyPitch( scaled_pose.pose.orientation );
+  }
+  else if (position_limited_ && position_fwd_only_) 	// if position is limited and position_fwd_only_ is true
+  {
+    scaled_pose.pose.position.x = 0;
+    scaled_pose.pose.position.y = 0;
+  }
+  else if (position_limited_ && !position_fwd_only_)	// if position is limited and position_fwd_only_ is false, i.e. consider only sideways position change
+  {
+    scaled_pose.pose.position.z = 0;
+  }
+
+  if (orientation_locked_)				// if palm orientation is to be ignored 
+  {
+    // Overwrite orientation with identity quaternion.
+    scaled_pose.pose.orientation.x = 0;
+    scaled_pose.pose.orientation.y = 0;
+    scaled_pose.pose.orientation.z = 0;
+    scaled_pose.pose.orientation.w = 1;
+  }
+
+  // Setting properly scaled and limited pose as the absolute_pose_cmd_
+  absolute_pose_cmd_.pose = scaled_pose.pose;
+  absolute_pose_cmd_.header.frame_id = scaled_pose.header.frame_id;
+  absolute_pose_cmd_.header.stamp = ros::Time(0);
+
+  return;
+} // end processLeapCmd
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
@@ -811,32 +932,41 @@ temoto::Status Teleoperator::setStatus()
 
 void Teleoperator::setScale()
 {
-  if (navT_or_manipF_)
+  // No scaling seems to be needed with LeapMotion
+  if (leap_input_)
   {
-    if (in_jog_mode_)  // nav, jog mode
-    {
-      pos_scale_ = 0.3;
-      rot_scale_ = 0.2;
-    }
-    else  // nav, pt-to-pt mode
-    {
-      pos_scale_ = 0.008;
-      rot_scale_ = 0.01;
-    }
+    pos_scale_ = 1.;
+    rot_scale_ = 1.;
   }
-  else // manipulation
-  {
-    if (in_jog_mode_)  // manipulate, jog mode
+
+  // Scaling for incremental SpaceNav cmds
+  else
+    if (navT_or_manipF_)
     {
-      pos_scale_ = 1.;
-      rot_scale_ = 1.;
+      if (in_jog_mode_)  // nav, jog mode
+      {
+        pos_scale_ = 0.3;
+        rot_scale_ = 0.2;
+      }
+      else  // nav, pt-to-pt mode
+      {
+        pos_scale_ = 0.008;
+        rot_scale_ = 0.01;
+      }
     }
-    else  // manipulate, pt-to-pt mode
+    else // manipulation
     {
-      pos_scale_ = 0.008;
-      rot_scale_ = 0.01;
+      if (in_jog_mode_)  // manipulate, jog mode
+      {
+        pos_scale_ = 1.;
+        rot_scale_ = 1.;
+      }
+      else  // manipulate, pt-to-pt mode
+      {
+        pos_scale_ = 0.008;
+        rot_scale_ = 0.01;
+      }
     }
-  }
 }
 
 
@@ -866,7 +996,12 @@ int main(int argc, char **argv)
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, &temoto_teleop);
 
   ros::Subscriber sub_pose_cmd;
-  sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, &temoto_teleop);
+  if (temoto_teleop.leap_input_)
+  {
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processLeapCmd, &temoto_teleop);
+  }
+  else  // incremental pose cmds
+    sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, &temoto_teleop);
 
   ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
 

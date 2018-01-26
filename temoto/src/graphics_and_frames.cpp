@@ -107,7 +107,7 @@ void Visuals::initCameraFrames()
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
 void Visuals::initDisplacementArrow()
 {
-  displacement_arrow_.header.frame_id = human_frame_; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"; // x is forward, y is horizontal, z is vertical //
+  displacement_arrow_.header.frame_id = current_cmd_frame_; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"
   displacement_arrow_.header.stamp = ros::Time();
   displacement_arrow_.ns = "displacement_arrow";
   displacement_arrow_.id = 0;
@@ -145,7 +145,7 @@ void Visuals::initDisplacementArrow()
 /** Creates the initial marker that displays front-facing text. */
 void Visuals::initDistanceAsText()
 {
-  distance_as_text_.header.frame_id = human_frame_;
+  distance_as_text_.header.frame_id = current_cmd_frame_;
   distance_as_text_.header.stamp = ros::Time();
   distance_as_text_.id = 0;
   distance_as_text_.ns = "distance_as_text";
@@ -197,7 +197,7 @@ void Visuals::initHandPoseMarker()
 /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
 void Visuals::initActiveRangeBox()
 {
-  active_range_box_.header.frame_id = human_frame_;
+  active_range_box_.header.frame_id = current_cmd_frame_;
   active_range_box_.header.stamp = ros::Time();
   active_range_box_.ns = "active_range_box";
   active_range_box_.id = 0;
@@ -425,7 +425,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Attach the leap_motion frame to robot EE
     if (leap_input_)
     {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
+      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), eef_frame_, "leap_motion"));
     }
 
   } // end setting markers in MANIPULATION mode
@@ -467,12 +467,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     		point_of_view_.up.vector.x = 0;
     		point_of_view_.up.vector.z = 1;
 
-    		// Camera will be behind temoto_end_effector, somewhat elevated
+    		// Camera will be behind current_cmd_frame, somewhat elevated
     		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
     		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
     		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-    		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+    		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin current_cmd_frame frame, i.e. the palm of robotiq gripper
     		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
       else							// natural control mode top view
@@ -514,7 +514,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// move camera to align with end effector along the y-axis
 		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z;				// move camera to align with end effector along the z-axis
 
-		// Look at the origin of temoto_end_effector, i.e. all zeros
+		// Look at the origin of current_cmd_frame, i.e. all zeros
 		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
       else							// else means camera should be in the top position
