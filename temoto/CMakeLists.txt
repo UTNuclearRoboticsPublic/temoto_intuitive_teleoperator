@@ -151,6 +151,7 @@ target_link_libraries(close_gripper ${catkin_LIBRARIES})
 
 add_library(go_to_laser_scan src/preplanned_sequences/go_to_laser_scan.cpp)
 target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
+add_dependencies(go_to_laser_scan laser_stitcher)
 
 add_library(open_gripper src/preplanned_sequences/open_gripper.cpp)
 target_link_libraries(open_gripper ${catkin_LIBRARIES})
