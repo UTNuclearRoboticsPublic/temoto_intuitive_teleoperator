@@ -6,7 +6,7 @@
 
 
   <!-- Load temoto parameters -->
-  <rosparam command="load" file="$(find temoto)/config/vaultbot.yaml" />
+  <rosparam command="load" file="$(find temoto)/config/ur5_sim.yaml" />
 
   <!-- LeapMotion or SpaceMouse? -->
   <include file="$(find spacenav_node)/launch/classic.launch"/>
@@ -51,17 +51,7 @@
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
 
 
-  <!-- bringup proper rviz config -->
-  <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">
-    <arg name="config" value="true"/>
-  </include>
-
-
-  <!-- Open an rqt window for camera feeds -->
-  <node name="rqt_image_panel" pkg="vaultbot_drivers" type="rqt_image_panel.sh" />
-
-
-  <!-- Start soundplay_node that is responsible for voice synthesis -->
+  <!-- Start soundplay_node that is responsible for voice synthesis -->le
   <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
 
 
@@ -72,18 +62,7 @@
   <!-- A server to execute the preplanned sequences -->
   <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen" respawn="true" />
 
-
-  <!-- Move the robot base to reach a pose -->
-  <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
-
-
-  <!-- launch Xbox teleop -->
-  <include file="$(find husky_control)/launch/teleop.launch" />
-
   <!-- Arm jogging -->
   <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>
-
-  <!-- Nav collision warning for teleoperated base motions -->
-  <include file="$(find nav_collision_warning)/launch/nav_collision_warning.launch"/>
 
 </launch>
