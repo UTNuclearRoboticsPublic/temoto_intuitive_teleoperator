@@ -264,21 +264,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Setting markers & frames in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
-    /*
-    // ==  ARROW  ============================================ //
-    // Displacement arrow is not needed in NAVIGATION mode, so make it invisible.
-    displacement_arrow_.color.a = 0;
-    
-    // Publish displacement_arrow_
-    marker_publisher.publish( displacement_arrow_ );
-    
-    // ==  ACTIVE RANGE BOX  ================================= //
-    // Active range box is not needed in NAVIGATION mode, so make it invisible.
-    active_range_box_.color.a = 0;
-    
-    // Publish active_range_box_
-    marker_publisher.publish( active_range_box_ );   
-    */
     
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
@@ -301,22 +286,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     marker_publisher.publish( cmd_pose_marker_ );
 
-    // ==  TEXT LABEL  ======================================= //
-    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
-/*
-    std::vector<geometry_msgs::Point> temp;
-    geometry_msgs::Point zero_point;
-    temp.push_back(zero_point);
-    temp.push_back(cmd_pose_marker_.pose.position);
-    distance_as_text_.text = getDistanceString(temp);			// get the linear distance from zero to hand position end point as string
-    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by*3.;	// scale the display text based on scale_by value
-    distance_as_text_.pose.position = cmd_pose_marker_.pose.position;   // text is placed at the hand position
-    distance_as_text_.pose.position.z = 1;				// raise text above the robot
-    distance_as_text_.header.frame_id = cmd_pose_marker_.header.frame_id;
-
-    marker_publisher.publish( distance_as_text_ );			// publish info_text visualization_marker; this is picked up by rivz
-    */
-
     // Attach the leap_motion frame to base_link
     if (leap_input_)
     {
@@ -326,61 +295,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Setting markers & frames in MANIPULATION mode
   else
   {
-    /*
-    // ==  ARROW  ============================================ /
-    // Update arrow marker properties and make hand tracking visible in RViz
-    // Arrow marker is described in current_cmd_frame frame.
-    // The arrow start point is always (0.0.0)
-
-    geometry_msgs::PointStamped arrow_tip_stamped;
-    arrow_tip_stamped.header.frame_id = latest_status_.commanded_pose.header.frame_id;
-    arrow_tip_stamped.point = latest_status_.commanded_pose.pose.position;
-    geometry_msgs::PointStamped arrow_tip;
-    tf_listener_.transformPoint( "current_cmd_frame", arrow_tip_stamped, arrow_tip );
-    displacement_arrow_.points[1] = arrow_tip.point; // arrow end point
-
-    // Change arrow's thickness based on scaling factor
-    displacement_arrow_.scale.x = 0.01 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
-    displacement_arrow_.scale.y = 0.02 + latest_status_.scale_by/100;	// head diameter when start and end point are defined
-    displacement_arrow_.scale.z = 0;					// automatic head length
-    
-    displacement_arrow_.color.a = 1;					// the arrow is visibly solid
-
-    // Publish displacement_arrow_
-    marker_publisher.publish( displacement_arrow_ );
-
-    // ==  ACTIVE RANGE BOX  ================================= //
-    // Use the same origin/pivot point as the start point of the arrow marker
-    active_range_box_.pose.position = displacement_arrow_.points[0];
-    // Dimensions of the box are also based on the arrow
-    active_range_box_.scale.x = displacement_arrow_.points[1].x * 2;
-    active_range_box_.scale.y = displacement_arrow_.points[1].y * 2;
-    active_range_box_.scale.z = displacement_arrow_.points[1].z * 2;
-    // If setting pose in one plane only, give the aid box thickness of the arrow
-    if (!latest_status_.position_forward_only && !latest_status_.position_unlimited) active_range_box_.scale.z = displacement_arrow_.scale.x;
-    // Coloring the active range box
-    active_range_box_.color = displacement_arrow_.color;		// use the same color as arrow
-    active_range_box_.color.a = 0.2;					// make it visible
-
-    // Publish the active_range_box_
-    marker_publisher.publish( active_range_box_ );
-      
-    // ==  TEXT LABEL  ======================================= //
-    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
-    // Get the distance between start and end point as string
-    distance_as_text_.text = getDistanceString( displacement_arrow_.points );
-    distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
-    
-    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-
-    // A tweak for when the camera is on the top facing down; lift text above the arrow
-    if (!camera_is_aligned_) distance_as_text_.pose.position.y = 0.7*displacement_arrow_.scale.y; // lift text to the top of arrows head
-    // A tweak for bringing the text in front of the hand pose orientation marker for better visibility
-    if (latest_status_.orientation_free && camera_is_aligned_) distance_as_text_.pose.position.z += 0.1;   // shift text in front of the hand pose rotation marker
-
-    // Publish distance_as_text_
-    marker_publisher.publish( distance_as_text_ );
-  */
 
     // ==  HAND POSE MARKER  ================================= //
     cmd_pose_marker_.header.stamp = ros::Time();
@@ -475,73 +389,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
     		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
       }
-      else							// natural control mode top view
-      {
-    		//ROS_INFO("NATURAL: Switching to top view.");
-    		// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-    		point_of_view_.up.vector.x = 1;
-    		point_of_view_.up.vector.z = 0;
-
-    		// Camera is positioned directly above the end effector
-    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;
-    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
-    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;
-
-    		// Look at the end effector
-    		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
-    		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
-    		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
-    		ROS_INFO_STREAM(point_of_view_);
-      }
       
       latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
       pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
       adjust_camera_ = false;					// set adjust_camera 'false'
     } // if adjust_camera in_natural_control_mode
       
-    // adjust camera for INVERTED CONTROL MODE
-    if (!latest_status_.in_natural_control_mode)
-    {
-      if (camera_is_aligned_)					// here alignment means the camera is in the front facing the end effector
-      {
-		//ROS_INFO("INVERTED: Switching to aligned view.");
-		// Set +Z as 'UP'
-		point_of_view_.up.vector.z = 1;
-		point_of_view_.up.vector.x = 0;
-
-		// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x + EYE_DISPLACEMENT_FRONT_;
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// move camera to align with end effector along the y-axis
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z;				// move camera to align with end effector along the z-axis
-
-		// Look at the origin of temoto_end_effector, i.e. all zeros
-		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-      }
-      else							// else means camera should be in the top position
-      {
-		//ROS_INFO("INVERTED: Switching to top view.");
-		// In the top view of inverted control mode, -X is considered 'UP'.
-		point_of_view_.up.vector.z = 0;
-		point_of_view_.up.vector.x = -1;
-
-		// Camera is positioned directly above the end effector
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;				// Above the virtual FRONT view screen
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;	// Never closer than virtual TOP view screen, max distance at 1.5 m
-		  
-		// Look at the end effector
-		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
-		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
-      }
-      
-      latest_known_camera_mode_ = 2;				// set latest_known_camera_mode to 2, i.e inverted
-      pov_publisher.publish( point_of_view_ );		// publish a CameraPlacement msg
-
-      // RESET
-      adjust_camera_ = false;					// set adjust_camera 'false'
-
-    } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
 } // end Visuals::crunch()
 

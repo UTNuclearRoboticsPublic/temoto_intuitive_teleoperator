@@ -43,10 +43,6 @@
   <!-- MoveIt interface for right_ur5 -->
   <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
 
-
-  <!-- Navigation interface for move_base -->
-  <node name="navigate_robot" pkg="temoto" type="navigate_robot" />
-
   
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
 
