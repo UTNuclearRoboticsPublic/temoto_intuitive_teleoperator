@@ -84,11 +84,14 @@ int main(int argc, char **argv)
   ros::NodeHandle nh;
   ros::Rate r(10);
   
-  // Human input frame.
+  // Human input frame. (switches from nav to ee, depending on mode)
   std::string human_frame;
 
   // Navigation control frame.
   std::string mobile_frame;
+
+  // EE frame
+  std::string ee_frame;
   
   // Get proper frame names from parameter servers
   ROS_INFO("[human_frame_broadcaster] Getting frame names from parameter server.");
@@ -96,6 +99,9 @@ int main(int argc, char **argv)
   ROS_INFO("[human_frame_broadcaster] Human frame is: %s", human_frame.c_str());
   nh.param<std::string>("/temoto_frames/mobile_base", mobile_frame, "base_link");
   ROS_INFO("[human_frame_broadcaster] Mobile base frame is: %s", mobile_frame.c_str());
+  nh.param<std::string>("/temoto_frames/end_effector", ee_frame, "base_link");
+  ROS_INFO("[human_frame_broadcaster] End effector frame is: %s", ee_frame.c_str());
+
   
   // Create a tranform broadcaster.
   static tf::TransformBroadcaster tf_broadcaster;
@@ -126,22 +132,14 @@ int main(int argc, char **argv)
     else
     {
       // Set appropriate rotation for how current_cmd_frame data is interpreted.
-      if ( g_natural_perspective )						// "natural" means robot arm is direct extension of human hand
-      {
-        // in manipulation/natural control mode, current_cmd_frame is rotated RPY=(90, 0, -90) about base_link
-        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, -0.5, -0.5, 0.5) );// set current_cmd_frame about base_link
-      }
-      else // not "natural" means human is facing the robot, i.e. left and right are inverted.
-      {
-      	// in manipulation/inverted control mode, current_cmd_frame is rotated RPY=(90, 0, 90) about base_link
-        hand_frame_to_robot.setRotation( tf::Quaternion(0.5, 0.5, 0.5, 0.5) );  // set current_cmd_frame about base_link
-      }
+
+      hand_frame_to_robot.setRotation( tf::Quaternion(0., 0., 0., 1.) );// set current_cmd_frame about base_link
 
       // The origin shifts to the end effector
-      hand_frame_to_robot.setOrigin( tf::Vector3(latest_status.end_effector_pose.pose.position.x, latest_status.end_effector_pose.pose.position.y, latest_status.end_effector_pose.pose.position.z) );
+      hand_frame_to_robot.setOrigin( tf::Vector3(0., 0., 0.) );
 
       // Broadcast the new transform
-      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), "base_link", human_frame) );
+      tf_broadcaster.sendTransform( tf::StampedTransform(hand_frame_to_robot, ros::Time::now(), ee_frame, human_frame) );
     }
 
     ros::spinOnce();
