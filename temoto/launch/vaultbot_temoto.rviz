@@ -111,7 +111,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: RGB8
       Decay Time: 0
-      Enabled: false
+      Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: 24.5100002
@@ -124,11 +124,11 @@ Visualization Manager:
       Size (Pixels): 6
       Size (m): 0.0199999996
       Style: Points
-      Topic: /r200_left_arm/depth_registered/points
+      Topic: /camera_ee/depth_registered/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
-      Value: false
+      Value: true
     - Alpha: 0.699999988
       Class: rviz/Map
       Color Scheme: map
@@ -327,11 +327,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_r200_surrogate:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           left_ur5_r200_tower_mount_link:
             Alpha: 1
             Show Axes: false
@@ -362,11 +357,6 @@ Visualization Manager:
             Show Trail: false
             Value: true
           left_ur5_wrist_3_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          r200_left_arm_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -592,11 +582,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_r200_surrogate:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           left_ur5_r200_tower_mount_link:
             Alpha: 1
             Show Axes: false
@@ -627,11 +612,6 @@ Visualization Manager:
             Show Trail: false
             Value: true
           left_ur5_wrist_3_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          r200_left_arm_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -754,11 +734,19 @@ Visualization Manager:
           Value: false
         bulkhead_link:
           Value: false
+        camera_ee_depth_frame:
+          Value: false
+        camera_ee_depth_optical_frame:
+          Value: false
+        camera_ee_ir_frame:
+          Value: false
+        camera_ee_ir_optical_frame:
+          Value: false
         camera_ee_link:
           Value: false
-        camera_ir2_optical_frame:
+        camera_ee_rgb_frame:
           Value: false
-        camera_ir_optical_frame:
+        camera_ee_rgb_optical_frame:
           Value: false
         current_cmd_frame:
           Value: false
@@ -769,6 +757,8 @@ Visualization Manager:
         front_left_wheel_link:
           Value: false
         front_right_wheel_link:
+          Value: false
+        hokuyo_lidar:
           Value: false
         imu_link:
           Value: false
@@ -783,8 +773,6 @@ Visualization Manager:
         left_ur5_ee_link:
           Value: false
         left_ur5_forearm_link:
-          Value: false
-        left_ur5_r200_surrogate:
           Value: false
         left_ur5_r200_tower_mount_link:
           Value: false
@@ -805,20 +793,6 @@ Visualization Manager:
         map:
           Value: false
         odom:
-          Value: false
-        r200_left_arm_depth_frame:
-          Value: false
-        r200_left_arm_depth_optical_frame:
-          Value: false
-        r200_left_arm_ir2_frame:
-          Value: false
-        r200_left_arm_ir_frame:
-          Value: false
-        r200_left_arm_link:
-          Value: false
-        r200_left_arm_rgb_frame:
-          Value: false
-        r200_left_arm_rgb_optical_frame:
           Value: false
         rear_bumper_link:
           Value: false
@@ -860,8 +834,6 @@ Visualization Manager:
           Value: false
         sensor_mast:
           Value: false
-        spacenav:
-          Value: true
         temoto_end_effector:
           Value: false
         top_chassis_link:
@@ -894,23 +866,10 @@ Visualization Manager:
                           left_ur5_wrist_2_link:
                             left_ur5_wrist_3_link:
                               left_ur5_ee_link:
+                                hokuyo_lidar:
+                                  {}
                                 left_ur5_r200_tower_mount_link:
                                   {}
-                                r200_left_arm_link:
-                                  left_ur5_r200_surrogate:
-                                    {}
-                                  r200_left_arm_depth_frame:
-                                    r200_left_arm_depth_optical_frame:
-                                      {}
-                                  r200_left_arm_ir2_frame:
-                                    camera_ir2_optical_frame:
-                                      {}
-                                  r200_left_arm_ir_frame:
-                                    camera_ir_optical_frame:
-                                      {}
-                                  r200_left_arm_rgb_frame:
-                                    r200_left_arm_rgb_optical_frame:
-                                      {}
                               left_ur5_tool0:
                                 {}
                   left_ur5_tool0_controller:
@@ -931,16 +890,24 @@ Visualization Manager:
                                   {}
                                 right_ur5_sr300_mount_link:
                                   camera_ee_link:
+                                    camera_ee_depth_frame:
+                                      camera_ee_depth_optical_frame:
+                                        {}
+                                    camera_ee_ir_frame:
+                                      camera_ee_ir_optical_frame:
+                                        {}
+                                    camera_ee_rgb_frame:
+                                      camera_ee_rgb_optical_frame:
+                                        {}
                                     right_ur5_sr300_surrogate:
                                       {}
                                 temoto_end_effector:
-                                  {}
+                                  current_cmd_frame:
+                                    {}
                               right_ur5_tool0:
                                 {}
                   right_ur5_tool0_controller:
                     {}
-              current_cmd_frame:
-                {}
               front_bumper_link:
                 {}
               front_left_wheel_link:
@@ -959,8 +926,6 @@ Visualization Manager:
                 {}
               sensor_mast:
                 {}
-              spacenav:
-                {}
               top_chassis_link:
                 {}
               user_rail_link:
@@ -974,7 +939,7 @@ Visualization Manager:
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        hand_pose_marker: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.699999988
@@ -1032,9 +997,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4096
+      Max Intensity: 3429
       Min Color: 0; 0; 0
-      Min Intensity: 0
+      Min Intensity: 100
       Name: LaserScan
       Position Transformer: XYZ
       Queue Size: 10
@@ -1103,20 +1068,20 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 1.41421354
+      Distance: 2.49821973
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -0.359844208
-        Y: -0.680349946
-        Z: 1.57042122
+        X: -1.20659304
+        Y: -0.967459023
+        Z: 2.04734135
       Focus:
-        X: 0.640155792
-        Y: -0.680349946
-        Z: 0.570421219
+        X: 0.443004131
+        Y: -0.120473385
+        Z: 0.373260498
       Invert Z Axis: false
       Maintain Vertical Axis: true
       Mouse Enabled: true
@@ -1143,7 +1108,7 @@ Window Geometry:
     collapsed: false
   MotionPlanning - Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000028000001d0000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001fe000001e6000001cc00fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000004a00ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d00650000000000000006900000030000fffffffb0000000800540069006d00650100000000000004500000000000000000000003d2000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000028000001d0000000d700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001fe000001e6000001cc00fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000004a00ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000ad00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d00650000000000000006900000030000fffffffb0000000800540069006d00650100000000000004500000000000000000000003d2000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:

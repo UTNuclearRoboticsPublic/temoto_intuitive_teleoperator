@@ -81,7 +81,7 @@
   <include file="$(find husky_control)/launch/teleop.launch" />
 
   <!-- Arm jogging -->
-  <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch"/>
 
   <!-- Nav collision warning for teleoperated base motions -->
   <include file="$(find nav_collision_warning)/launch/nav_collision_warning.launch"/>
