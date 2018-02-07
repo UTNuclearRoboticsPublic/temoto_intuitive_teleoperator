@@ -312,6 +312,18 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     return;
   }
 
+  // If rotational components >> translational, ignore translation (and vice versa)
+  double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
+  double rot_mag = pow( pose_cmd.axes[3]*pose_cmd.axes[3] + pose_cmd.axes[4]*pose_cmd.axes[4] + pose_cmd.axes[5]*pose_cmd.axes[5], 2);
+  if ( trans_mag > 2.*rot_mag )
+  {
+    pose_cmd.axes[3] = 0.; pose_cmd.axes[4] = 0.; pose_cmd.axes[5] = 0.;
+  }
+  else if ( rot_mag > 2.*trans_mag )
+  {
+    pose_cmd.axes[0] = 0.; pose_cmd.axes[1] = 0.; pose_cmd.axes[2] = 0.;
+  }
+
   // Should we reset the command integrations?
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_integrated_cmds_)
@@ -963,8 +975,8 @@ void Teleoperator::setScale()
       }
       else  // manipulate, pt-to-pt mode
       {
-        pos_scale_ = 0.008;
-        rot_scale_ = 0.01;
+        pos_scale_ = 0.012;
+        rot_scale_ = 0.015;
       }
     }
 }

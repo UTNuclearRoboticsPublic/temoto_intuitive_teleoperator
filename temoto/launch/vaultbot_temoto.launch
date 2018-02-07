@@ -14,9 +14,9 @@
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
-  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
-  <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/>
-  <!-- <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" /> -->
+  <!-- <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" /> -->
+  <!-- <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/> -->
+  <include file="$(find google_speech_to_text)/launch/en-US.launch" />
 
 
   <!--                 -->
