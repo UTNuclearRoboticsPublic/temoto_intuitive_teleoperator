@@ -223,38 +223,6 @@ void Visuals::initActiveRangeBox()
   return;
 } // end Visuals::initActiveRangeBox()
 
-/** Calculates the distance between two points in meters or millimeters and returns it as a string.
- *  @param twoPointVector vector containing two points.
- *  @return string containing the distance between two points in meters or millimeters followed by ' m' or ' mm', respectively.
- */
-std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector)
-{
-  std::string  distance_as_text;
-  std::string  units;
-  int precision = 2;
-  // Calculate the distance between the first two points in the input vector of points
-//  double distance = sqrt( pow(twoPointVector[1].x-twoPointVector[0].x, 2) + pow(twoPointVector[1].y-twoPointVector[0].y, 2) + pow(twoPointVector[1].z-twoPointVector[0].z, 2));
-  double distance = calculateDistance(twoPointVector);
-  if (distance < 1)	// if distance is less than 1 m, use mm instead
-  {
-    // Convert the distance m -> mm
-    distance = distance*1000;
-    units = " mm";
-    if (distance >= 10) precision = 1;
-  }
-  else			// otherwise, use meters as units
-  {
-    units = " m";
-  }
-  // use the number of fractional digits specified by precision to put distance into stringstream and add units.
-  std::ostringstream sstream;
-  sstream << std::fixed << std::setprecision(precision) << distance << units;
-
-  // stringstream to string
-  distance_as_text = sstream.str();
-  return distance_as_text;
-}
-
 void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publisher)
 {
   // ============================================================ 

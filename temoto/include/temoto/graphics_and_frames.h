@@ -120,11 +120,6 @@ private:
   
   /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
   void initActiveRangeBox();
-  
-  // ___ HELPER FUNCTIONS ___
-  
-  /** Calculates the distance between two points in meters or millimeters and returns it as a string. */
-  std::string getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector);
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
 

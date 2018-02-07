@@ -930,12 +930,7 @@ temoto::Status Teleoperator::setStatus()
   status.orientation_free = !orientation_locked_;
   status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
-  //ROS_INFO_STREAM("[start_teleop] Commanded pose: " << absolute_pose_cmd_ );
-  //if (current_pose_.header.frame_id != "/base_link")
-  //{
-  //  ROS_INFO_STREAM(current_pose_.header.frame_id);
-  //  ROS_WARN("[start_teleop] The current robot pose is not being reported in base_link.");
-  //}
+
   status.position_forward_only = position_fwd_only_;
   status.in_navigation_mode = navT_or_manipF_;
 
@@ -962,8 +957,8 @@ void Teleoperator::setScale()
       }
       else  // nav, pt-to-pt mode
       {
-        pos_scale_ = 0.008;
-        rot_scale_ = 0.01;
+        pos_scale_ = 0.032;
+        rot_scale_ = 0.05;
       }
     }
     else // manipulation
@@ -982,7 +977,7 @@ void Teleoperator::setScale()
 }
 
 
-/** MAIN */
+// MAIN
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "start_teleop");

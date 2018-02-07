@@ -68,19 +68,13 @@ public:
   /** Callback function for navigation service request */
   bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
   
-  // Functions that actually communicates with move_base action server
-  
-  /** Plans and executes the navigation of the robot to the pose stored in navigation_goal_stamped_. This function is blocking. */
-  void requestNavigation();
+  // Functions that actually communicate with move_base action server
   
   /** Sends navigation_goal_stamped_ to move_base action server. Non-blocking. */
   void sendNavigationGoal();
 
   /** Sends a action request to cancel goal. */
   void abortNavigation();
-
-  /** Asks for status from action server. */
-  void checkNavigationStatus();
 
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;

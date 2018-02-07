@@ -61,26 +61,6 @@ bool NavigateRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
   }
 } // end serviceUpdate
 
-/** Plans and executes the navigation of the robot to the pose stored in navigation_goal_stamped_. This function is blocking. */
-void NavigateRobotInterface::requestNavigation()
-{
-  move_base_msgs::MoveBaseGoal goal;
-
-  goal.target_pose = navigation_goal_stamped_;
-  
-  ROS_INFO("[temoto/navigate_robot] Sending navigation goal");
-  move_base_aclient_.sendGoal(goal);
-
-  move_base_aclient_.waitForResult();
-
-  if(move_base_aclient_.getState() == actionlib::SimpleClientGoalState::SUCCEEDED)
-    ROS_INFO("[temoto/navigate_robot] Navigation goal achieved");
-  else
-    ROS_INFO("[temoto/navigate_robot] Navigation goal failed for some reason");
-  return;
-}
-
-
 /** Send navigation_goal_stamped_ to move_base action server. Non-blocking. */
 void NavigateRobotInterface::sendNavigationGoal()
 {
@@ -101,13 +81,6 @@ void NavigateRobotInterface::abortNavigation()
   return;
 }
 
-/** Asks for status from action server. */
-void NavigateRobotInterface::checkNavigationStatus()
-{
-  move_base_aclient_.getState();
-  return;
-}
-
 /** Main method. */
 int main(int argc, char** argv)
 {
@@ -115,7 +88,6 @@ int main(int argc, char** argv)
   ros::NodeHandle n;
   ros::Rate node_rate(30);
 
-  // Instance of NavigateRobotInterface
   NavigateRobotInterface navigateIF("move_base");
   
   // Set up service for navigate_robot_srv; if there's a service request, call serviceUpdate() function
@@ -123,6 +95,7 @@ int main(int argc, char** argv)
   
   while ( ros::ok() )
   {
+    ROS_ERROR_STREAM("[navigate_robot] looping");
     if (navigateIF.stop_navigation_)
     {
       navigateIF.abortNavigation();
@@ -133,7 +106,6 @@ int main(int argc, char** argv)
     {
       // navigate the robot to requested goal
       navigateIF.sendNavigationGoal();
-//       navigateIF.requestNavigation();
       navigateIF.new_navgoal_requested_ = false;
     }
       
