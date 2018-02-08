@@ -386,8 +386,8 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
-    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.03)) )
+      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
     else
     {
       ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
@@ -439,14 +439,14 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.03)) )
     {
       transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+      return;
     }
     else
     {
       ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
-      return;
     }
 
     absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
