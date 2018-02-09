@@ -386,7 +386,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.01)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.05)) )
       transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
     else
     {
@@ -438,7 +438,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.01)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.05)) )
     {
       transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
     }
