@@ -82,7 +82,7 @@ int main(int argc, char **argv)
 {
   ros::init(argc, argv, "human_frame_broadcaster");
   ros::NodeHandle nh;
-  ros::Rate r(10);
+  ros::Rate r(100);
   
   // Human input frame.
   std::string human_frame;
