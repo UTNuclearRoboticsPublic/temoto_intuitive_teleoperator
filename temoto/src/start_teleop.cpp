@@ -64,8 +64,13 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
 
   absolute_pose_cmd_.header.frame_id = "base_link";
-  absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
-  absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
+  absolute_pose_cmd_.pose.position.x = 0;
+  absolute_pose_cmd_.pose.position.y = 0;
+  absolute_pose_cmd_.pose.position.z = 0;
+  absolute_pose_cmd_.pose.orientation.x = 0;
+  absolute_pose_cmd_.pose.orientation.y = 0;
+  absolute_pose_cmd_.pose.orientation.z = 0;
+  absolute_pose_cmd_.pose.orientation.w = 1;
 
   jog_twist_cmd_.header.frame_id = "temoto_end_effector";
 
@@ -328,12 +333,20 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_integrated_cmds_)
   {
-    absolute_pose_cmd_.pose.orientation.x = 0.; absolute_pose_cmd_.pose.orientation.y = 0.; absolute_pose_cmd_.pose.orientation.z = 0.; absolute_pose_cmd_.pose.orientation.w = 1.;
+    absolute_pose_cmd_.pose.position.x = 0.;
+    absolute_pose_cmd_.pose.position.y = 0.;
+    absolute_pose_cmd_.pose.position.z = 0.;
+    absolute_pose_cmd_.pose.orientation.x = 0.;
+    absolute_pose_cmd_.pose.orientation.y = 0.;
+    absolute_pose_cmd_.pose.orientation.z = 0.;
+    absolute_pose_cmd_.pose.orientation.w = 1.;
 
-    absolute_pose_cmd_.pose.position.x = 0.; absolute_pose_cmd_.pose.position.y = 0.; absolute_pose_cmd_.pose.position.z = 0.;
-
-    incremental_orientation_cmd_.x = 0.; incremental_orientation_cmd_.y = 0.; incremental_orientation_cmd_.z = 0.;
-    incremental_position_cmd_.x = 0.; incremental_position_cmd_.y = 0.; incremental_position_cmd_.z = 0.;
+    incremental_position_cmd_.x = 0.;
+    incremental_position_cmd_.y = 0.;
+    incremental_position_cmd_.z = 0.;
+    incremental_orientation_cmd_.x = 0.;
+    incremental_orientation_cmd_.y = 0.;
+    incremental_orientation_cmd_.z = 0.;
 
     // Reset the flag
     reset_integrated_cmds_ = false;
@@ -365,7 +378,9 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
 
     tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x,
+                                                incremental_orientation_cmd_.y,
+                                                incremental_orientation_cmd_.z);
 
     // Add the incremental command to the previously commanded orientation
     quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
@@ -385,9 +400,11 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
 
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
-    incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
-    transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+    incoming_position_cmd.vector.x = incremental_position_cmd_.x;
+    incoming_position_cmd.vector.y = incremental_position_cmd_.y;
+    incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+    if (transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)))
+      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
     else
     {
       ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
@@ -409,49 +426,69 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   //////////////////////////////
   if ( !navT_or_manipF_ && !in_jog_mode_ )
   {
+    // TODO:
+    //  1. REMOVE THE CIRCULAR DEPENDENCY (absolute_pose_cmd_ ->
+    //spacenav frame -> absolute_pose_cmd)
+    //  2. ORIENTATION SHOULD ROTATE THE MARKER AROUND ITS OWN AXES.
+    //RIGHT NOW EVERYTHING IS ROTATED AROUND temoto_end_effector.
+
     // Integrate for point-to-point motion
-
-    // ORIENTATION
-    // new incremental rpy command
-    incremental_orientation_cmd_.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-    incremental_orientation_cmd_.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-    incremental_orientation_cmd_.z = rot_scale_*pose_cmd.axes[5];  // about z axis
-
-    tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x, incremental_orientation_cmd_.y, incremental_orientation_cmd_.z);
-
-    // Add the incremental command to the previously commanded orientation
-    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-    q_previous_cmd *= q_incremental;  // Calculate the new orientation
-    q_previous_cmd.normalize();
-    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
+    
     // POSITION
-
     // Integrate the incremental cmd. It persists even if the robot moves
     incremental_position_cmd_.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
     incremental_position_cmd_.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
     incremental_position_cmd_.z += pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
+    // ORIENTATION
+    // new incremental rpy command
+    incremental_orientation_cmd_.x = rot_scale_ * pose_cmd.axes[3];  // about x axis
+    incremental_orientation_cmd_.y = rot_scale_ * pose_cmd.axes[4];  // about y axis
+    incremental_orientation_cmd_.z = rot_scale_ * pose_cmd.axes[5];  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.x,
+                                                incremental_orientation_cmd_.y,
+                                                incremental_orientation_cmd_.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
 
     // Incoming position cmds are in the spacenav frame
     // So convert them to base_link like everything else
 
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
-    incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.1)) )
-    {
-      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-    }
-    else
-    {
-      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
-      return;
-    }
+    incoming_position_cmd.vector.x = incremental_position_cmd_.x;
+    incoming_position_cmd.vector.y = incremental_position_cmd_.y;
+    incoming_position_cmd.vector.z = incremental_position_cmd_.z;
+    //if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.1)) )
+    //{
+    //  transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+    //}
+    //else
+    //{
+    //  ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
+    //  return;
+    //}
 
     absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
     absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
     absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+
+//    tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
+//    tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+//    spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
+//
+//    geometry_msgs::TransformStamped spacenav_tf_msg;
+//    spacenav_tf_msg.header.stamp = ros::Time::now();
+//    spacenav_tf_msg.header.frame_id = "base_link";
+//    spacenav_tf_msg.child_frame_id = "spacenav";
+//    spacenav_tf_msg.transform = toMsg(spacenav_tf_);
+//    tf_br_.sendTransform(spacenav_tf_msg);
   }
 
   return;
@@ -927,7 +964,7 @@ void Teleoperator::triggerSequence(temoto::Command& voice_command)
  *  This is used in marker publication.
  *  @return temoto::Status message.
  */
-temoto::Status Teleoperator::setStatus()
+temoto::Status Teleoperator::getStatus()
 {
   temoto::Status status;
   status.scale_by = pos_scale_;			// Latest pos_scale_ value
@@ -944,7 +981,7 @@ temoto::Status Teleoperator::setStatus()
   status.in_navigation_mode = navT_or_manipF_;
 
   return status;
-} // end setStatus()
+} // end getStatus()
 
 void Teleoperator::setScale()
 {
@@ -1037,7 +1074,7 @@ int main(int argc, char **argv)
     }
 
     // publish current status
-    pub_status.publish( temoto_teleop.setStatus() );
+    pub_status.publish( temoto_teleop.getStatus() );
     
     ros::spinOnce();
     node_rate.sleep();

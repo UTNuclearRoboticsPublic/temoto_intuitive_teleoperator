@@ -81,7 +81,7 @@ public:
   
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
-  temoto::Status setStatus();
+  temoto::Status getStatus();
 
   void setScale();
   
