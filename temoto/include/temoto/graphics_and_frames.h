@@ -39,9 +39,12 @@
 #include "visualization_msgs/Marker.h"
 #include "geometry_msgs/Pose.h"
 #include "std_srvs/Empty.h"
-#include <tf/transform_broadcaster.h>
-#include <tf/transform_datatypes.h>
-#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2/LinearMath/Vector3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
@@ -84,8 +87,8 @@ public:
     latest_known_camera_mode_ = 0;
 
     // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
-    leap_motion_tf_.setOrigin( tf::Vector3(0., 0., 0.) );
-    leap_motion_tf_.setRotation(  tf::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
+    leap_motion_tf_.setOrigin( tf2::Vector3(0., 0., 0.) );
+    leap_motion_tf_.setRotation(  tf2::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
   };
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
@@ -166,12 +169,12 @@ private:
   const double EYE_DISPLACEMENT_TOP_ = 1.;
 
   /** Show the hand marker frame in RViz **/
-  tf::TransformBroadcaster tf_br_;
-  tf::Transform spacenav_tf_;
-  tf::Transform leap_motion_tf_;
+  tf2_ros::TransformBroadcaster tf_br_;
+  tf2::Transform spacenav_tf_;
+  tf2::Transform leap_motion_tf_;
 
   /** ROS transform listener **/
-  tf::TransformListener tf_listener_;
+//  tf2_ros::TransformListener tf_listener_;
 };
 
 #endif

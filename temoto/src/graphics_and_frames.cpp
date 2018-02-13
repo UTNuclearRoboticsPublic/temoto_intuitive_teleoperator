@@ -257,7 +257,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Attach the leap_motion frame to base_link
     if (leap_input_)
     {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
+      geometry_msgs::TransformStamped leap_tf_msg;
+      leap_tf_msg.header.stamp = ros::Time::now();
+      leap_tf_msg.header.frame_id = "base_link";
+      leap_tf_msg.child_frame_id = "leap_motion";
+      leap_tf_msg.transform = toMsg(leap_motion_tf_);
+      tf_br_.sendTransform(leap_tf_msg);
     }
   }
   // Setting markers & frames in MANIPULATION mode
@@ -280,10 +285,11 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     {
       // 180* about y (pitch) then 90* about z (yaw)
       // Multiply by this second quaternion to rotate it.
-      tf::Quaternion q_orig, q_rot( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
-      quaternionMsgToTF(cmd_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
+      tf2::Quaternion q_orig, q_rot;
+      q_rot.setRPY( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
+      tf2::fromMsg(cmd_pose_marker_.pose.orientation, q_orig);  // Get the original orientation
       q_orig *= q_rot;  // Calculate the new orientation
-      quaternionTFToMsg(q_orig, cmd_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
+      cmd_pose_marker_.pose.orientation = tf2::toMsg(q_orig);  // Stuff it back into the marker pose
     }
 
     // Paint the marker based on restricted motion
@@ -299,15 +305,27 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Add the spacenav frame
     if (!leap_input_)
     {
-      spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-      spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-      tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+      tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
+      tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+      spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
+
+      geometry_msgs::TransformStamped spacenav_tf_msg;
+      spacenav_tf_msg.header.stamp = ros::Time::now();
+      spacenav_tf_msg.header.frame_id = "base_link";
+      spacenav_tf_msg.child_frame_id = "spacenav";
+      spacenav_tf_msg.transform = toMsg(spacenav_tf_);
+      tf_br_.sendTransform(spacenav_tf_msg);
     }
 
     // Attach the leap_motion frame to robot EE
     if (leap_input_)
     {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
+      geometry_msgs::TransformStamped spacenav_tf_msg;
+      spacenav_tf_msg.header.stamp = ros::Time::now();
+      spacenav_tf_msg.header.frame_id = "temoto_end_effector";
+      spacenav_tf_msg.child_frame_id = "leap_motion";
+      spacenav_tf_msg.transform = toMsg(leap_motion_tf_);
+      tf_br_.sendTransform(spacenav_tf_msg);
     }
 
   } // end setting markers in MANIPULATION mode
