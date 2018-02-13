@@ -8,9 +8,8 @@
   <!-- Load temoto parameters -->
   <rosparam command="load" file="$(find temoto)/config/vaultbot.yaml" />
 
-  <!-- LeapMotion or SpaceMouse? -->
-  <!-- <include file="$(find spacenav_node)/launch/classic.launch"/> -->
-  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
+  <!-- Type of pose controller -->
+  <include file="$(find spacenav_node)/launch/classic.launch"/>
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->

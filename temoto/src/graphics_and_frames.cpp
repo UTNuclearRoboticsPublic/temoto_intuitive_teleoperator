@@ -300,88 +300,11 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     cmd_pose_marker_.color.a = 1;
 
     marker_publisher.publish( cmd_pose_marker_ );
-
-    // ==  TEXT LABEL  ======================================= //
-    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
-/*
-    std::vector<geometry_msgs::Point> temp;
-    geometry_msgs::Point zero_point;
-    temp.push_back(zero_point);
-    temp.push_back(cmd_pose_marker_.pose.position);
-    distance_as_text_.text = getDistanceString(temp);			// get the linear distance from zero to hand position end point as string
-    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by*3.;	// scale the display text based on scale_by value
-    distance_as_text_.pose.position = cmd_pose_marker_.pose.position;   // text is placed at the hand position
-    distance_as_text_.pose.position.z = 1;				// raise text above the robot
-    distance_as_text_.header.frame_id = cmd_pose_marker_.header.frame_id;
-
-    marker_publisher.publish( distance_as_text_ );			// publish info_text visualization_marker; this is picked up by rivz
-    */
-
-    // Attach the leap_motion frame to base_link
-    if (leap_input_)
-    {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
-    }
   }
+
   // Setting markers & frames in MANIPULATION mode
   else
   {
-    /*
-    // ==  ARROW  ============================================ /
-    // Update arrow marker properties and make hand tracking visible in RViz
-    // Arrow marker is described in current_cmd_frame frame.
-    // The arrow start point is always (0.0.0)
-
-    geometry_msgs::PointStamped arrow_tip_stamped;
-    arrow_tip_stamped.header.frame_id = latest_status_.commanded_pose.header.frame_id;
-    arrow_tip_stamped.point = latest_status_.commanded_pose.pose.position;
-    geometry_msgs::PointStamped arrow_tip;
-    tf_listener_.transformPoint( "current_cmd_frame", arrow_tip_stamped, arrow_tip );
-    displacement_arrow_.points[1] = arrow_tip.point; // arrow end point
-
-    // Change arrow's thickness based on scaling factor
-    displacement_arrow_.scale.x = 0.01 + latest_status_.scale_by/1000;	// shaft diameter when start and end point are defined
-    displacement_arrow_.scale.y = 0.02 + latest_status_.scale_by/100;	// head diameter when start and end point are defined
-    displacement_arrow_.scale.z = 0;					// automatic head length
-    
-    displacement_arrow_.color.a = 1;					// the arrow is visibly solid
-
-    // Publish displacement_arrow_
-    marker_publisher.publish( displacement_arrow_ );
-
-    // ==  ACTIVE RANGE BOX  ================================= //
-    // Use the same origin/pivot point as the start point of the arrow marker
-    active_range_box_.pose.position = displacement_arrow_.points[0];
-    // Dimensions of the box are also based on the arrow
-    active_range_box_.scale.x = displacement_arrow_.points[1].x * 2;
-    active_range_box_.scale.y = displacement_arrow_.points[1].y * 2;
-    active_range_box_.scale.z = displacement_arrow_.points[1].z * 2;
-    // If setting pose in one plane only, give the aid box thickness of the arrow
-    if (!latest_status_.position_forward_only && !latest_status_.position_unlimited) active_range_box_.scale.z = displacement_arrow_.scale.x;
-    // Coloring the active range box
-    active_range_box_.color = displacement_arrow_.color;		// use the same color as arrow
-    active_range_box_.color.a = 0.2;					// make it visible
-
-    // Publish the active_range_box_
-    marker_publisher.publish( active_range_box_ );
-      
-    // ==  TEXT LABEL  ======================================= //
-    // Update display_distance parameters (display_distance operates relative to current_cmd_frame frame)
-    // Get the distance between start and end point as string
-    distance_as_text_.text = getDistanceString( displacement_arrow_.points );
-    distance_as_text_.pose.position = displacement_arrow_.points[1];	// text is positioned at the end of the arrow marker
-    
-    distance_as_text_.scale.z = 0.1 + latest_status_.scale_by/20;	// scale the display text based on scale_by value
-
-    // A tweak for when the camera is on the top facing down; lift text above the arrow
-    if (!camera_is_aligned_) distance_as_text_.pose.position.y = 0.7*displacement_arrow_.scale.y; // lift text to the top of arrows head
-    // A tweak for bringing the text in front of the hand pose orientation marker for better visibility
-    if (latest_status_.orientation_free && camera_is_aligned_) distance_as_text_.pose.position.z += 0.1;   // shift text in front of the hand pose rotation marker
-
-    // Publish distance_as_text_
-    marker_publisher.publish( distance_as_text_ );
-  */
-
     // ==  HAND POSE MARKER  ================================= //
     cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
@@ -415,19 +338,9 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     marker_publisher.publish( cmd_pose_marker_ );
 
     // Add the spacenav frame
-    if (!leap_input_)
-    {
-      spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-      spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-      tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
-    }
-
-    // Attach the leap_motion frame to robot EE
-    if (leap_input_)
-    {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), eef_frame_, "leap_motion"));
-    }
-
+    spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
+    spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
+    tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
   } // end setting markers in MANIPULATION mode
     
 
