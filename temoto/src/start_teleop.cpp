@@ -412,12 +412,15 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     geometry_msgs::Vector3Stamped incoming_position_cmd;
     incoming_position_cmd.header.frame_id = "spacenav";
     incoming_position_cmd.vector.x = incremental_position_cmd_.x; incoming_position_cmd.vector.y  = incremental_position_cmd_.y; incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)) )
+    if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.05)) )
+    {
       transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-
-    absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+      absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
+      absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
+      absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+    }
+    else
+      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
   }
 
   return;
@@ -653,93 +656,16 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Planning and moving ...");
       callRobotMotionInterface(low_level_cmds::GO);
       return;
-    }
-    else if (voice_command.cmd_string == "robot plan home")
-    {
-      ROS_INFO("Planning to home ...");
-      callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
-      return;
-    }
-    else if (voice_command.cmd_string == "robot plan home")
-    {
-      ROS_INFO("Planning to home ...");
-      callRobotMotionInterfaceWithNamedTarget(low_level_cmds::PLAN, "home_pose");
-      return;
-    }    
+    }  
     else if (voice_command.cmd_string == "robot please go home")
     {
       ROS_INFO("Planning and moving to home ...");
       callRobotMotionInterfaceWithNamedTarget(low_level_cmds::GO, "home_pose");
       return;
     }
-    else if (voice_command.cmd_string == "natural control mode")
-    {
-      ROS_INFO("Using natural control perspective ...");
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.first_person_perspective = true;	// request a change of control perspective
-      switch_human2robot_tf.request.navigate = navT_or_manipF_;	// preserve current navigation/manipulation mode
-      // if service request successful, change the value of control perspective in this node
-      tf_change_client_.call( switch_human2robot_tf );
-      naturalT_or_invertedF_control_ = true;
-      return;
-    }
-    else if (voice_command.cmd_string == "inverted control mode")
-    {
-      ROS_INFO("Using inverted control perspective ...");
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.first_person_perspective = false;	// request a change of control perspective
-      switch_human2robot_tf.request.navigate = navT_or_manipF_;	// preserve current navigation/manipulation mode
-
-      tf_change_client_.call( switch_human2robot_tf );
-      naturalT_or_invertedF_control_ = false;
-      return;
-    }
-    else if (voice_command.cmd_string == "free directions")
-    {
-      ROS_INFO("Acknowledging 'Free directions' ...");
-      position_limited_ = false;
-      position_fwd_only_ = false;				// once input position is not limited, there cannot be "forward only" mode
-      return;
-    }
-    else if (voice_command.cmd_string == "limit directions")
-    {
-      ROS_INFO("Acknowledging 'Limit directions' ...");
-      position_limited_ = true;
-      return;
-    }
-    else if (voice_command.cmd_string == "consider rotation")
-    {
-      ROS_INFO("Considering hand rotation/orientation ...");
-      orientation_locked_ = false;
-      return;
-    }
-    else if (voice_command.cmd_string == "ignore rotation")
-    {
-      ROS_INFO("Ignoring hand rotation/orientation ...");
-      orientation_locked_ = true;
-      return;
-    }
-    else if (voice_command.cmd_string == "robot please approach")  // Move the robot base and arm to reach the marker pose
-    {
-      ROS_INFO("Approaching ...");
-      Teleoperator::triggerSequence(voice_command);
-      return;
-    }
     else if (voice_command.cmd_string == "go to laser scan")  // Move the left arm to a pose for a laser scan
     {
       ROS_INFO("Moving to a pose for laser scanning ...");
-      Teleoperator::triggerSequence(voice_command);
-      return;
-    }
-    else if (voice_command.cmd_string == "robot please scan")  // start a lidar scan
-    {
-      ROS_INFO("Beginning a lidar scan ...");
-      Teleoperator::triggerSequence(voice_command);
-      return;
-    }
-    else if (voice_command.cmd_string == "robot push button")  // start a lidar scan
-    {
-      ROS_INFO("Pushing a button ...");
       Teleoperator::triggerSequence(voice_command);
       return;
     }

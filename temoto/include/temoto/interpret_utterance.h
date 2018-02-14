@@ -76,12 +76,6 @@ public:
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
     {"robot plan and go"},		// command PLAN&EXECUTE
-    {"robot plan home"},	// command PLAN to a saved home pose
-    {"robot please go home"},	// command PLAN&EXECUTE the home pose
-    {"natural control mode"},	// control mode determines whether operator has natural or inverted view
-    {"inverted control mode"},	// control mode determines whether operator has natural or inverted view
-    {"free directions"},		// complete position of hand is used
-    {"limit directions"},		// some directions may be limited
     {"consider rotation"},	// factors in hand orientation
     {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
@@ -93,10 +87,7 @@ public:
     // They can be generally any C++ file
     {"open gripper"},		// open gripper, a preplanned sequence
     {"close gripper"},   // close gripper, a preplanned sequence
-    {"robot please approach"},  // move the robot base and arm to reach the marker pose
-    {"go to laser scan"},	// move the left arm to a pose for a laser scan
-    {"robot push button"},	// make a small motion to push a button
-    {"robot please scan"}	// do a lidar scan
+    {"go to laser scan"}	// move the left arm to a pose for a laser scan
   };
 
   ros::NodeHandle n_;
