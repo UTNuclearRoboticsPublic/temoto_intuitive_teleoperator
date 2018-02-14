@@ -45,6 +45,9 @@
 #include "tf/tf.h"
 #include "tf/transform_datatypes.h"
 #include "tf/transform_listener.h"
+//tf2
+#include "tf2_ros/transform_broadcaster.h"
+#include "tf2/LinearMath/Transform.h"
 
 // temoto includes
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
@@ -83,6 +86,8 @@ public:
   
   temoto::Status getStatus();
 
+  void getAbsolutePoseMsg(geometry_msgs::PoseStamped& pose_msg);
+
   void setScale();
   
   //Callback functions
@@ -120,6 +125,9 @@ private:
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;
 
+  /// Transform publisher
+  tf2_ros::TransformBroadcaster tf_br_;
+
   /// Scaling factor
   double pos_scale_;
   double rot_scale_;
@@ -136,10 +144,16 @@ private:
   geometry_msgs::PoseStamped current_pose_;
   
   /// For absolute pose commands, as from LeapMotion
-  geometry_msgs::PoseStamped absolute_pose_cmd_;
+//  geometry_msgs::PoseStamped absolute_pose_cmd_;
+  tf2::Vector3 absolute_position_cmd_;
+  tf2::Quaternion absolute_orientation_cmd_;
+
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
-  geometry_msgs::Vector3 incremental_position_cmd_;
-  geometry_msgs::Vector3 incremental_orientation_cmd_;
+  tf2::Vector3 incremental_position_cmd_;
+  tf2::Quaternion incremental_orientation_cmd_;
+
+  // Integrated transform of SpaceMouse
+  tf2::Transform cmd_tf_;
 
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
