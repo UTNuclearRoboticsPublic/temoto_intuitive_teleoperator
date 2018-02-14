@@ -8,7 +8,6 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
         - /MotionPlanning1/Planned Path1
-        - /TF1/Frames1
       Splitter Ratio: 0.680511
     Tree Height: 321
   - Class: rviz/Selection
@@ -777,203 +776,19 @@ Visualization Manager:
         Show Robot Visual: true
       Value: true
     - Class: rviz/TF
-      Enabled: true
+      Enabled: false
       Frame Timeout: 15
       Frames:
         All Enabled: false
-        SICK_LMS291_link:
-          Value: false
-        base_footprint:
-          Value: false
-        base_link:
-          Value: false
-        bulkhead_link:
-          Value: false
-        camera_ee_link:
-          Value: false
-        current_cmd_frame:
-          Value: false
-        floorplane_link:
-          Value: false
-        front_bumper_link:
-          Value: false
-        front_left_wheel_link:
-          Value: false
-        front_right_wheel_link:
-          Value: false
-        imu_link:
-          Value: false
-        inertial_link:
-          Value: false
-        laser:
-          Value: false
-        laser_scan_link:
-          Value: false
-        left_ur5_2_finger_gripper_link:
-          Value: false
-        left_ur5_base:
-          Value: false
-        left_ur5_base_link:
-          Value: false
-        left_ur5_ee_link:
-          Value: false
-        left_ur5_forearm_link:
-          Value: false
-        left_ur5_ft_link:
-          Value: false
-        left_ur5_r200_mount_link:
-          Value: false
-        left_ur5_shoulder_link:
-          Value: false
-        left_ur5_temoto_ee:
-          Value: false
-        left_ur5_tool0:
-          Value: false
-        left_ur5_upper_arm_link:
-          Value: false
-        left_ur5_wrist_1_link:
-          Value: false
-        left_ur5_wrist_2_link:
-          Value: false
-        left_ur5_wrist_3_link:
-          Value: false
-        rear_bumper_link:
-          Value: false
-        rear_left_wheel_link:
-          Value: false
-        rear_right_wheel_link:
-          Value: false
-        right_ur5_2_finger_gripper_link:
-          Value: false
-        right_ur5_base:
-          Value: false
-        right_ur5_base_link:
-          Value: false
-        right_ur5_ee_link:
-          Value: false
-        right_ur5_forearm_link:
-          Value: false
-        right_ur5_ft_link:
-          Value: false
-        right_ur5_shoulder_link:
-          Value: false
-        right_ur5_sr300_mount_link:
-          Value: false
-        right_ur5_sr300_surrogate:
-          Value: false
-        right_ur5_temoto_ee:
-          Value: false
-        right_ur5_tool0:
-          Value: false
-        right_ur5_upper_arm_link:
-          Value: false
-        right_ur5_wrist_1_link:
-          Value: false
-        right_ur5_wrist_2_link:
-          Value: false
-        right_ur5_wrist_3_link:
-          Value: false
-        screen_link:
-          Value: false
-        sensor_mast:
-          Value: false
-        sensor_mast_mount_link:
-          Value: false
-        spacenav:
-          Value: true
-        top_chassis_link:
-          Value: false
-        user_rail_link:
-          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        base_link:
-          base_footprint:
-            floorplane_link:
-              {}
-          bulkhead_link:
-            SICK_LMS291_link:
-              laser:
-                {}
-              laser_scan_link:
-                {}
-            left_ur5_base_link:
-              left_ur5_base:
-                {}
-              left_ur5_shoulder_link:
-                left_ur5_upper_arm_link:
-                  left_ur5_forearm_link:
-                    left_ur5_wrist_1_link:
-                      left_ur5_wrist_2_link:
-                        left_ur5_wrist_3_link:
-                          left_ur5_ee_link:
-                            left_ur5_2_finger_gripper_link:
-                              {}
-                            left_ur5_ft_link:
-                              {}
-                            left_ur5_r200_mount_link:
-                              {}
-                            left_ur5_temoto_ee:
-                              {}
-                          left_ur5_tool0:
-                            {}
-            right_ur5_base_link:
-              right_ur5_base:
-                {}
-              right_ur5_shoulder_link:
-                right_ur5_upper_arm_link:
-                  right_ur5_forearm_link:
-                    right_ur5_wrist_1_link:
-                      right_ur5_wrist_2_link:
-                        right_ur5_wrist_3_link:
-                          right_ur5_ee_link:
-                            right_ur5_2_finger_gripper_link:
-                              {}
-                            right_ur5_ft_link:
-                              {}
-                            right_ur5_sr300_mount_link:
-                              camera_ee_link:
-                                right_ur5_sr300_surrogate:
-                                  {}
-                            right_ur5_temoto_ee:
-                              {}
-                          right_ur5_tool0:
-                            {}
-            screen_link:
-              {}
-            sensor_mast_mount_link:
-              sensor_mast:
-                {}
-          current_cmd_frame:
-            {}
-          front_bumper_link:
-            {}
-          front_left_wheel_link:
-            {}
-          front_right_wheel_link:
-            {}
-          imu_link:
-            {}
-          inertial_link:
-            {}
-          rear_bumper_link:
-            {}
-          rear_left_wheel_link:
-            {}
-          rear_right_wheel_link:
-            {}
-          spacenav:
-            {}
-          top_chassis_link:
-            {}
-          user_rail_link:
-            {}
+        {}
       Update Interval: 0
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: visualization_marker
@@ -1113,13 +928,13 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -0.741837
-        Y: -0.346176
-        Z: 1.95151
+        X: -0.47461
+        Y: -0.355981
+        Z: 1.90337
       Focus:
-        X: 0.258163
-        Y: -0.346176
-        Z: 0.951506
+        X: 0.52539
+        Y: -0.355981
+        Z: 0.903367
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View

@@ -76,8 +76,6 @@ public:
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
     {"robot plan and go"},		// command PLAN&EXECUTE
-    {"consider rotation"},	// factors in hand orientation
-    {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
     {"jog mode"},		// send small motions commands immediately

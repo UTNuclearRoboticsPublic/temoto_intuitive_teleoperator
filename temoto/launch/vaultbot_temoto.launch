@@ -25,7 +25,7 @@
 
 
   <!-- Bring up Griffin Powermate -->
-  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
+  <!-- <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" /> -->
   
 
   <!-- Bring up some temoto core components -->
@@ -41,10 +41,6 @@
 
   <!-- MoveIt interface for right_ur5 -->
   <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
-
-
-  <!-- Navigation interface for move_base -->
-  <node name="navigate_robot" pkg="temoto" type="navigate_robot" />
 
   
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
@@ -74,10 +70,6 @@
 
   <!-- Move the robot base to reach a pose -->
   <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
-
-
-  <!-- launch Xbox teleop -->
-  <include file="$(find husky_control)/launch/teleop.launch" />
 
   <!-- Arm jogging -->
   <include file="$(find vaultbot_drivers)/launch/jog_arms.launch"/>
