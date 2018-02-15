@@ -126,7 +126,7 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES beginner_tutorials
- CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs
+ CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs tf2 tf2_ros tf2_geometry_msgs
 #  DEPENDS system_lib
 #  CATKIN_DEPENDS message_runtime
 )
@@ -142,6 +142,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${move_base_to_manip_INCLUDE_DIRS}
 )
+
 
 ## Declare a C++ library
 # Preplanned sequences:

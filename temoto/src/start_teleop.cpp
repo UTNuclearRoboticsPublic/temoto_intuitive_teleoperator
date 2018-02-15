@@ -34,12 +34,12 @@
  */
 
 #include "temoto/start_teleop.h"
-#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 
 /** Constructor for Teleoperator.
  */
 Teleoperator::Teleoperator(ros::NodeHandle& n)
  : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
+   , tf_listener_(tf_buffer_)
   , incremental_orientation_cmd_(tf2::Quaternion::getIdentity()) // initially, add no rotation. New incremental rotation commands from e.g. the SpaceMouse will be added here.
 {
   std::string primary_hand;
@@ -64,8 +64,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
 
-  absolute_position_cmd_.setZero();
-  absolute_orientation_cmd_ = tf2::Quaternion::getIdentity();
+  // Reset current command transform
   cmd_tf_.setIdentity();
 
   jog_twist_cmd_.header.frame_id = "temoto_end_effector";
@@ -123,7 +122,39 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   temoto::Goal motion;	
   motion.request.action_type = action_type;	// set action_type
 
-  getAbsolutePoseMsg(motion.request.goal_pose);
+  // Transform cmd_tf_ from temoto_end_effector frame to base_link frame
+  try
+  {
+    tf2::Transform temoto_to_base_tf;
+    tf2::fromMsg(
+        tf_buffer_.lookupTransform("base_link", "temoto_end_effector", ros::Time(0)).transform,
+        temoto_to_base_tf);
+    tf2::Transform abs_tf(temoto_to_base_tf * cmd_tf_);
+
+    geometry_msgs::PoseStamped pose_msg;
+    pose_msg.header.frame_id = "base_link";
+    pose_msg.header.stamp = ros::Time::now();
+    pose_msg.pose.position.x = abs_tf.getOrigin().x();
+    pose_msg.pose.position.y = abs_tf.getOrigin().y();
+    pose_msg.pose.position.z = abs_tf.getOrigin().z();
+    pose_msg.pose.orientation = tf2::toMsg(abs_tf.getRotation());
+    motion.request.goal_pose = pose_msg;
+
+    // geometry_msgs::TransformStamped goal_tf;
+    // goal_tf.header.stamp = ros::Time::now();
+    // goal_tf.header.frame_id = "base_link";
+    // goal_tf.child_frame_id = "goal_frame";
+    // goal_tf.transform.translation.x = motion.request.goal_pose.pose.position.x;
+    // goal_tf.transform.translation.y = motion.request.goal_pose.pose.position.y;
+    // goal_tf.transform.translation.z = motion.request.goal_pose.pose.position.z;
+    // goal_tf.transform.rotation = motion.request.goal_pose.pose.orientation;
+
+    tf_broadcaster_.sendTransform(goal_tf);
+  }
+  catch (tf2::TransformException ex)
+  {
+    ROS_ERROR("%s", ex.what());
+  }
 
   // =================================================
   // === Calling NavigateRobotInterface ==============
@@ -175,8 +206,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // Translate current_cmd_frame pose to base_link
       geometry_msgs::PoseStamped goal_in_baselink;
       // absolute_pose_cmd_ is given in current_cmd_frame frame and shall be transformed into base_link
-      transform_listener_.transformPose("base_link", motion.request.goal_pose, goal_in_baselink);
-    
+      tf_buffer_.transform(motion.request.goal_pose, goal_in_baselink, "base_link");
+
 
       double bl_roll, bl_pitch, bl_yaw;
       // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
@@ -329,11 +360,8 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_integrated_cmds_)
   {
-    absolute_position_cmd_.setZero();
-    absolute_orientation_cmd_ = tf2::Quaternion::getIdentity();
-
-    incremental_position_cmd_.setZero();
-    incremental_orientation_cmd_ = tf2::Quaternion::getIdentity();
+    // Reset current command transform
+    cmd_tf_.setIdentity();
 
     // Reset the flag
     reset_integrated_cmds_ = false;
@@ -359,45 +387,23 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   ////////////////////////////
   if ( navT_or_manipF_ && !in_jog_mode_ )
   {
+    // Prepare the differential delta transform that comes from the sensor.
+   
     // ORIENTATION
-    // new incremental yaw command
     // For nav mode, we want to stay in the plane ==> ignore roll & pitch
     tf2::Quaternion delta_orientation;
     delta_orientation.setRPY(0, 0, rot_scale_ * pose_cmd.axes[5]);
 
-    // Integrate the the delta_orientation into incremental_orientation_cmd
-    incremental_orientation_cmd_ *= delta_orientation;  // Calculate the new orientation
-
     // POSITION
-    // Integrate the delta_position into incremental position_cmd.
-    // It persists even if the robot moves. Ignore Z
+    // Ignore translation along z axis.
     tf2::Vector3 delta_position(pose_cmd.axes[0],pose_cmd.axes[1], 0);
-    incremental_position_cmd_ += delta_position * pos_scale_;
+    delta_position *= pos_scale_;
 
-    // Incoming position/orientation are in the spacenav frame
-    // So convert them to base_link like everything else
+    // Build the delta transform.
+    tf2::Transform delta_tf(delta_orientation, delta_position);
 
-    //TODO: TEMRORARILY TURNED OFF. FIX THIS PART.
-//    geometry_msgs::Vector3Stamped incoming_position_cmd;
-//    incoming_position_cmd.header.frame_id = "spacenav";
-//    incoming_position_cmd.vector.x = incremental_position_cmd_.x;
-//    incoming_position_cmd.vector.y = incremental_position_cmd_.y;
-//    incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-//    if (transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.02)))
-//      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-//    else
-//    {
-//      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
-//      return;
-//    }
-//
-//    // Ignore Z
-//    incoming_position_cmd.vector.z = 0.;
-
-    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
-//    absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
-//    absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-//    absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;
+    // Apply delta transform to the current command transform.
+    cmd_tf_ *= delta_tf;
   }
 
 
@@ -406,78 +412,22 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   //////////////////////////////
   if ( !navT_or_manipF_ && !in_jog_mode_ )
   {
-    // TODO:
-    //  1. REMOVE THE CIRCULAR DEPENDENCY (absolute_pose_cmd_ ->
-    //spacenav frame -> absolute_pose_cmd)
-    //  2. ORIENTATION SHOULD ROTATE THE MARKER AROUND ITS OWN AXES.
-    //RIGHT NOW EVERYTHING IS ROTATED AROUND temoto_end_effector.
-
     // Integrate for point-to-point motion
     
+    // Prepare the differential delta transform that comes from the sensor.
     // POSITION
-    // Integrate the incremental cmd. It persists even if the robot moves
     tf2::Vector3 delta_position(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2]);
     delta_position *= pos_scale_;
-    //incremental_position_cmd_ += pos_scale_ * delta_position;
 
     // ORIENTATION
     tf2::Quaternion delta_orientation;
     delta_orientation.setRPY(rot_scale_ * pose_cmd.axes[3], rot_scale_ * pose_cmd.axes[4],
                              rot_scale_ * pose_cmd.axes[5]);
-    // Integrate the the delta_orientation into incremental_orientation_cmd
-    //incremental_orientation_cmd_ *= delta_orientation;  // Calculate the new orientation
+    // Build the delta transform.
     tf2::Transform delta_tf(delta_orientation, delta_position);
 
-    // Transform this bastard
+    // Apply delta transform to the current command transform.
     cmd_tf_ *= delta_tf;
-
-    // Incoming position cmds are in the spacenav frame
-    // So convert them to base_link like everything else
-     //try
-     //{
-     //  tf2::Transform tf_spacenav_to_base;
-     //  fromMsg(tf2_buffer.lookupTransform("base_link", "spacenav", ros::Time(0)),
-     //          tf_spacenav_to_base);
-     //  absolute_orientation_cmd_
-     //}
-     //catch(tf2::TransformException ex)
-     //{
-     //  TEMOTO_ERROR("%s",ex.what());
-     //}
-
-
-    // Incoming position cmds are in the spacenav frame
-    // So convert them to base_link like everything else
-//    geometry_msgs::Vector3Stamped incoming_position_cmd;
-//    incoming_position_cmd.header.frame_id = "spacenav";
-//    incoming_position_cmd.vector.x = incremental_position_cmd_.x;
-//    incoming_position_cmd.vector.y = incremental_position_cmd_.y;
-//    incoming_position_cmd.vector.z = incremental_position_cmd_.z;
-    //if ( transform_listener_.waitForTransform("spacenav", "base_link", ros::Time::now(), ros::Duration(0.1)) )
-    //{
-    //  transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-    //}
-    //else
-    //{
-    //  ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
-    //  return;
-    //}
-
-//    tf2::Vector3 space
-//    absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
-//    absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
-//    absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
-
-    //tf2::Transform rotation_tf(incremental_orientation_cmd_, tf2::Vector3());
-    //tf2::Vector3 rotated_origin = rotation_tf * incremental_position_cmd_;
-    //tf2::Transform spacenav_tf(tf2::Quaternion::getIdentity(), rotated_origin);
-
-    geometry_msgs::TransformStamped spacenav_tf_msg;
-    spacenav_tf_msg.header.stamp = ros::Time::now();
-    spacenav_tf_msg.header.frame_id = "temoto_end_effector";
-    spacenav_tf_msg.child_frame_id = "spacenav";
-    spacenav_tf_msg.transform = tf2::toMsg(cmd_tf_);
-    tf_br_.sendTransform(spacenav_tf_msg);
   }
 
   return;
@@ -595,19 +545,19 @@ void Teleoperator::processLeapCmd(leap_motion_controller::Set leap_data)
   if (orientation_locked_)				// if palm orientation is to be ignored 
   {
     // Overwrite orientation with identity quaternion.
-    scaled_pose.pose.orientation.x = 0;
-    scaled_pose.pose.orientation.y = 0;
-    scaled_pose.pose.orientation.z = 0;
-    scaled_pose.pose.orientation.w = 1;
+    scaled_pose.pose.orientation = tf2::toMsg(tf2::Quaternion::getIdentity());
   }
 
   // Setting properly scaled and limited pose as the absolute_pose_cmd_
 //  absolute_pose_cmd_.pose = scaled_pose.pose;
 //  absolute_pose_cmd_.header.frame_id = scaled_pose.header.frame_id;
 //  absolute_pose_cmd_.header.stamp = ros::Time(0);
-//  TODO: FRAME CONVERSION HERE!!!
-  tf2::fromMsg(scaled_pose.pose.position, absolute_position_cmd_);
-  tf2::fromMsg(scaled_pose.pose.orientation, absolute_orientation_cmd_);
+//  TODO: CONVERSION FROM LEAP to temoto_end_effector frame HERE???
+  tf2::Vector3 origin;
+  tf2::Quaternion rotation = tf2::Quaternion::getIdentity();
+  tf2::fromMsg(scaled_pose.pose.position, origin);
+  tf2::fromMsg(scaled_pose.pose.orientation, rotation);
+  cmd_tf_ = tf2::Transform(rotation, origin);
 
   return;
 } // end processLeapCmd
@@ -832,8 +782,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       callRobotMotionInterface(low_level_cmds::EXECUTE);
 
       // Reset the incremental commands integrations
-      incremental_position_cmd_.setZero();
-      incremental_orientation_cmd_ = tf2::Quaternion::getIdentity();
+      cmd_tf_.setIdentity();
       return;
     }
     else if (voice_command.cmd_string == "robot plan and go")
@@ -979,12 +928,12 @@ temoto::Status Teleoperator::getStatus()
 
 void Teleoperator::getAbsolutePoseMsg(geometry_msgs::PoseStamped& pose_msg)
 {
-  pose_msg.header.frame_id = "base_link";
+  pose_msg.header.frame_id = "temoto_end_effector";
   pose_msg.header.stamp = ros::Time::now(); //TODO: Tmp hack and not the age of actual data!
-  pose_msg.pose.position.x = absolute_position_cmd_.x();
-  pose_msg.pose.position.y = absolute_position_cmd_.y();
-  pose_msg.pose.position.z = absolute_position_cmd_.z();
-  pose_msg.pose.orientation = tf2::toMsg(absolute_orientation_cmd_);
+  pose_msg.pose.position.x = cmd_tf_.getOrigin().x();
+  pose_msg.pose.position.y = cmd_tf_.getOrigin().y();
+  pose_msg.pose.position.z = cmd_tf_.getOrigin().z();
+  pose_msg.pose.orientation = tf2::toMsg(cmd_tf_.getRotation());
 }
 
 void Teleoperator::setScale()

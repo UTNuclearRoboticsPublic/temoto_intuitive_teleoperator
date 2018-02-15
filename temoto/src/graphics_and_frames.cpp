@@ -305,16 +305,16 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Add the spacenav frame
     if (!leap_input_)
     {
-     // tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
-     // tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
-     // spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
+      tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
+      tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+      spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
 
-     // geometry_msgs::TransformStamped spacenav_tf_msg;
-     // spacenav_tf_msg.header.stamp = ros::Time::now();
-     // spacenav_tf_msg.header.frame_id = "base_link";
-     // spacenav_tf_msg.child_frame_id = "spacenav";
-     // spacenav_tf_msg.transform = toMsg(spacenav_tf_);
-     // tf_br_.sendTransform(spacenav_tf_msg);
+      geometry_msgs::TransformStamped spacenav_tf_msg;
+      spacenav_tf_msg.header.stamp = ros::Time::now();
+      spacenav_tf_msg.header.frame_id = "temoto_end_effector";
+      spacenav_tf_msg.child_frame_id = "spacenav";
+      spacenav_tf_msg.transform = toMsg(spacenav_tf_);
+      tf_br_.sendTransform(spacenav_tf_msg);
     }
 
     // Attach the leap_motion frame to robot EE

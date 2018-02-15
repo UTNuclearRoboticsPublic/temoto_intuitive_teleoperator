@@ -37,6 +37,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "geometry_msgs/TransformStamped.h"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "std_msgs/Bool.h"
@@ -44,10 +45,14 @@
 #include "std_msgs/String.h"
 #include "tf/tf.h"
 #include "tf/transform_datatypes.h"
-#include "tf/transform_listener.h"
+//#include "tf/transform_listener.h"
+
 //tf2
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_ros/transform_listener.h"
 #include "tf2/LinearMath/Transform.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2/transform_datatypes.h"
 
 // temoto includes
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
@@ -123,10 +128,11 @@ public:
 
 private:
   /// Local TransformListener for transforming poses
-  tf::TransformListener transform_listener_;
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 
   /// Transform publisher
-  tf2_ros::TransformBroadcaster tf_br_;
+  tf2_ros::TransformBroadcaster tf_broadcaster_;
 
   /// Scaling factor
   double pos_scale_;
@@ -145,8 +151,8 @@ private:
   
   /// For absolute pose commands, as from LeapMotion
 //  geometry_msgs::PoseStamped absolute_pose_cmd_;
-  tf2::Vector3 absolute_position_cmd_;
-  tf2::Quaternion absolute_orientation_cmd_;
+//  tf2::Vector3 absolute_position_cmd_;
+//  tf2::Quaternion absolute_orientation_cmd_;
 
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
   tf2::Vector3 incremental_position_cmd_;
