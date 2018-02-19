@@ -38,6 +38,7 @@
 #include "ros/ros.h"
 #include "visualization_msgs/Marker.h"
 #include "geometry_msgs/Pose.h"
+#include "geometry_msgs/PoseStamped.h"
 #include "std_srvs/Empty.h"
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
@@ -58,38 +59,7 @@ class Visuals
 {
 public:
   // ___ CONSTRUCTOR ___
-  Visuals()
-  {
-    // NodeHandle for accessing private parameters
-    ros::NodeHandle pn("~");
-
-    // Get the STL's for the manip/nav hand markers from launch file, if any
-    std::string manip_stl;
-    pn.param<std::string>("/temoto/manip_stl", manip_stl_, "");
-
-    // Get all the relevant frame names from parameter server
-    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
-    pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
-    pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
-
-    pn.param<bool>("/temoto/leap_input", leap_input_, false);
-
-    // Initialize point-of-view camera placement and all the required markers
-    initCameraFrames();
-    initDisplacementArrow();
-    initDistanceAsText();
-    initHandPoseMarker();
-    initActiveRangeBox();
-    
-    // Initial state setup
-    adjust_camera_ = true;
-    camera_is_aligned_ = true;
-    latest_known_camera_mode_ = 0;
-
-    // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
-    leap_motion_tf_.setOrigin( tf2::Vector3(0., 0., 0.) );
-    leap_motion_tf_.setRotation(  tf2::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
-  };
+  Visuals();
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
   void updateStatus (temoto::Status status);
@@ -173,8 +143,12 @@ private:
   tf2::Transform spacenav_tf_;
   tf2::Transform leap_motion_tf_;
 
+  // Publisher to update the goal state in rviz motion planning plugin
+  ros::Publisher pub_update_rviz_goal_;
+
   /** ROS transform listener **/
-//  tf2_ros::TransformListener tf_listener_;
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 };
 
 #endif

@@ -149,7 +149,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // goal_tf.transform.translation.z = motion.request.goal_pose.pose.position.z;
     // goal_tf.transform.rotation = motion.request.goal_pose.pose.orientation;
 
-    tf_broadcaster_.sendTransform(goal_tf);
+    // tf_broadcaster_.sendTransform(goal_tf);
   }
   catch (tf2::TransformException ex)
   {

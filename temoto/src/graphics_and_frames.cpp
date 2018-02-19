@@ -36,6 +36,46 @@
 
 #include "temoto/graphics_and_frames.h"
 
+/**
+ * Default constructor
+ */
+Visuals::Visuals() : tf_listener_(tf_buffer_)
+{
+  // NodeHandle for accessing private parameters
+  ros::NodeHandle pn("~");
+
+  // Get the STL's for the manip/nav hand markers from launch file, if any
+  std::string manip_stl;
+  pn.param<std::string>("/temoto/manip_stl", manip_stl_, "");
+
+  // Get all the relevant frame names from parameter server
+  pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
+  pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
+  pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
+
+  pn.param<bool>("/temoto/leap_input", leap_input_, false);
+
+  // Initialize point-of-view camera placement and all the required markers
+  initCameraFrames();
+  initDisplacementArrow();
+  initDistanceAsText();
+  initHandPoseMarker();
+  initActiveRangeBox();
+
+  // Initial state setup
+  adjust_camera_ = true;
+  camera_is_aligned_ = true;
+  latest_known_camera_mode_ = 0;
+
+  // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
+  leap_motion_tf_.setOrigin( tf2::Vector3(0., 0., 0.) );
+  leap_motion_tf_.setRotation(  tf2::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
+
+  // publisher to update the goal in rviz in real-time
+  pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>(
+      "/rviz/moveit/move_marker/goal_temoto_end_effector", 1);
+}
+
 /** Callback function for /temoto/status.
  *  Looks for any changes that would require re-adjustment of the point-of-view camera.
  *  Stores the received status in a class variable latest_status_.
@@ -315,6 +355,22 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
       spacenav_tf_msg.child_frame_id = "spacenav";
       spacenav_tf_msg.transform = toMsg(spacenav_tf_);
       tf_br_.sendTransform(spacenav_tf_msg);
+
+      // update the goal position in moveit plugin to display real-time IK
+      geometry_msgs::TransformStamped tfs_msg = tf_buffer_.lookupTransform(
+          "world", "temoto_end_effector", ros::Time(0));
+      tf2::Transform temoto_to_world_tf;
+      tf2::fromMsg(tfs_msg.transform, temoto_to_world_tf);
+      tf2::Transform abs_tf(temoto_to_world_tf * spacenav_tf_);
+
+      geometry_msgs::PoseStamped move_goal_msg;
+      move_goal_msg.header.frame_id = "world";
+      move_goal_msg.header.stamp = ros::Time::now();
+      move_goal_msg.pose.position.x = abs_tf.getOrigin().x();
+      move_goal_msg.pose.position.y = abs_tf.getOrigin().y();
+      move_goal_msg.pose.position.z = abs_tf.getOrigin().z();
+      move_goal_msg.pose.orientation = tf2::toMsg(abs_tf.getRotation());
+      pub_update_rviz_goal_.publish(move_goal_msg);
     }
 
     // Attach the leap_motion frame to robot EE
