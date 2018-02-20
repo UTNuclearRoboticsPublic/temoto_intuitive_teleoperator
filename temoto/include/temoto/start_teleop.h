@@ -75,8 +75,6 @@ public:
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
 
   // Helper functions
-
-  geometry_msgs::Quaternion extractOnlyPitch(geometry_msgs::Quaternion msg);
   
   geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   

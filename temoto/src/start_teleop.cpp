@@ -259,31 +259,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
   return;
 } // end callRobotMotionInterfaceWithNamedTarget
 
-/** Alters a quaternion so that the pitch is preserved while roll and yaw are set to zero.
- * 
- *  @param quaternion_msg incoming quaternion as a geometry_msgs.
- *  @return normalized quaternion as a geometry_msgs that contains only pitch information.
- */
-geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaternion quaternion_msg)
-{
-  // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
-  tf::Quaternion quat;
-  tf::quaternionMsgToTF(quaternion_msg, quat);
-
-  // the tf::Quaternion has a method to acess roll pitch and yaw
-  double roll, pitch, yaw;
-  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-  
-  // modify quaternion by setting roll and yaw to zero
-//   ROS_INFO("[start_teleop/extractOnlyPitch] PITCH: %.2f", pitch);
-  quat.setRPY(0, pitch, 0);
-  quat.normalize();
-  
-  // the modified quaternion is converted to a geometry_msgs::Quaternion
-  geometry_msgs::Quaternion outbound_msg;
-  tf::quaternionTFToMsg(quat, outbound_msg);
-  return outbound_msg;
-}
 
 /** Callback function for relative position commands.
  *  Add the new command to the current RViz marker pose.
@@ -733,8 +708,8 @@ void Teleoperator::setScale()
     }
     else  // nav, pt-to-pt mode
     {
-      pos_scale_ = 0.008;
-      rot_scale_ = 0.01;
+      pos_scale_ = 0.016;
+      rot_scale_ = 0.02;
     }
   }
   else // manipulation

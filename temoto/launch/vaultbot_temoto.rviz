@@ -8,6 +8,8 @@ Panels:
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
         - /MotionPlanning1/Planned Path1
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.680511
     Tree Height: 321
   - Class: rviz/Selection
@@ -776,19 +778,235 @@ Visualization Manager:
         Show Robot Visual: true
       Value: true
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        SICK_LMS291_link:
+          Value: false
+        base_footprint:
+          Value: false
+        base_link:
+          Value: false
+        bulkhead_link:
+          Value: false
+        camera_ee_depth_frame:
+          Value: false
+        camera_ee_depth_optical_frame:
+          Value: false
+        camera_ee_ir_frame:
+          Value: false
+        camera_ee_ir_optical_frame:
+          Value: false
+        camera_ee_link:
+          Value: false
+        camera_ee_rgb_frame:
+          Value: false
+        camera_ee_rgb_optical_frame:
+          Value: false
+        current_cmd_frame:
+          Value: false
+        floorplane_link:
+          Value: false
+        front_bumper_link:
+          Value: false
+        front_left_wheel_link:
+          Value: false
+        front_right_wheel_link:
+          Value: false
+        imu_link:
+          Value: false
+        inertial_link:
+          Value: false
+        laser:
+          Value: false
+        laser_scan_link:
+          Value: false
+        left_ur5_2_finger_gripper_link:
+          Value: false
+        left_ur5_base:
+          Value: false
+        left_ur5_base_link:
+          Value: false
+        left_ur5_ee_link:
+          Value: false
+        left_ur5_forearm_link:
+          Value: false
+        left_ur5_ft_link:
+          Value: false
+        left_ur5_r200_mount_link:
+          Value: false
+        left_ur5_shoulder_link:
+          Value: false
+        left_ur5_temoto_ee:
+          Value: false
+        left_ur5_tool0:
+          Value: false
+        left_ur5_tool0_controller:
+          Value: false
+        left_ur5_upper_arm_link:
+          Value: false
+        left_ur5_wrist_1_link:
+          Value: false
+        left_ur5_wrist_2_link:
+          Value: false
+        left_ur5_wrist_3_link:
+          Value: false
+        odom:
+          Value: false
+        rear_bumper_link:
+          Value: false
+        rear_left_wheel_link:
+          Value: false
+        rear_right_wheel_link:
+          Value: false
+        right_ur5_2_finger_gripper_link:
+          Value: false
+        right_ur5_base:
+          Value: false
+        right_ur5_base_link:
+          Value: false
+        right_ur5_ee_link:
+          Value: false
+        right_ur5_forearm_link:
+          Value: false
+        right_ur5_ft_link:
+          Value: false
+        right_ur5_shoulder_link:
+          Value: false
+        right_ur5_sr300_mount_link:
+          Value: false
+        right_ur5_sr300_surrogate:
+          Value: false
+        right_ur5_temoto_ee:
+          Value: false
+        right_ur5_tool0:
+          Value: false
+        right_ur5_tool0_controller:
+          Value: false
+        right_ur5_upper_arm_link:
+          Value: false
+        right_ur5_wrist_1_link:
+          Value: false
+        right_ur5_wrist_2_link:
+          Value: false
+        right_ur5_wrist_3_link:
+          Value: false
+        screen_link:
+          Value: false
+        sensor_mast:
+          Value: false
+        sensor_mast_mount_link:
+          Value: false
+        spacenav:
+          Value: true
+        top_chassis_link:
+          Value: false
+        user_rail_link:
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        odom:
+          base_link:
+            base_footprint:
+              floorplane_link:
+                {}
+            bulkhead_link:
+              SICK_LMS291_link:
+                laser:
+                  {}
+                laser_scan_link:
+                  {}
+              left_ur5_base_link:
+                left_ur5_base:
+                  {}
+                left_ur5_shoulder_link:
+                  left_ur5_upper_arm_link:
+                    left_ur5_forearm_link:
+                      left_ur5_wrist_1_link:
+                        left_ur5_wrist_2_link:
+                          left_ur5_wrist_3_link:
+                            left_ur5_ee_link:
+                              left_ur5_2_finger_gripper_link:
+                                {}
+                              left_ur5_ft_link:
+                                {}
+                              left_ur5_r200_mount_link:
+                                {}
+                              left_ur5_temoto_ee:
+                                {}
+                            left_ur5_tool0:
+                              {}
+                left_ur5_tool0_controller:
+                  {}
+              right_ur5_base_link:
+                right_ur5_base:
+                  {}
+                right_ur5_shoulder_link:
+                  right_ur5_upper_arm_link:
+                    right_ur5_forearm_link:
+                      right_ur5_wrist_1_link:
+                        right_ur5_wrist_2_link:
+                          right_ur5_wrist_3_link:
+                            right_ur5_ee_link:
+                              right_ur5_2_finger_gripper_link:
+                                {}
+                              right_ur5_ft_link:
+                                {}
+                              right_ur5_sr300_mount_link:
+                                camera_ee_link:
+                                  camera_ee_depth_frame:
+                                    camera_ee_depth_optical_frame:
+                                      {}
+                                  camera_ee_ir_frame:
+                                    camera_ee_ir_optical_frame:
+                                      {}
+                                  camera_ee_rgb_frame:
+                                    camera_ee_rgb_optical_frame:
+                                      {}
+                                  right_ur5_sr300_surrogate:
+                                    {}
+                              right_ur5_temoto_ee:
+                                {}
+                            right_ur5_tool0:
+                              {}
+                right_ur5_tool0_controller:
+                  {}
+              screen_link:
+                {}
+              sensor_mast_mount_link:
+                sensor_mast:
+                  {}
+            current_cmd_frame:
+              {}
+            front_bumper_link:
+              {}
+            front_left_wheel_link:
+              {}
+            front_right_wheel_link:
+              {}
+            imu_link:
+              {}
+            inertial_link:
+              {}
+            rear_bumper_link:
+              {}
+            rear_left_wheel_link:
+              {}
+            rear_right_wheel_link:
+              {}
+            spacenav:
+              {}
+            top_chassis_link:
+              {}
+            user_rail_link:
+              {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: visualization_marker
@@ -928,13 +1146,13 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -0.47461
-        Y: -0.355981
-        Z: 1.90337
+        X: -0.201186
+        Y: -0.0827342
+        Z: 1.4166
       Focus:
-        X: 0.52539
-        Y: -0.355981
-        Z: 0.903367
+        X: 0.798814
+        Y: -0.0827342
+        Z: 0.416597
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View
@@ -952,15 +1170,15 @@ Window Geometry:
   Camera:
     collapsed: false
   Displays:
-    collapsed: false
+    collapsed: true
   Height: 1026
-  Hide Left Dock: false
+  Hide Left Dock: true
   Hide Right Dock: false
   MotionPlanning:
-    collapsed: false
+    collapsed: true
   MotionPlanning - Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730100000028000001d0000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006701000001fe000001e6000001cc00fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000004a00ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d0065000000000000000690000002f600fffffffb0000000800540069006d00650100000000000004500000000000000000000003d2000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000cfb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c0061007900730000000028000001d0000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e006700000001fe000001e6000001cc00fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000004a00ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d0065000000000000000690000002f600fffffffb0000000800540069006d0065010000000000000450000000000000000000000690000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   Time:
