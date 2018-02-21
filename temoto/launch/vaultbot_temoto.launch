@@ -72,7 +72,7 @@
   <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
 
   <!-- Arm jogging -->
-  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" output="screen" />
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" />
 
   <!-- Nav collision warning for teleoperated base motions -->
   <include file="$(find nav_collision_warning)/launch/nav_collision_warning.launch"/>
