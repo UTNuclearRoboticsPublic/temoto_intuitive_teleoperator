@@ -73,7 +73,7 @@ Visuals::Visuals() : tf_listener_(tf_buffer_)
 
   // publisher to update the goal in rviz in real-time
   pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>(
-      "/rviz/moveit/move_marker/goal_temoto_end_effector", 1);
+      "/rviz/moveit/move_marker/goal_ee_link", 1);
 }
 
 /** Callback function for /temoto/status.
@@ -361,7 +361,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
           "world", "temoto_end_effector", ros::Time(0));
       tf2::Transform temoto_to_world_tf;
       tf2::fromMsg(tfs_msg.transform, temoto_to_world_tf);
-      tf2::Transform abs_tf(temoto_to_world_tf * spacenav_tf_);
+
+      geometry_msgs::TransformStamped tfs_msg2 = tf_buffer_.lookupTransform(
+          "temoto_end_effector", "ee_link", ros::Time(0));
+      tf2::Transform temoto_to_ee_link_tf;
+      tf2::fromMsg(tfs_msg2.transform, temoto_to_ee_link_tf);
+      tf2::Transform abs_tf(temoto_to_world_tf * spacenav_tf_ * temoto_to_ee_link_tf);
 
       geometry_msgs::PoseStamped move_goal_msg;
       move_goal_msg.header.frame_id = "world";

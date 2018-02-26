@@ -347,14 +347,14 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   // If rotational components >> translational, ignore translation (and vice versa)
   double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
   double rot_mag = pow( pose_cmd.axes[3]*pose_cmd.axes[3] + pose_cmd.axes[4]*pose_cmd.axes[4] + pose_cmd.axes[5]*pose_cmd.axes[5], 2);
-  if ( trans_mag > 2.*rot_mag )
-  {
-    pose_cmd.axes[3] = 0.; pose_cmd.axes[4] = 0.; pose_cmd.axes[5] = 0.;
-  }
-  else if ( rot_mag > 2.*trans_mag )
-  {
-    pose_cmd.axes[0] = 0.; pose_cmd.axes[1] = 0.; pose_cmd.axes[2] = 0.;
-  }
+//  if ( trans_mag > 2.*rot_mag )
+//  {
+//    pose_cmd.axes[3] = 0.; pose_cmd.axes[4] = 0.; pose_cmd.axes[5] = 0.;
+//  }
+//  else if ( rot_mag > 2.*trans_mag )
+//  {
+//    pose_cmd.axes[0] = 0.; pose_cmd.axes[1] = 0.; pose_cmd.axes[2] = 0.;
+//  }
 
   // Should we reset the command integrations?
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
@@ -572,7 +572,8 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
   {
     if (powermate.is_pressed)			// if the push button has been pressed
     {
-      callRobotMotionInterface(low_level_cmds::EXECUTE);		// makes the service request to move the robot, according to prior plan
+      //callRobotMotionInterface(low_level_cmds::EXECUTE);		// makes the service request to move the robot, according to prior plan
+      reset_integrated_cmds_ = true;
     }
     return;
   }
@@ -582,14 +583,14 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     // The smaller the pos_scale_, the smaller the step. log10 gives the order of magnitude
     double step = (-powermate.direction)*pow( 10,  floor( log10( pos_scale_ ) ) - 1. );
     if (step < -0.09) step = -0.01;		// special case for when scale is 1; to ensure that step is never larger than 0.01
-    pos_scale_ = pos_scale_ + step;		// increase/decrease scale
+    pos_scale_ += step;		// increase/decrease scale
 
     step = (-powermate.direction)*pow( 10,  floor( log10( rot_scale_ ) ) - 1. );
-    rot_scale_ = rot_scale_ + step;
+    rot_scale_ += step;
 
     // cap the scales
-    if (pos_scale_ > 1.) pos_scale_ = 1.;
-    if (rot_scale_ > 0.01) rot_scale_ = 0.01;
+    pos_scale_ = std::min(pos_scale_, 1.0);
+    rot_scale_ = std::min(rot_scale_, 0.1);
 
     return;
   } // else
@@ -970,7 +971,7 @@ void Teleoperator::setScale()
       else  // manipulate, pt-to-pt mode
       {
         pos_scale_ = 0.012;
-        rot_scale_ = 0.015;
+        rot_scale_ = 0.03;
       }
     }
 }

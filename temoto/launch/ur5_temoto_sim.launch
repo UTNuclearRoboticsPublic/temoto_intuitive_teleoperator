@@ -26,7 +26,7 @@
 
 
   <!-- Bring up Griffin Powermate -->
-  <!-- node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" /-->
+  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
   
 
   <!-- Bring up some temoto core components -->
