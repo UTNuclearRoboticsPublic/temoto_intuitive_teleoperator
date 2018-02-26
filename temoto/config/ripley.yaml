@@ -1,0 +1,15 @@
+temoto_frames:
+  human_input: "current_cmd_frame"
+  end_effector: "right_ur5_temoto_ee"
+  mobile_base: "base_link"
+temoto:
+  spacenav_input: true
+  temoto_pose_cmd_topic: "spacenav/joy"
+
+  # navigate or manipulate
+  navigate: false
+  manipulate: true
+
+  manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
+  input_voice_topic: "stt/spoken_text"
+  movegroup: "right_ur5_temoto"

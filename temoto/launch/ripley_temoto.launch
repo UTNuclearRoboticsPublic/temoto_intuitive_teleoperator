@@ -1,0 +1,80 @@
+<launch>
+
+  <!--                 -->
+  <!--  CONFIGURATION  -->
+  <!--                 -->
+
+
+  <!-- Load temoto parameters -->
+  <rosparam command="load" file="$(find temoto)/config/ripley.yaml" />
+
+  <!-- Type of pose controller -->
+  <include file="$(find spacenav_node)/launch/classic.launch"/>
+
+  <!-- Bring up speech-to-text and text-to-speech -->
+  <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
+  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
+  <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/>
+  <!-- <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" /> -->
+
+
+  <!--                 -->
+  <!--                 -->
+  <!--                 -->
+  
+
+
+  <!-- Bring up Griffin Powermate -->
+  <!-- <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" /> -->
+  
+
+  <!-- Bring up some temoto core components -->
+  <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
+
+
+  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
+
+
+  <!-- Specify the frame of incoming commands -->
+  <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
+  
+
+  <!-- MoveIt interface for right_ur5 -->
+  <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
+
+  
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
+
+
+  <!-- bringup proper rviz config -->
+  <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
+
+
+  <!-- Open an rqt window for camera feeds -->
+  <node name="rqt_gui" pkg="vaultbot_drivers" type="rqt_gui.sh" />
+
+
+  <!-- Start soundplay_node that is responsible for voice synthesis -->
+  <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
+
+
+  <!-- Load preplanned motions from yaml file -->
+  <!-- <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" /> -->
+
+
+  <!-- A server to execute the preplanned sequences -->
+  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen" respawn="true" />
+
+
+  <!-- Move the robot base to reach a pose -->
+  <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
+
+  <!-- Arm jogging -->
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" output="screen" />
+
+  <!-- Nav collision warning for teleoperated base motions -->
+  <include file="$(find nav_collision_warning)/launch/nav_collision_warning.launch"/>
+
+</launch>
