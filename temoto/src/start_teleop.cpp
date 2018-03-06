@@ -65,7 +65,11 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
 
   // Reset current command transform
-  cmd_tf_.setIdentity();
+//  cmd_tf_.setIdentity();
+  // start with cmd_tf_ pointing to temoto_end_effector frame
+  tf2::fromMsg(
+      tf_buffer_.lookupTransform("base_link", "temoto_end_effector", ros::Time(0)).transform,
+      cmd_tf_);
 
   jog_twist_cmd_.header.frame_id = "temoto_end_effector";
 
@@ -125,19 +129,19 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // Transform cmd_tf_ from temoto_end_effector frame to base_link frame
   try
   {
-    tf2::Transform temoto_to_base_tf;
-    tf2::fromMsg(
-        tf_buffer_.lookupTransform("base_link", "temoto_end_effector", ros::Time(0)).transform,
-        temoto_to_base_tf);
-    tf2::Transform abs_tf(temoto_to_base_tf * cmd_tf_);
+    //tf2::Transform temoto_to_base_tf;
+    //tf2::fromMsg(
+    //    tf_buffer_.lookupTransform("base_link", "temoto_end_effector", ros::Time(0)).transform,
+    //    temoto_to_base_tf);
+    //tf2::Transform abs_tf(temoto_to_base_tf * cmd_tf_);
 
     geometry_msgs::PoseStamped pose_msg;
     pose_msg.header.frame_id = "base_link";
     pose_msg.header.stamp = ros::Time::now();
-    pose_msg.pose.position.x = abs_tf.getOrigin().x();
-    pose_msg.pose.position.y = abs_tf.getOrigin().y();
-    pose_msg.pose.position.z = abs_tf.getOrigin().z();
-    pose_msg.pose.orientation = tf2::toMsg(abs_tf.getRotation());
+    pose_msg.pose.position.x = cmd_tf_.getOrigin().x();
+    pose_msg.pose.position.y = cmd_tf_.getOrigin().y();
+    pose_msg.pose.position.z = cmd_tf_.getOrigin().z();
+    pose_msg.pose.orientation = tf2::toMsg(cmd_tf_.getRotation());
     motion.request.goal_pose = pose_msg;
 
     // geometry_msgs::TransformStamped goal_tf;
@@ -154,6 +158,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   catch (tf2::TransformException ex)
   {
     ROS_ERROR("%s", ex.what());
+    return;
   }
 
   // =================================================
@@ -360,8 +365,13 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_integrated_cmds_)
   {
+    // reset cmd_tf_ to temoto_end_effector frame
+    tf2::fromMsg(
+        tf_buffer_.lookupTransform("base_link", "temoto_end_effector", ros::Time(0)).transform,
+        cmd_tf_);
+
     // Reset current command transform
-    cmd_tf_.setIdentity();
+   // cmd_tf_.setIdentity();
 
     // Reset the flag
     reset_integrated_cmds_ = false;
@@ -783,7 +793,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       callRobotMotionInterface(low_level_cmds::EXECUTE);
 
       // Reset the incremental commands integrations
-      cmd_tf_.setIdentity();
+      //cmd_tf_.setIdentity();
       return;
     }
     else if (voice_command.cmd_string == "robot plan and go")
@@ -929,7 +939,8 @@ temoto::Status Teleoperator::getStatus()
 
 void Teleoperator::getAbsolutePoseMsg(geometry_msgs::PoseStamped& pose_msg)
 {
-  pose_msg.header.frame_id = "temoto_end_effector";
+  //pose_msg.header.frame_id = "temoto_end_effector";
+  pose_msg.header.frame_id = "base_link";
   pose_msg.header.stamp = ros::Time::now(); //TODO: Tmp hack and not the age of actual data!
   pose_msg.pose.position.x = cmd_tf_.getOrigin().x();
   pose_msg.pose.position.y = cmd_tf_.getOrigin().y();

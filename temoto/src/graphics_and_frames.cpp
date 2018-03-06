@@ -73,7 +73,7 @@ Visuals::Visuals() : tf_listener_(tf_buffer_)
 
   // publisher to update the goal in rviz in real-time
   pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>(
-      "/rviz/moveit/move_marker/goal_ee_link", 1);
+      "/rviz/moveit/move_marker/goal_temoto_end_effector", 1);
 }
 
 /** Callback function for /temoto/status.
@@ -345,36 +345,29 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Add the spacenav frame
     if (!leap_input_)
     {
-      tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
-      tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+      tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x,
+                                   cmd_pose_marker_.pose.position.y,
+                                   cmd_pose_marker_.pose.position.z);
+      tf2::Quaternion spacenav_rotation(
+          cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y,
+          cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
       spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
 
       geometry_msgs::TransformStamped spacenav_tf_msg;
       spacenav_tf_msg.header.stamp = ros::Time::now();
-      spacenav_tf_msg.header.frame_id = "temoto_end_effector";
+      spacenav_tf_msg.header.frame_id = "base_link";
       spacenav_tf_msg.child_frame_id = "spacenav";
       spacenav_tf_msg.transform = toMsg(spacenav_tf_);
       tf_br_.sendTransform(spacenav_tf_msg);
 
       // update the goal position in moveit plugin to display real-time IK
-      geometry_msgs::TransformStamped tfs_msg = tf_buffer_.lookupTransform(
-          "world", "temoto_end_effector", ros::Time(0));
-      tf2::Transform temoto_to_world_tf;
-      tf2::fromMsg(tfs_msg.transform, temoto_to_world_tf);
-
-      geometry_msgs::TransformStamped tfs_msg2 = tf_buffer_.lookupTransform(
-          "temoto_end_effector", "ee_link", ros::Time(0));
-      tf2::Transform temoto_to_ee_link_tf;
-      tf2::fromMsg(tfs_msg2.transform, temoto_to_ee_link_tf);
-      tf2::Transform abs_tf(temoto_to_world_tf * spacenav_tf_ * temoto_to_ee_link_tf);
-
       geometry_msgs::PoseStamped move_goal_msg;
-      move_goal_msg.header.frame_id = "world";
+      move_goal_msg.header.frame_id = "base_link";
       move_goal_msg.header.stamp = ros::Time::now();
-      move_goal_msg.pose.position.x = abs_tf.getOrigin().x();
-      move_goal_msg.pose.position.y = abs_tf.getOrigin().y();
-      move_goal_msg.pose.position.z = abs_tf.getOrigin().z();
-      move_goal_msg.pose.orientation = tf2::toMsg(abs_tf.getRotation());
+      move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
+      move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
+      move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
+      move_goal_msg.pose.orientation = tf2::toMsg(spacenav_tf_.getRotation());
       pub_update_rviz_goal_.publish(move_goal_msg);
     }
 
