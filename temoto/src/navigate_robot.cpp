@@ -95,7 +95,6 @@ int main(int argc, char** argv)
   
   while ( ros::ok() )
   {
-    ROS_ERROR_STREAM("[navigate_robot] looping");
     if (navigateIF.stop_navigation_)
     {
       navigateIF.abortNavigation();
