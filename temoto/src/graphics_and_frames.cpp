@@ -306,9 +306,18 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Attach the leap_motion frame to robot EE
     if (leap_input_)
-    {
       tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
-    }
+
+	// update the goal position in moveit plugin to display real-time IK
+    // Need to enable external comms in MoveIt for this to work
+	geometry_msgs::PoseStamped move_goal_msg;
+	move_goal_msg.header.frame_id = "base_link";
+	move_goal_msg.header.stamp = ros::Time::now();
+	move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
+	move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
+	move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
+	quaternionTFToMsg( spacenav_tf_.getRotation(), move_goal_msg.pose.orientation );
+    pub_update_rviz_goal_.publish(move_goal_msg);
 
   } // end setting markers in MANIPULATION mode
     

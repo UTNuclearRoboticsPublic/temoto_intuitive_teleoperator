@@ -42,6 +42,7 @@
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <tf/transform_listener.h>
+
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
@@ -86,6 +87,9 @@ public:
     // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
     leap_motion_tf_.setOrigin( tf::Vector3(0., 0., 0.) );
     leap_motion_tf_.setRotation(  tf::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
+
+    // publisher to update the goal in rviz in real-time
+    pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>("/rviz/moveit/move_marker/goal_right_ur5_ee_link", 1);
   };
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
@@ -170,7 +174,10 @@ private:
   tf::Transform spacenav_tf_;
   tf::Transform leap_motion_tf_;
 
-  /** ROS transform listener **/
+  // Publisher to update the goal state in rviz motion planning plugin
+  // Need to enable external comms in MoveIt for this to work
+  ros::Publisher pub_update_rviz_goal_;
+
   tf::TransformListener tf_listener_;
 };
 
