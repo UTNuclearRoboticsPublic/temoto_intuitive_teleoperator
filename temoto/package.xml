@@ -65,6 +65,7 @@
   <run_depend>geometry_msgs</run_depend>
   <run_depend>grasp_interface</run_depend>
   <run_depend>griffin_powermate</run_depend>
+  <run_depend>message_generation</run_depend>
   <run_depend>message_runtime</run_depend>
   <run_depend>move_base_to_manip</run_depend>
   <run_depend>moveit_core</run_depend>
