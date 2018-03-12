@@ -173,10 +173,6 @@ add_executable(graphics_and_frames src/graphics_and_frames.cpp)
 target_link_libraries(graphics_and_frames ${catkin_LIBRARIES} temoto_common)
 add_dependencies(graphics_and_frames temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
-add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
-target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_common)
-add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
-
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
 add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
