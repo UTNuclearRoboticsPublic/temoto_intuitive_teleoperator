@@ -50,7 +50,7 @@
 class Interpreter
 {
 public:
-  /** Constructor */
+  // Constructor
   Interpreter()
   {
     ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
@@ -66,24 +66,20 @@ public:
 
     // Output to the screen all the accepted voice commands
     displayRecognizedVoiceCommands();
+
+    // wait for for the sound_client server to come up
+    // TODO: change to something that actually checks if the server is online
+    sleep(1);
+    sound_client_.say("Hello! I am ready to receive verbal instructions.");
   };
-  
+
   /** Maps verbal instructions to specific command code. */
   std::vector<std::string> command_list_ =
   {
     // Commands for basic Temoto functionality: moving and navigating
-    {"stop stop"},		// stop or abort command
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
     {"robot plan and go"},		// command PLAN&EXECUTE
-    {"robot plan home"},	// command PLAN to a saved home pose
-    {"robot please go home"},	// command PLAN&EXECUTE the home pose
-    {"natural control mode"},	// control mode determines whether operator has natural or inverted view
-    {"inverted control mode"},	// control mode determines whether operator has natural or inverted view
-    {"free directions"},		// complete position of hand is used
-    {"limit directions"},		// some directions may be limited
-    {"consider rotation"},	// factors in hand orientation
-    {"ignore rotation"},		// hand orientation is ignored, i.e. using hand position only
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
     {"jog mode"},		// send small motions commands immediately
@@ -93,10 +89,6 @@ public:
     // They can be generally any C++ file
     {"open gripper"},		// open gripper, a preplanned sequence
     {"close gripper"},   // close gripper, a preplanned sequence
-    {"robot please approach"},  // move the robot base and arm to reach the marker pose
-    {"go to laser scan"},	// move the left arm to a pose for a laser scan
-    {"robot push button"},	// make a small motion to push a button
-    {"robot please scan"}	// do a lidar scan
   };
 
   ros::NodeHandle n_;

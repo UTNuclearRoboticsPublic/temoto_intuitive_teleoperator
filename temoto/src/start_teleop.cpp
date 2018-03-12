@@ -64,12 +64,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
 
   // Set initial scale on incoming commands
   setScale();
-
-  // Free hand motion
-  position_limited_ = false;
-  position_fwd_only_ = false;
   
-
   // client for /temoto/move_robot_service
   move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
   // client for /temoto/navigate_robot_srv
@@ -737,7 +732,7 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Rate node_rate(30.);
+  ros::Rate node_rate(40.);
 
   Teleoperator temoto_teleop(n);
 
@@ -753,6 +748,7 @@ int main(int argc, char **argv)
   ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
 
   ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
+
   
   while ( ros::ok() )
   {
@@ -768,7 +764,8 @@ int main(int argc, char **argv)
     
     ros::spinOnce();
     node_rate.sleep();
-  } // end while
+  } // end main loop
+
   
   return 0;
 } // end main

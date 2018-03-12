@@ -89,26 +89,3 @@ void Interpreter::displayRecognizedVoiceCommands()
   
   return;
 }
-
-/** Main method. */
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "interpret_utterance");
-
-  // Instance of Interpreter
-  Interpreter interpreter;
-
-  // wait for for the sound_client server to come up
-  // TODO: change to something that actually checks if the server is online
-  sleep(1);
-  interpreter.sound_client_.say("Hello! I am ready to receive verbal instructions.");
-
-  // wait for utterances
-  while (ros::ok())
-  {
-    ros::Duration(0.1).sleep();
-    ros::spinOnce();
-  }
-  
-  return 0;
-} // end main

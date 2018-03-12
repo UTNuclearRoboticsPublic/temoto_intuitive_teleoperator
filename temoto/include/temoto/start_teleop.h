@@ -47,15 +47,13 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/interpret_utterance.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
 #include "griffin_powermate/PowermateEvent.h"
 
 // Other includes
-#include <cstdlib>
-#include <iostream>
-#include <algorithm>
 #include <string>
 
 #ifndef START_TELEOP_H
@@ -112,6 +110,9 @@ public:
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
 
 private:
+  // Other Temoto classes (each encapsulating its own functionality)
+  Interpreter interpreter;  // Interpret voice commands
+
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;
 
@@ -138,9 +139,6 @@ private:
   // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
   // INVERTED control: the human operator is facing the robot so that left and right are inverted.
   bool naturalT_or_invertedF_control_ = true;	///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
-  bool orientation_locked_ = false;		///< Hand orientation info is to be ignored if TRUE.
-  bool position_limited_ = true;		///< Hand position is restricted to a specific direction/plane if TRUE.
-  bool position_fwd_only_ = false;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers

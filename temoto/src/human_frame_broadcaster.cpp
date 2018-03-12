@@ -43,7 +43,7 @@
 
 namespace human_frame_broadcaster
 {
-  /** Latest recieved full system status published by start_teleop node. */
+  // Latest recieved full system status published by start_teleop node.
   temoto::Status latest_status;
 
   bool g_navigation_control = false;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
@@ -61,7 +61,7 @@ void statusCallback(temoto::Status status)
   latest_status = status;
 }
 
-/** Main method. */
+// MAIN
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "human_frame_broadcaster");

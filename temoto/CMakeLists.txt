@@ -157,21 +157,20 @@ add_dependencies(temoto_common temoto_generate_messages_cpp)
 
 ## Declare a C++ executable
 
+##########################################
+# This is where most of the action happens
+##########################################
+add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp)
+target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common)
+add_dependencies(start_teleop temoto_generate_messages_cpp)
+
 add_executable(move_robot src/move_robot.cpp)
 target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(move_robot temoto_generate_messages_cpp)
 
-add_executable(start_teleop src/start_teleop.cpp)
-target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common)
-add_dependencies(start_teleop temoto_generate_messages_cpp)
-
 add_executable(graphics_and_frames src/graphics_and_frames.cpp)
 target_link_libraries(graphics_and_frames ${catkin_LIBRARIES} temoto_common)
 add_dependencies(graphics_and_frames temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-
-add_executable(interpret_utterance src/interpret_utterance.cpp)
-target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)
-add_dependencies(interpret_utterance temoto_generate_messages_cpp)
 
 add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
 target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_common)

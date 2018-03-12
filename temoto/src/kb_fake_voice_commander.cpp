@@ -44,34 +44,6 @@ public:
                 publish = true;
             }
 
-            // Limit directions: "l" key
-            //else if (kbCommand.key_code == 0x0026)
-            //{
-            //    voiceCommand.data = "limit directions";
-            //    publish = true;
-            //}
-
-            // Limit directions: "f" key
-            else if (kbCommand.key_code == 0x0021)
-            {
-                voiceCommand.data = "free directions";
-                publish = true;
-            }
-
-            // Ignore rotation: "x" key
-            else if (kbCommand.key_code == 0x002d)
-            {
-                voiceCommand.data = "ignore rotation";
-                publish = true;
-            }
-
-            // Consider rotation: "r" key
-            else if (kbCommand.key_code == 0x0013)
-            {
-                voiceCommand.data = "consider rotation";
-                publish = true;
-            }
-
             // Manipulation: "m" key
             else if (kbCommand.key_code == 0x0032)
             {
