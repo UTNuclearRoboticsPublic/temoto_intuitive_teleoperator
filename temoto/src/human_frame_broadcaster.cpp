@@ -46,26 +46,10 @@ namespace human_frame_broadcaster
   /** Latest recieved full system status published by start_teleop node. */
   temoto::Status latest_status;
 
-  bool g_natural_perspective = true;		///< Is TRUE for natural interpretation of human input; FALSE for inverted perspective.
   bool g_navigation_control = false;		///< Is TRUE when human input is to be interpred as a navigation goal in base_link frame.
 }
 using namespace human_frame_broadcaster;
 
-/** This function is executed when change_human2robot_tf service is called.
- *  It updates current_cmd_frame frame based on the client's request.
- *  @param req temoto::ChangeTf service request.
- *  @param res temoto::ChangeTf service response.
- *  @return always true.
- */
-bool service_change_tf(	temoto::ChangeTf::Request  &req,
-			temoto::ChangeTf::Request &res)
-{
-  // Get the value from the request
-  g_natural_perspective = req.first_person_perspective;
-  g_navigation_control = req.navigate;
-  
-  return true;
-} // end service_change_tf
 
 /** Update the status of the robot.
  *  We use this to get the current end effector pose.
@@ -108,10 +92,6 @@ int main(int argc, char **argv)
 
   // ROS subscriber on /temoto/status. Used to get the EE pose
   ros::Subscriber sub_status = nh.subscribe("temoto/status", 1, statusCallback);
-  
-  // Advertise a service for switching between tranfrom rotations.
-  ros::ServiceServer service = nh.advertiseService("temoto/change_human2robot_tf", service_change_tf);
-  ROS_INFO("[human_frame_broadcaster] Service 'temoto/change_human2robot_tf' up and going.");
   
   // A tranform between current_cmd_frame (child) frame and parent robot frame. 
   tf::Transform hand_frame_to_robot;

@@ -36,7 +36,6 @@
 // Include all temoto messages and services
 #include "temoto/Command.h"
 #include "temoto/Status.h"
-#include "temoto/ChangeTf.h"
 #include "temoto/Goal.h"
 
 #ifndef TEMOTO_COMMON_H

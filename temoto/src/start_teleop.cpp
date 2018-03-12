@@ -74,9 +74,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
   // client for /temoto/navigate_robot_srv
   navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
-  // client for requesting change of transform between operator's hand frame and the robot's tool/planning frame
-  tf_change_client_ = n.serviceClient<temoto::ChangeTf>("temoto/change_human2robot_tf");
-  // client for starting and waiting on a preplanned sequence
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
@@ -584,10 +581,6 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into MANIPULATION mode  ...");
       AMP_HAND_MOTION_ = 1;
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.navigate = false; // request a change of control mode
-      switch_human2robot_tf.request.first_person_perspective = naturalT_or_invertedF_control_;  // preserve current control perspective
-      tf_change_client_.call( switch_human2robot_tf );
       navT_or_manipF_ = false;
       setScale();
     }
@@ -603,11 +596,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into NAVIGATION mode  ...");
       AMP_HAND_MOTION_ = 100;
-      temoto::ChangeTf switch_human2robot_tf;
-      switch_human2robot_tf.request.navigate = true;  // request a change of control mode
-      switch_human2robot_tf.request.first_person_perspective = naturalT_or_invertedF_control_;
 
-      tf_change_client_.call( switch_human2robot_tf );
       navT_or_manipF_ = true;
       setScale();
     }
@@ -749,19 +738,8 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
 
   ros::Rate node_rate(30.);
-  
-  // Instance of Teleoperator
-  Teleoperator temoto_teleop(n);
 
-  // Make a request for initial human2robot TF set-up
-  temoto::ChangeTf initial_human2robot_tf;
-  if (temoto_teleop.manipulate_)  // Start in manipulation mode, if it's available
-    initial_human2robot_tf.request.navigate = false;
-  else
-    initial_human2robot_tf.request.navigate = true;
-  initial_human2robot_tf.request.first_person_perspective = true;
-  ros::service::waitForService("temoto/change_human2robot_tf");
-  temoto_teleop.tf_change_client_.call( initial_human2robot_tf );
+  Teleoperator temoto_teleop(n);
 
   // Setup ROS publishers/subscribers
   ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, &temoto_teleop);
