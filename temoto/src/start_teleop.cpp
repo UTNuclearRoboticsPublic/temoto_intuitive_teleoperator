@@ -698,17 +698,13 @@ void Teleoperator::triggerSequence(temoto::Command& voice_command)
 temoto::Status Teleoperator::setStatus()
 {
   temoto::Status status;
+  
   status.scale_by = pos_scale_;			// Latest pos_scale_ value
-
 
   status.commanded_pose = absolute_pose_cmd_;
 
-  status.in_natural_control_mode = naturalT_or_invertedF_control_;
-  status.orientation_free = !orientation_locked_;
-  status.position_unlimited = !position_limited_;
   status.end_effector_pose = current_pose_;			// latest known end effector pose
 
-  status.position_forward_only = position_fwd_only_;
   status.in_navigation_mode = navT_or_manipF_;
 
   return status;

@@ -49,36 +49,6 @@ void Visuals::updateStatus (temoto::Status status)
     adjust_camera_ = true;
     //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION or vice versa.");
   }
-
-  // Before overwriting previous status, checks if switch between camera views is necesassry due to limited directions.
-  if (status.position_forward_only && !latest_status_.position_forward_only)
-  {
-    adjust_camera_ = true;
-    camera_is_aligned_ = false;	// Change to top-view as operator has switched to forward only motion pattern
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'not fwd only' to 'fwd only'.");
-  }
-  else if (!status.position_forward_only && latest_status_.position_forward_only)
-  {
-    adjust_camera_ = true;
-    camera_is_aligned_ = true;	// Change to the so-called aligned view because operator has stopped using forward only
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'fwd only' to 'not fwd only'.");
-  }
-  
-  // Checks if switch between camera views is necesassry due to change in control mode.
-  if (status.in_natural_control_mode && !latest_status_.in_natural_control_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'natural control mode'.");
-  }
-  else if (!status.in_natural_control_mode && latest_status_.in_natural_control_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'inverted control mode'.");
-  }
-  
-  // Checks if switch between camera views is necesassry due to change in (un)limiting directions.
-  if (status.position_unlimited != latest_status_.position_unlimited)
-  	adjust_camera_ = true;
   
   // Overwrite latest_status values with the new status.
   latest_status_ = status;
@@ -190,6 +160,7 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.color.r = 1.0;
   cmd_pose_marker_.color.g = 0.5;
   cmd_pose_marker_.color.b = 0.0;
+  cmd_pose_marker_.color.a = 1;
   
   return;
 } // end Visuals::initHandPoseMarker()
@@ -242,15 +213,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
-    
-    // Paint the marker based on restricted motion latest_status
-    if (latest_status_.orientation_free)
-      cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else
-      cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
-
-    // In NAVIGATION, the hand pose marker must always be visible
-    cmd_pose_marker_.color.a = 1;
 
     marker_publisher.publish( cmd_pose_marker_ );
 
@@ -270,24 +232,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Hand pose marker
     cmd_pose_marker_.header = latest_status_.commanded_pose.header;
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
-
-    if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE
-    {
-      // 180* about y (pitch) then 90* about z (yaw)
-      // Multiply by this second quaternion to rotate it.
-      tf::Quaternion q_orig, q_rot( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
-      quaternionMsgToTF(cmd_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
-      q_orig *= q_rot;  // Calculate the new orientation
-      quaternionTFToMsg(q_orig, cmd_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
-    }
-
-    // Paint the marker based on restricted motion
-    if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
-
-    // SPECIAL CASE! Hide hand pose marker when orientation is to be ignored.
-    if (!latest_status_.orientation_free) cmd_pose_marker_.color.a = 0;	// make the marker invisible
-    else cmd_pose_marker_.color.a = 1;
 
     marker_publisher.publish( cmd_pose_marker_ );
 
@@ -338,27 +282,23 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-    // Adjust camera for NATURAL CONTROL MODE
-    if (latest_status_.in_natural_control_mode)
-    {
-      if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
-      {
-    		point_of_view_.up.vector.x = 0;
-    		point_of_view_.up.vector.z = 1;
+	  if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
+	  {
+			point_of_view_.up.vector.x = 0;
+			point_of_view_.up.vector.z = 1;
 
-    		// Camera will be behind temoto_end_effector, somewhat elevated
-    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
-    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+			// Camera will be behind temoto_end_effector, somewhat elevated
+			point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+			point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
+			point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-    		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-    		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-      }
-      
-      latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
-      pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
-      adjust_camera_ = false;					// set adjust_camera 'false'
-    } // if adjust_camera in_natural_control_mode
+			// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+			point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+	  }
+	  
+	  latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
+	  pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
+	  adjust_camera_ = false;					// set adjust_camera 'false'
       
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
 } // end Visuals::crunch()
