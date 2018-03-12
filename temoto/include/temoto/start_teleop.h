@@ -50,7 +50,6 @@
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
-#include "leap_motion_controller/Set.h"
 #include "griffin_powermate/PowermateEvent.h"
 
 // Other includes
@@ -86,8 +85,6 @@ public:
   void setScale();
   
   //Callback functions
-  
-  void processLeapCmd(leap_motion_controller::Set leap_data);
 
   void processJoyCmd(sensor_msgs::Joy pose_cmd);
   
@@ -113,8 +110,6 @@ public:
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
-  bool leap_input_ = false;
-  bool spacenav_input_ = true;
 
 private:
   /// Local TransformListener for transforming poses
@@ -126,16 +121,11 @@ private:
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
-  
-  /// Offsett zero position of the Leap Motion Controller.
-  const double OFFSET_X_ = 0;
-  const double OFFSET_Y_ = 0.2;		// Height of zero
-  const double OFFSET_Z_ = 0;
 
   /// Latest pose value received for the end effector.
   geometry_msgs::PoseStamped current_pose_;
   
-  /// For absolute pose commands, as from LeapMotion
+  /// For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
   geometry_msgs::Vector3 incremental_position_cmd_;
@@ -151,8 +141,6 @@ private:
   bool orientation_locked_ = false;		///< Hand orientation info is to be ignored if TRUE.
   bool position_limited_ = true;		///< Hand position is restricted to a specific direction/plane if TRUE.
   bool position_fwd_only_ = false;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processLeapCmd(..).
-  bool primary_hand_is_left_;			///< TRUE unless user specified right hand as the primary hand.
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers

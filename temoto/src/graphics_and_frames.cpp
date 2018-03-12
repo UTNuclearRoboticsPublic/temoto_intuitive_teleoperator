@@ -254,11 +254,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     marker_publisher.publish( cmd_pose_marker_ );
 
-    // Attach the leap_motion frame to base_link
-    if (leap_input_)
-    {
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "base_link", "leap_motion"));
-    }
   }
   // Setting markers & frames in MANIPULATION mode
   else
@@ -296,17 +291,10 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     marker_publisher.publish( cmd_pose_marker_ );
 
-    // Add the spacenav frame
-    if (!leap_input_)
-    {
-      spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-      spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-      tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
-    }
+    spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
+    spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
+    tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
 
-    // Attach the leap_motion frame to robot EE
-    if (leap_input_)
-      tf_br_.sendTransform(tf::StampedTransform(leap_motion_tf_, ros::Time::now(), "temoto_end_effector", "leap_motion"));
 
 	// update the goal position in moveit plugin to display real-time IK
     // Need to enable external comms in MoveIt for this to work

@@ -13,7 +13,6 @@ find_package(catkin REQUIRED
   geometry_msgs
   griffin_powermate
   keyboard_reader
-  leap_motion_controller
   message_generation
   move_base_msgs
   move_base_to_manip

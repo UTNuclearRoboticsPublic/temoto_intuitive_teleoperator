@@ -70,8 +70,6 @@ public:
     pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
-    pn.param<bool>("/temoto/leap_input", leap_input_, false);
-
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
     initDisplacementArrow();
@@ -83,10 +81,6 @@ public:
     adjust_camera_ = true;
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
-
-    // For the LeapMotion controller: X is right, Y is down, Z is towards the human's body
-    leap_motion_tf_.setOrigin( tf::Vector3(0., 0., 0.) );
-    leap_motion_tf_.setRotation(  tf::Quaternion( 0.5, -0.5, -0.5, 0.5)  );
 
     // publisher to update the goal in rviz in real-time
     pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>("/rviz/moveit/move_marker/goal_right_ur5_ee_link", 1);
@@ -126,9 +120,6 @@ private:
   void initActiveRangeBox();
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
-
-  // LeapMotion or SpaceNav?
-  bool leap_input_;
 
   /** STL files for the hand markers. */
   std::string manip_stl_;;
@@ -172,7 +163,6 @@ private:
   /** Show the hand marker frame in RViz **/
   tf::TransformBroadcaster tf_br_;
   tf::Transform spacenav_tf_;
-  tf::Transform leap_motion_tf_;
 
   // Publisher to update the goal state in rviz motion planning plugin
   // Need to enable external comms in MoveIt for this to work

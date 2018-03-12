@@ -3,11 +3,7 @@ temoto_frames:
   end_effector: "temoto_end_effector"
   mobile_base: "base_link"
 temoto:
-  # LeapMotion or SpaceNav
-  leap_input: false
-  spacenav_input: true
-  primary_hand: "left"
-  temoto_pose_cmd_topic: "/temoto/spacenav/joy" #"leap_motion_output"
+  temoto_pose_cmd_topic: "/temoto/spacenav/joy"
 
    # navigate or manipulate
   navigate: false
