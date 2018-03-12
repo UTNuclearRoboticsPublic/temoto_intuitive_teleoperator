@@ -32,73 +32,46 @@ public:
 
             // Plan trajecory: "l" key
             if (kbCommand.key_code == 0x0026 )
-            {
                 voiceCommand.data = "robot please plan";
-                publish = true;
-            }
 
             // Execute trajectory: "e" key
             else if (kbCommand.key_code == 0x0012)
-            {
                 voiceCommand.data = "robot please execute";
-                publish = true;
-            }
 
             // Manipulation: "m" key
             else if (kbCommand.key_code == 0x0032)
-            {
                 voiceCommand.data = "manipulation";
-                publish = true;
-            }
 
             // Navigation: "n" key
             else if (kbCommand.key_code == 0x0031)
-            {
                 voiceCommand.data = "navigation";
-                publish = true;
-            }
 
             // Robot please go: "g" key
             else if (kbCommand.key_code == 0x0067)
-            {
                 voiceCommand.data = "robot please go";
-                publish = true;
-            }
 
             // Open gripper: "o" key
             else if (kbCommand.key_code == 0x0018)
-            {
                 voiceCommand.data = "open gripper";
-                publish = true;
-            }
 
             // Open gripper: "c" key
             else if (kbCommand.key_code == 0x002e)
-            {
                 voiceCommand.data = "close gripper";
-                publish = true;
-            }
 
-            // Start joggign: "j" key
+            // Start jogging: "j" key
             else if (kbCommand.key_code == 0x0024)
-            {
                 voiceCommand.data = "jog mode";
-                publish = true;
-            }
 
             // Stop joggign: "s" key
             else if (kbCommand.key_code == 0x001f)
-            {
                 voiceCommand.data = "stop jogging";
-                publish = true;
-            }
 
-            if (publish)
-            {
-                ROS_INFO("[fake voice commander] Publishing: %s", voiceCommand.data.c_str());
-                voiceCommandPublisher.publish(voiceCommand);
-                publish = false;
-            }
+            else
+                voiceCommand.data = "unrecognized command";
+
+
+            ROS_INFO("[fake voice commander] Publishing: %s", voiceCommand.data.c_str());
+            voiceCommandPublisher.publish(voiceCommand);
         }
     }
 };
