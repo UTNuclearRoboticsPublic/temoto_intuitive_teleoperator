@@ -48,6 +48,7 @@
 
 // temoto includes
 #include "temoto/interpret_utterance.h"
+#include "temoto/preplanned_sequences.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
 #include "temoto/temoto_common.h"
@@ -112,6 +113,7 @@ public:
 private:
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;  // Interpret voice commands
+  //preplanned_sequence sequence;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
 
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;

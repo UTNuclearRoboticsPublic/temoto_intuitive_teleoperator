@@ -61,16 +61,3 @@ void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
   if ( msg-> data.c_str() == low_level_cmds::ABORT)
     ROS_INFO_STREAM("[preplanned_sequences] ABORTING");
 }
-
-
-/** MAIN */
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "navigate_robot");
-  preplanned_sequence sequence;  // An object to process incoming commands
-  ros::AsyncSpinner spinner(2);  // 2 threads: execute the given task, and listen for ABORT
-  spinner.start();
-
-  ros::waitForShutdown();
-  return 0;
-}
