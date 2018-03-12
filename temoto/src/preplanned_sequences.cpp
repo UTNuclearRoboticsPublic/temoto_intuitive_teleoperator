@@ -47,12 +47,6 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     close_gripper::close_gripper(gripper_publisher_);
   else if (goal->sequence_name == "open gripper")
     open_gripper::open_gripper(gripper_publisher_);
-  else if (goal->sequence_name == "robot please approach")
-    robot_please_approach do_the_approach;
-  else if (goal->sequence_name == "go to laser scan")
-    go_to_laser_scan::go_to_laser_scan(n_);
-  else if (goal->sequence_name == "robot push button")
-    robot_push_button::robot_push_button(n_);
 
   // Action server: signal that the sequence is done
   result_.success = true;
