@@ -32,9 +32,6 @@
   <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
 
 
-  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
-
-
   <!-- Specify the frame of incoming commands -->
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   
@@ -68,12 +65,9 @@
   <!-- <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" /> -->
 
 
-  <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen" respawn="true" />
-
-
   <!-- Move the robot base to reach a pose -->
   <include file="$(find move_base_to_manip)/launch/move_base_to_manip.launch" />
+
 
   <!-- Arm jogging -->
   <include file="$(find vaultbot_drivers)/launch/jog_arms.launch"/>

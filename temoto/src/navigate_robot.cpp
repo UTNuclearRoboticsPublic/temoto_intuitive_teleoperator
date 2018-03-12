@@ -36,30 +36,24 @@
 #include "temoto/low_level_cmds.h"
 #include "temoto/navigate_robot.h"
 
-/** This method is executed when temoto/navigate_robot_service service is called.
- *  It updates navigation_goal_stamped_ based on the client's request and sets the new_navgoal_requested_ flag to let main() know that moving of the robot has been requested.
- *  When ABORT has been requested, it sets stop_navigation_ TRUE.
- *  @param req temoto::Goal service request.
- *  @param res temoto::Goal service response.
- *  @return always true.
- */
-bool NavigateRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
-					   temoto::Goal::Response &res)
-{ 
+
+bool NavigateRobotInterface::navRequest( std::string action_type, geometry_msgs::PoseStamped goal_pose )
+{
+  ROS_WARN_STREAM("Received nav request.");
+
   // check first if abort navigation has been requested.
-  if (req.action_type == low_level_cmds::ABORT )
+  if ( action_type == low_level_cmds::ABORT )
   {
-    stop_navigation_ = true;
+    abortNavigation();
     return true;
   }
-  // get goal pose and set new_navgoal_requested_ TRUE
   else
   {
-    navigation_goal_stamped_ = req.goal_pose;
-    new_navgoal_requested_ = true;
+    navigation_goal_stamped_ = goal_pose;
+    sendNavigationGoal();
     return true;
   }
-} // end serviceUpdate
+} // end navRequest
 
 /** Send navigation_goal_stamped_ to move_base action server. Non-blocking. */
 void NavigateRobotInterface::sendNavigationGoal()
@@ -81,7 +75,7 @@ void NavigateRobotInterface::abortNavigation()
   return;
 }
 
-/** Main method. */
+/*
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "navigate_robot");
@@ -90,8 +84,8 @@ int main(int argc, char** argv)
 
   NavigateRobotInterface navigateIF("move_base");
   
-  // Set up service for navigate_robot_srv; if there's a service request, call serviceUpdate() function
-  ros::ServiceServer service = n.advertiseService("temoto/navigate_robot_srv", &NavigateRobotInterface::serviceUpdate, &navigateIF);
+  // Set up service for navigate_robot_srv; if there's a service request, call navRequest() function
+  ros::ServiceServer service = n.advertiseService("temoto/navigate_robot_srv", &NavigateRobotInterface::navRequest, &navigateIF);
   
   while ( ros::ok() )
   {
@@ -116,3 +110,4 @@ int main(int argc, char** argv)
 
   return 0;
 }
+*/

@@ -48,25 +48,22 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 class NavigateRobotInterface {
 public:
-  /** Constructor */
-  NavigateRobotInterface(std::string mbase_name) :	// I use something called initializer list here, Alex taught me that
+  // Constructor
+  NavigateRobotInterface(std::string mbase_name) :
 	  move_base_aclient_(mbase_name, "true")	// Initialize the action client and tell it that we want to spin a thread by default
   {
-    new_navgoal_requested_ = false;
-    stop_navigation_ = false;
-
     // Wait for the action server to come up
     while( !move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
     {
-      ROS_INFO("[temoto/navigate_robot] Waiting for the move_base action server to come up");
+      ROS_WARN("[temoto/navigate_robot] Waiting for the move_base action server to come up");
     }
   };
    
-  /** Simple Action Client for move_base */
+  // Simple Action Client for move_base
   MoveBaseClient move_base_aclient_;
   
-  /** Callback function for navigation service request */
-  bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
+  // Callback function for navigation service request
+  bool navRequest( std::string action_type, geometry_msgs::PoseStamped goal_pose );
   
   // Functions that actually communicate with move_base action server
   
@@ -78,14 +75,7 @@ public:
 
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;
-   
-  // Public variables describing the state of MoveRobotInterface
-  
-  /** If new move has been requested by a client, it is set to TRUE; after calling sendNavigationGoal(), it is set to FALSE. */
-  bool new_navgoal_requested_;
-  
-  /** TRUE when 'cancel goal' has been requested; FALSE otherwise */
-  bool stop_navigation_;
+
 };
 
 #endif

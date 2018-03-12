@@ -47,8 +47,8 @@ public:
                 voiceCommand.data = "navigation";
 
             // Robot please go: "g" key
-            else if (kbCommand.key_code == 0x0067)
-                voiceCommand.data = "robot please go";
+            else if (kbCommand.key_code == 0x0022)
+                voiceCommand.data = "robot plan and go";
 
             // Open gripper: "o" key
             else if (kbCommand.key_code == 0x0018)

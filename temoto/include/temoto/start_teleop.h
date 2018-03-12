@@ -48,6 +48,7 @@
 
 // temoto includes
 #include "temoto/interpret_utterance.h"
+#include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
@@ -64,7 +65,6 @@ class Teleoperator
 {
 public:
   // Constructor
-  
   Teleoperator(ros::NodeHandle& n);
   
   // Callback functions
@@ -101,7 +101,6 @@ public:
   
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
-  ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
   ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for current_cmd_frame frame.
   bool manipulate_ = true;		/// Is manipulation enabled?
   bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
@@ -113,7 +112,8 @@ public:
 private:
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;  // Interpret voice commands
-  //preplanned_sequence sequence;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
+  preplanned_sequence sequence_;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
+  NavigateRobotInterface navigateIF_;  // Send motion commands to the base
 
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;

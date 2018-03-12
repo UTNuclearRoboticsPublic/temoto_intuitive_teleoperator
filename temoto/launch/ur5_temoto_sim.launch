@@ -31,9 +31,6 @@
   <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
 
 
-  <node name="interpret_utterance" pkg="temoto" type="interpret_utterance" />
-
-
   <!-- Specify the frame of incoming commands -->
   <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
   
@@ -52,9 +49,6 @@
   <!-- Load preplanned motions from yaml file -->
   <!-- <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" /> -->
 
-
-  <!-- A server to execute the preplanned sequences -->
-  <node name="preplanned_sequences" pkg="temoto" type="preplanned_sequences" output="screen" respawn="true" />
 
   <!-- Arm jogging -->
   <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>

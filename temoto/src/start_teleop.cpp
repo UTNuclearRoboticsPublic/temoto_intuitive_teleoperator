@@ -37,9 +37,9 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator(ros::NodeHandle& n)
- : preplanned_sequence_client_("temoto/preplanned_sequence", true)  // true--> don't block the thread
-  //, q_incremental_(0., 0., 0., 1.) // initially, add no rotation. New incremental rotation commands from e.g. the SpaceMouse will be added here.
+Teleoperator::Teleoperator(ros::NodeHandle& n) :
+ preplanned_sequence_client_("temoto/preplanned_sequence", true),  // true--> don't block the thread
+ navigateIF_("move_base")
 {
   n.param<std::string>("/temoto/temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
 
@@ -67,8 +67,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n)
   
   // client for /temoto/move_robot_service
   move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
-  // client for /temoto/navigate_robot_srv
-  navigate_robot_client_ = n.serviceClient<temoto::Goal>("temoto/navigate_robot_srv");
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
@@ -109,8 +107,9 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     if (action_type == low_level_cmds::ABORT)
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to stop navigation.");
-      // make a service request to stop the robot
-      if ( !navigate_robot_client_.call( motion ) )
+      // Stop
+      geometry_msgs::PoseStamped empty_pose;
+      if ( !navigateIF_.navRequest( low_level_cmds::ABORT, empty_pose ) )
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
@@ -164,8 +163,10 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // Set goal_in_baselink as the target goal
       motion.request.goal_pose = goal_in_baselink;
       
-      // make a service request to navigate_robot_srv
-      if ( !navigate_robot_client_.call( motion ) )
+      // Move the robot
+      geometry_msgs::PoseStamped filler;
+      ROS_WARN_STREAM("Requesting navigation.");
+      if ( !navigateIF_.navRequest( motion.request.action_type, motion.request.goal_pose ) )
       {
 	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
       }
@@ -761,7 +762,7 @@ int main(int argc, char **argv)
 
     // publish current status
     pub_status.publish( temoto_teleop.setStatus() );
-    
+   
     ros::spinOnce();
     node_rate.sleep();
   } // end main loop
