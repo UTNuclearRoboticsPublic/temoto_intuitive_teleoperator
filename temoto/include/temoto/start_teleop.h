@@ -75,10 +75,6 @@ public:
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
 
   // Helper functions
-
-  geometry_msgs::Quaternion extractOnlyPitch(geometry_msgs::Quaternion msg);
-  
-  geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
   
   temoto::Status setStatus();
 
@@ -102,9 +98,7 @@ public:
   
   // Public members
   ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
-  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for current_cmd_frame frame.
   bool manipulate_ = true;		/// Is manipulation enabled?
-  bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.

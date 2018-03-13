@@ -186,14 +186,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     }
     // Point-to-point motion
     else
-    {
-      // Adjust orientation for inverted control mode
-      if ( !naturalT_or_invertedF_control_)
-      {
-        // rotate orientation 180 around UP-vector
-        motion.request.goal_pose.pose.orientation = oneEightyAroundOperatorUp( motion.request.goal_pose.pose.orientation ) ;
-      }
-         
+    {        
       // Call temoto/move_robot_service
       if ( !move_robot_client_.call( motion ) )
       {
@@ -246,31 +239,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
   return;
 } // end callRobotMotionInterfaceWithNamedTarget
 
-/** Alters a quaternion so that the pitch is preserved while roll and yaw are set to zero.
- * 
- *  @param quaternion_msg incoming quaternion as a geometry_msgs.
- *  @return normalized quaternion as a geometry_msgs that contains only pitch information.
- */
-geometry_msgs::Quaternion Teleoperator::extractOnlyPitch(geometry_msgs::Quaternion quaternion_msg)
-{
-  // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
-  tf::Quaternion quat;
-  tf::quaternionMsgToTF(quaternion_msg, quat);
-
-  // the tf::Quaternion has a method to acess roll pitch and yaw
-  double roll, pitch, yaw;
-  tf::Matrix3x3(quat).getRPY(roll, pitch, yaw);
-  
-  // modify quaternion by setting roll and yaw to zero
-//   ROS_INFO("[start_teleop/extractOnlyPitch] PITCH: %.2f", pitch);
-  quat.setRPY(0, pitch, 0);
-  quat.normalize();
-  
-  // the modified quaternion is converted to a geometry_msgs::Quaternion
-  geometry_msgs::Quaternion outbound_msg;
-  tf::quaternionTFToMsg(quat, outbound_msg);
-  return outbound_msg;
-}
 
 /** Callback function for relative position commands.
  *  Add the new command to the current RViz marker pose.
@@ -493,24 +461,6 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
   executing_preplanned_sequence_ = !sequence_result.result.success;
   if ( !executing_preplanned_sequence_ )
     ROS_INFO_STREAM("The preplanned sequence is complete.");
-}
-
-
-/** This function fixes the quaternion of a pose input in 'inverted control mode'.
- *  @param operator_input_quaternion_msg is the original quaternion during 'inverted control mode'.
- *  @return geometry_msgs::Quaternion quaternion_msg_out is the proper quaternion current_cmd_frame frame.
- */
-geometry_msgs::Quaternion Teleoperator::oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg)
-{
-  geometry_msgs::Quaternion quaternion_msg_out;
-  // Adjust orientation for inverted control mode
-  tf::Quaternion invert_rotation(0, 1, 0, 0);				// 180° turn around Y axis, UP in current_cmd_frame frame
-  tf::Quaternion operator_input;					// incoming operator's palm orientation
-  tf::quaternionMsgToTF(operator_input_quaternion_msg, operator_input);	// convert incoming quaternion msg to tf quaternion
-  tf::Quaternion final_rotation = operator_input * invert_rotation;	// apply invert_rotation to incoming palm rotation
-  final_rotation.normalize();						// normalize resulting quaternion
-  tf::quaternionTFToMsg(final_rotation, quaternion_msg_out);		// convert tf quaternion to quaternion msg
-  return quaternion_msg_out;
 }
 
 
