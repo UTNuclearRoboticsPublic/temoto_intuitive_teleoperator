@@ -63,7 +63,6 @@ public:
 
     // Get all the relevant frame names from parameter server
     nh_.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
-    nh_.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
     nh_.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
     // Initialize point-of-view camera placement and all the required markers
@@ -120,9 +119,6 @@ private:
   
   // Human input frame.
   std::string human_frame_;
-  
-  // Motion-planning control frame.
-  std::string eef_frame_;
   
   // Navigation control frame.
   std::string base_frame_;

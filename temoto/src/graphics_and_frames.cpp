@@ -57,7 +57,7 @@ void Visuals::initCameraFrames()
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
 void Visuals::initDisplacementArrow()
 {
-  displacement_arrow_.header.frame_id = human_frame_; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"; // x is forward, y is horizontal, z is vertical //
+  displacement_arrow_.header.frame_id = human_frame_;
   displacement_arrow_.header.stamp = ros::Time();
   displacement_arrow_.ns = "displacement_arrow";
   displacement_arrow_.id = 0;
@@ -281,12 +281,12 @@ void Visuals::crunch()
 		point_of_view_.up.vector.x = 0;
 		point_of_view_.up.vector.z = 1;
 
-		// Camera will be behind temoto_end_effector, somewhat elevated
+		// Camera will be behind end effector, somewhat elevated
 		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
 		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
 		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end effector frame, i.e. the palm of robotiq gripper
 		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
 
 	  pub_pov_camera_.publish( point_of_view_ );			// publish a CameraPlacement msg

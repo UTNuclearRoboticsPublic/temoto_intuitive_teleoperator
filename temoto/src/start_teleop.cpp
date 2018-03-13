@@ -66,7 +66,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
 
-  jog_twist_cmd_.header.frame_id = "temoto_end_effector";
+  jog_twist_cmd_.header.frame_id = "r_temoto_end_effector";
 
   // Set initial scale on incoming commands
   setScale();
@@ -610,7 +610,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     }
     else if (voice_command.cmd_string == "next end effector")
     {
-      ROS_INFO("Controlling the next end effector from yaml file ...");
+      ROS_INFO("Controlling the next group from yaml file ...");
       return;
     }
   
