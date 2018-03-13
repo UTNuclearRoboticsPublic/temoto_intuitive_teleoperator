@@ -36,26 +36,6 @@
 
 #include "temoto/graphics_and_frames.h"
 
-/** Callback function for /temoto/status.
- *  Looks for any changes that would require re-adjustment of the point-of-view camera.
- *  Stores the received status in a class variable latest_status_.
- *  @param status temoto::Status message
- */
-void Visuals::updateStatus (temoto::Status status)
-{
-  // Before overwriting previous status, checks if switch between camera views is necesassry due to switch between navigation and manipulation modes.
-  if (status.in_navigation_mode != latest_status_.in_navigation_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION or vice versa.");
-  }
-  
-  // Overwrite latest_status values with the new status.
-  latest_status_ = status;
-
-  return;
-}
-
 /** Creates the initial CameraPlacment message that is used for positioning point-of-view (POV) camera in RViz.
  */
 void Visuals::initCameraFrames()
@@ -254,7 +234,7 @@ void Visuals::crunch()
 
 
   	// update the goal position in moveit plugin to display real-time IK
-      // Need to enable external comms in MoveIt for this to work
+    // Need to enable external comms in MoveIt's RViz plugin for this to work
   	geometry_msgs::PoseStamped move_goal_msg;
   	move_goal_msg.header.frame_id = "base_link";
   	move_goal_msg.header.stamp = ros::Time::now();
@@ -265,16 +245,19 @@ void Visuals::crunch()
     pub_update_rviz_goal_.publish(move_goal_msg);
 
   } // end setting markers in MANIPULATION mode
-    
+
 
   // ============================================================ 
   // ==  CAMERA POSE  ===========================================
   // ============================================================
   // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV) camera.
+  if ( latest_status_.in_navigation_mode != prev_status_.in_navigation_mode )
+    adjust_camera_ = true;
 
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
+    ROS_WARN_STREAM("Adjusting camera for nav mode");
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
@@ -288,30 +271,29 @@ void Visuals::crunch()
     point_of_view_.focus.point.x = 0;
     point_of_view_.focus.point.y = 0;
 
-    latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
     pub_pov_camera_.publish( point_of_view_ );				// publish the modified CameraPlacement message
     adjust_camera_ = false;						// set adjust_camera 'false'
   }
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-	  if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
-	  {
-			point_of_view_.up.vector.x = 0;
-			point_of_view_.up.vector.z = 1;
+    ROS_WARN_STREAM("Adjusting camera for manipulation mode");
+		point_of_view_.up.vector.x = 0;
+		point_of_view_.up.vector.z = 1;
 
-			// Camera will be behind temoto_end_effector, somewhat elevated
-			point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-			point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
-			point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+		// Camera will be behind temoto_end_effector, somewhat elevated
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-			// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
-			point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-	  }
-	  
-	  latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
+		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin temoto_end_effector frame, i.e. the palm of robotiq gripper
+		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+
 	  pub_pov_camera_.publish( point_of_view_ );			// publish a CameraPlacement msg
 	  adjust_camera_ = false;					// set adjust_camera 'false'
       
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
+
+  prev_status_ = latest_status_;
+
 } // end Visuals::crunch()

@@ -47,7 +47,6 @@
 
 // temoto includes
 #include "temoto/temoto_common.h"
-#include "griffin_powermate/PowermateEvent.h"
 
 #ifndef RVIZ_VISUAL_H
 #define RVIZ_VISUAL_H
@@ -73,35 +72,29 @@ public:
     initDistanceAsText();
     initHandPoseMarker();
     initActiveRangeBox();
-    
-    // Initial state setup
+
     adjust_camera_ = true;
-    camera_is_aligned_ = true;
-    latest_known_camera_mode_ = 0;
 
     // Publishers
     pub_update_rviz_goal_ = nh_.advertise<geometry_msgs::PoseStamped>("/rviz/moveit/move_marker/goal_right_ur5_ee_link", 1);
     pub_rviz_marker_ = nh_.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
     pub_pov_camera_ = nh_.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
   };
-  
-  /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
-  void updateStatus (temoto::Status status);
-  
-  /** Callback function for /griffin_powermate/events. Sets adjust_camera_ TRUE. */
-  void powermateWheelEvent (griffin_powermate::PowermateEvent powermate);
 
-  /** Updates RViz point-of-view and visualization markers as needed. */
+  // Updates RViz point-of-view and visualization markers as needed.
   void crunch();
 
-  /** Initializes camera placement to a preset pose in frame specified by frame_id */
+  // Initializes camera placement to a preset pose in frame specified by frame_id
   void initCameraFrames();
   
-  /** ROS camera placement message that defines user's point-of-view in RViz. */
+  // ROS camera placement message that defines user's point-of-view in RViz.
   view_controller_msgs::CameraPlacement point_of_view_;
 
-  /** Latest recieved full system status published by start_teleop node. */
+  // Latest recieved full system status published by start_teleop node.
   temoto::Status latest_status_;
+
+  // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
+  temoto::Status prev_status_;
 
 private:
   ros::NodeHandle nh_;
@@ -125,43 +118,37 @@ private:
   /** STL files for the hand markers. */
   std::string manip_stl_;;
   
-  /** Human input frame. */
+  // Human input frame.
   std::string human_frame_;
   
-  /** Motion-planning control frame. */
+  // Motion-planning control frame.
   std::string eef_frame_;
   
-  /** Navigation control frame. */
+  // Navigation control frame.
   std::string base_frame_;
 
-  /** This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.*/
+  // This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.
   bool adjust_camera_;
-
-  /** Camera is algined with end effector (i.e., TRUE) as opposed to being in top-down point-of-view (i.e., FALSE).*/
-  bool camera_is_aligned_;
   
-  /** A state variable for keeping track of where rviz_visual node thinks the camera is. */
-  uint8_t latest_known_camera_mode_; 	// 0-unknown, 1-natural, 2-inverted, 11-navigation natural, 12-navigation inverted
-  
-  /** Arrow-shaped marker that visualizes target displacement of the robot. */
+  // Arrow-shaped marker that visualizes target displacement of the robot.
   visualization_msgs::Marker displacement_arrow_;
   
-  /** Text marker for displaying the length of displacement represented by displacement_arrow_. */
+  // Text marker for displaying the length of displacement represented by displacement_arrow_.
   visualization_msgs::Marker distance_as_text_;
   
-  /** Flattened-box-shaped marker that represents the position and orientation of the operator's primary hand. */
+  // Flattened-box-shaped marker that represents the position and orientation of the operator's primary hand.
   visualization_msgs::Marker cmd_pose_marker_;
   
-  /** Translucent box or area that is centered around the starting pose while displacement_arrow_ always points to one of its corners. */
+  // Translucent box or area that is centered around the starting pose while displacement_arrow_ always points to one of its corners.
   visualization_msgs::Marker active_range_box_;
 
-  /** A number that is used when some distance is required between robot and any marker or camera. */
+  // A number that is used when some distance is required between robot and any marker or camera.
   const double EYE_DISPLACEMENT_FRONT_ = 1.;
 
-  /** A number that is used when some distance is required between robot and any marker or camera. */
+  // A number that is used when some distance is required between robot and any marker or camera.
   const double EYE_DISPLACEMENT_TOP_ = 1.;
 
-  /** Show the hand marker frame in RViz **/
+  // Show the hand marker frame in RViz
   tf::TransformBroadcaster tf_br_;
   tf::Transform spacenav_tf_;
 

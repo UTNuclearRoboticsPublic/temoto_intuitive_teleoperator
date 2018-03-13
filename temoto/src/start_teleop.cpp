@@ -733,7 +733,7 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Rate node_rate(40.);
+  ros::Rate node_rate(50.);
 
   Teleoperator temoto_teleop(n);
 
