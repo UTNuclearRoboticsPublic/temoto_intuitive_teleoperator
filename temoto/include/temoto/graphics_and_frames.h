@@ -58,17 +58,14 @@ public:
   // ___ CONSTRUCTOR ___
   Visuals()
   {
-    // NodeHandle for accessing private parameters
-    ros::NodeHandle pn("~");
-
     // Get the STL's for the manip/nav hand markers from launch file, if any
     std::string manip_stl;
-    pn.param<std::string>("/temoto/manip_stl", manip_stl_, "");
+    nh_.param<std::string>("/temoto/manip_stl", manip_stl_, "");
 
     // Get all the relevant frame names from parameter server
-    pn.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
-    pn.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
-    pn.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
+    nh_.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
+    nh_.param<std::string>("/temoto_frames/end_effector", eef_frame_, "temoto_end_effector");
+    nh_.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
@@ -82,8 +79,10 @@ public:
     camera_is_aligned_ = true;
     latest_known_camera_mode_ = 0;
 
-    // publisher to update the goal in rviz in real-time
-    pub_update_rviz_goal_ = pn.advertise<geometry_msgs::PoseStamped>("/rviz/moveit/move_marker/goal_right_ur5_ee_link", 1);
+    // Publishers
+    pub_update_rviz_goal_ = nh_.advertise<geometry_msgs::PoseStamped>("/rviz/moveit/move_marker/goal_right_ur5_ee_link", 1);
+    pub_rviz_marker_ = nh_.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
+    pub_pov_camera_ = nh_.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
   };
   
   /** Callback function for /temoto/status. Looks for changes that require setting adjust_camera_ TRUE. */
@@ -91,9 +90,9 @@ public:
   
   /** Callback function for /griffin_powermate/events. Sets adjust_camera_ TRUE. */
   void powermateWheelEvent (griffin_powermate::PowermateEvent powermate);
-  
+
   /** Updates RViz point-of-view and visualization markers as needed. */
-  void crunch(ros::Publisher &marker_publisher, ros::Publisher &pow_publisher);
+  void crunch();
 
   /** Initializes camera placement to a preset pose in frame specified by frame_id */
   void initCameraFrames();
@@ -105,6 +104,8 @@ public:
   temoto::Status latest_status_;
 
 private:
+  ros::NodeHandle nh_;
+
   // ___ INITIALIZERS ___
 
   /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
@@ -167,6 +168,13 @@ private:
   // Publisher to update the goal state in rviz motion planning plugin
   // Need to enable external comms in MoveIt for this to work
   ros::Publisher pub_update_rviz_goal_;
+
+  // Publish visual markers to RViz
+  ros::Publisher pub_rviz_marker_;
+
+  // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
+  // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
+  ros::Publisher pub_pov_camera_;
 
   tf::TransformListener tf_listener_;
 };

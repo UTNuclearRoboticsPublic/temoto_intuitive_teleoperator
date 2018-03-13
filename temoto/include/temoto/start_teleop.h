@@ -47,6 +47,7 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
@@ -108,6 +109,7 @@ public:
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
+  Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
 private:
   // Other Temoto classes (each encapsulating its own functionality)

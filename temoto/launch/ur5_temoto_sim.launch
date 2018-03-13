@@ -28,18 +28,12 @@
 
 
   <!-- Bring up some temoto core components -->
-  <node name="graphics_and_frames" pkg="temoto" type="graphics_and_frames" output="screen" />
-
-
-  <!-- Specify the frame of incoming commands -->
-  <node name="human_frame_broadcaster" pkg="temoto" type="human_frame_broadcaster" />
-  
 
   <!-- MoveIt interface for right_ur5 -->
   <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
 
   
-  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="xterm -title '手元 TELEOPERATOR' -e" />
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="gnome-terminal --command" />
 
 
   <!-- Start soundplay_node that is responsible for voice synthesis -->le

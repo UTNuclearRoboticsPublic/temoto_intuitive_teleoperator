@@ -41,73 +41,31 @@ bool NavigateRobotInterface::navRequest( std::string action_type, geometry_msgs:
 {
   ROS_WARN_STREAM("Received nav request.");
 
+  // Wait for the action server to come up
+  if( !move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
+  {
+    ROS_WARN("[temoto/navigate_robot] The move_base action server is not available.");
+    return false;
+  }
+
   // check first if abort navigation has been requested.
   if ( action_type == low_level_cmds::ABORT )
   {
-    abortNavigation();
+    move_base_aclient_.cancelGoal();
     return true;
   }
   else
   {
     navigation_goal_stamped_ = goal_pose;
-    sendNavigationGoal();
+
+    move_base_msgs::MoveBaseGoal mb_goal;
+
+    mb_goal.target_pose = navigation_goal_stamped_;
+  
+    ROS_INFO("[temoto/navigate_robot] Sending navigation goal");
+
+    move_base_aclient_.sendGoal(mb_goal);
+
     return true;
   }
-} // end navRequest
-
-/** Send navigation_goal_stamped_ to move_base action server. Non-blocking. */
-void NavigateRobotInterface::sendNavigationGoal()
-{
-  move_base_msgs::MoveBaseGoal mb_goal;
-
-  mb_goal.target_pose = navigation_goal_stamped_;
-  
-  ROS_INFO("[temoto/navigate_robot] Sending navigation goal");
-  move_base_aclient_.sendGoal(mb_goal);
-
-  return;
 }
-
-/** Sends a action request to cancel goal. */
-void NavigateRobotInterface::abortNavigation()
-{
-  move_base_aclient_.cancelGoal();
-  return;
-}
-
-/*
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "navigate_robot");
-  ros::NodeHandle n;
-  ros::Rate node_rate(30);
-
-  NavigateRobotInterface navigateIF("move_base");
-  
-  // Set up service for navigate_robot_srv; if there's a service request, call navRequest() function
-  ros::ServiceServer service = n.advertiseService("temoto/navigate_robot_srv", &NavigateRobotInterface::navRequest, &navigateIF);
-  
-  while ( ros::ok() )
-  {
-    if (navigateIF.stop_navigation_)
-    {
-      navigateIF.abortNavigation();
-      navigateIF.stop_navigation_ = false;
-    }
-    // if new navigation goal has been requested
-    else if (navigateIF.new_navgoal_requested_)
-    {
-      // navigate the robot to requested goal
-      navigateIF.sendNavigationGoal();
-      navigateIF.new_navgoal_requested_ = false;
-    }
-      
-    ros::spinOnce();
-    node_rate.sleep();
-  } // while
-
-
-
-  return 0;
-}
-*/

@@ -165,7 +165,7 @@ void Visuals::initHandPoseMarker()
   return;
 } // end Visuals::initHandPoseMarker()
 
-/** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
+// Creates the initial marker for an active range box around the robot where target position is always in one of the corners.
 void Visuals::initActiveRangeBox()
 {
   active_range_box_.header.frame_id = human_frame_;
@@ -194,8 +194,22 @@ void Visuals::initActiveRangeBox()
   return;
 } // end Visuals::initActiveRangeBox()
 
-void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publisher)
+void Visuals::crunch()
 {
+
+  // ============================================================ 
+  // ==  CHECK FOR REASONABLE EE POSE  ==========================
+  // ============================================================
+
+  // An uninitialized w-component of quaternion is a good bet that the pose was uninitialized
+  if ( latest_status_.end_effector_pose.pose.orientation.w==0. )
+  {
+    ROS_WARN_THROTTLE(5, "[rviz_visual] Waiting for the initial end effector pose.");
+    ROS_WARN_THROTTLE(5, "[rviz_visual] For distributed systems, are your clocks synched?");
+    return;
+  }
+
+
   // ============================================================ 
   // ==  VISUALIZATION MARKERS  =================================
   // ============================================================
@@ -214,13 +228,12 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
-    marker_publisher.publish( cmd_pose_marker_ );
+    pub_rviz_marker_.publish( cmd_pose_marker_ );
 
   }
   // Setting markers & frames in MANIPULATION mode
   else
   {
-
     // ==  HAND POSE MARKER  ================================= //
     cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
@@ -233,22 +246,22 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     cmd_pose_marker_.header = latest_status_.commanded_pose.header;
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
-    marker_publisher.publish( cmd_pose_marker_ );
+    pub_rviz_marker_.publish( cmd_pose_marker_ );
 
     spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
     spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
     tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
 
 
-	// update the goal position in moveit plugin to display real-time IK
-    // Need to enable external comms in MoveIt for this to work
-	geometry_msgs::PoseStamped move_goal_msg;
-	move_goal_msg.header.frame_id = "base_link";
-	move_goal_msg.header.stamp = ros::Time::now();
-	move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
-	move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
-	move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
-	quaternionTFToMsg( spacenav_tf_.getRotation(), move_goal_msg.pose.orientation );
+  	// update the goal position in moveit plugin to display real-time IK
+      // Need to enable external comms in MoveIt for this to work
+  	geometry_msgs::PoseStamped move_goal_msg;
+  	move_goal_msg.header.frame_id = "base_link";
+  	move_goal_msg.header.stamp = ros::Time::now();
+  	move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
+  	move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
+  	move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
+  	quaternionTFToMsg( spacenav_tf_.getRotation(), move_goal_msg.pose.orientation );
     pub_update_rviz_goal_.publish(move_goal_msg);
 
   } // end setting markers in MANIPULATION mode
@@ -276,7 +289,7 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     point_of_view_.focus.point.y = 0;
 
     latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
-    pov_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
+    pub_pov_camera_.publish( point_of_view_ );				// publish the modified CameraPlacement message
     adjust_camera_ = false;						// set adjust_camera 'false'
   }
   // Adjust camera in MANIPULATION mode
@@ -297,54 +310,8 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 	  }
 	  
 	  latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
-	  pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
+	  pub_pov_camera_.publish( point_of_view_ );			// publish a CameraPlacement msg
 	  adjust_camera_ = false;					// set adjust_camera 'false'
       
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
 } // end Visuals::crunch()
-
-/** Main */
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "rviz_visual");
-  ros::NodeHandle n;
-  
-  // Setting the node rate (Hz)
-  ros::Rate node_rate(30);
-
-  Visuals rviz_visuals;
-  
-  ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
-  
-  // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
-  // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
-  ros::Publisher pub_pov_camera = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
-
-  // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
-  ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
-
-  // Wait for initial end-effector position to set camera position
-
-  while ((rviz_visuals.latest_status_.end_effector_pose.pose.position.x==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.y==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.z==0) )
-  {
-    ROS_WARN("[rviz_visual] Waiting for the initial end effector pose.");
-    ROS_WARN("[rviz_visual] For distributed systems, are your clocks synched?");
-    ros::spinOnce();
-    ros::Duration(1.).sleep();
-  }
-
-  rviz_visuals.crunch(pub_marker, pub_pov_camera);
- 
-  // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
-  pub_pov_camera.publish( rviz_visuals.point_of_view_ );
-  
-  while ( ros::ok() )
-  {
-    // Update point-of-view camera pose and all the visualization markers
-    rviz_visuals.crunch(pub_marker, pub_pov_camera);
-    
-    ros::spinOnce();
-    node_rate.sleep();
-  }
-  
-} // end main()

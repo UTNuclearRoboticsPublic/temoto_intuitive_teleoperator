@@ -748,20 +748,17 @@ int main(int argc, char **argv)
 
   ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
 
-  ros::Publisher pub_status = n.advertise<temoto::Status>("temoto/status", 3);
-
   
   while ( ros::ok() )
   {
     // Jog?
     if ( temoto_teleop.in_jog_mode_ && 
 	!temoto_teleop.executing_preplanned_sequence_ )  	// Can't while doing something else
-    {
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
-    }
 
-    // publish current status
-    pub_status.publish( temoto_teleop.setStatus() );
+
+    temoto_teleop.graphics_and_frames_.latest_status_ = temoto_teleop.setStatus();
+    temoto_teleop.graphics_and_frames_.crunch();
    
     ros::spinOnce();
     node_rate.sleep();

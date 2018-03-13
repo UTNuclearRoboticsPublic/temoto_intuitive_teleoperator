@@ -52,11 +52,6 @@ public:
   NavigateRobotInterface(std::string mbase_name) :
 	  move_base_aclient_(mbase_name, "true")	// Initialize the action client and tell it that we want to spin a thread by default
   {
-    // Wait for the action server to come up
-    while( !move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
-    {
-      ROS_WARN("[temoto/navigate_robot] Waiting for the move_base action server to come up");
-    }
   };
    
   // Simple Action Client for move_base
@@ -64,14 +59,6 @@ public:
   
   // Callback function for navigation service request
   bool navRequest( std::string action_type, geometry_msgs::PoseStamped goal_pose );
-  
-  // Functions that actually communicate with move_base action server
-  
-  /** Sends navigation_goal_stamped_ to move_base action server. Non-blocking. */
-  void sendNavigationGoal();
-
-  /** Sends a action request to cancel goal. */
-  void abortNavigation();
 
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;

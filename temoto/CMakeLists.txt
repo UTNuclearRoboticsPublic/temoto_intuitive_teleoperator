@@ -160,7 +160,7 @@ add_dependencies(temoto_common temoto_generate_messages_cpp)
 ##########################################
 # This is where most of the action happens
 ##########################################
-add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp)
+add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp src/graphics_and_frames.cpp)
 add_dependencies(start_teleop temoto_generate_messages_cpp )
 # Add one-off commands to trigger short, pre-planned sequences here
 target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common close_gripper open_gripper )
@@ -168,10 +168,6 @@ target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common close_gripp
 add_executable(move_robot src/move_robot.cpp)
 target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_common)
 add_dependencies(move_robot temoto_generate_messages_cpp)
-
-add_executable(graphics_and_frames src/graphics_and_frames.cpp)
-target_link_libraries(graphics_and_frames ${catkin_LIBRARIES} temoto_common)
-add_dependencies(graphics_and_frames temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
