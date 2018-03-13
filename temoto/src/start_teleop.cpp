@@ -54,7 +54,13 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
+  // Subscribers
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
+  sub_pose_cmd_ = n.subscribe(temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, this);
+  sub_voice_commands_ = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
+  sub_executing_preplanned_ = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
+  sub_end_effector_ = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, this);
+  sub_scaling_factor_ = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
 
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
@@ -686,18 +692,6 @@ int main(int argc, char **argv)
   ros::Rate node_rate(50.);
 
   Teleoperator temoto_teleop(n);
-
-  // Setup ROS publishers/subscribers
-  ros::Subscriber sub_scaling_factor = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, &temoto_teleop);
-
-  ros::Subscriber sub_pose_cmd = n.subscribe(temoto_teleop.temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, &temoto_teleop);
-
-  ros::Subscriber sub_voice_commands = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, &temoto_teleop);
-
-  ros::Subscriber sub_end_effector = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, &temoto_teleop);
-
-  ros::Subscriber sub_executing_preplanned = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, &temoto_teleop);
-
   
   while ( ros::ok() )
   {

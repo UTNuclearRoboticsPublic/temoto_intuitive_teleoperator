@@ -142,6 +142,9 @@ private:
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
 
+  // ROS subscribers
+  ros::Subscriber sub_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_end_effector_, sub_scaling_factor_;
+
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
   double nav_speed_fraction_ = 1.;
