@@ -608,6 +608,11 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       callRobotMotionInterface(low_level_cmds::GO);
       return;
     }
+    else if (voice_command.cmd_string == "next end effector")
+    {
+      ROS_INFO("Controlling the next end effector from yaml file ...");
+      return;
+    }
   
     else
     {

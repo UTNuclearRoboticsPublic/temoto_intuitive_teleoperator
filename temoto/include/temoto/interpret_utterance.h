@@ -84,6 +84,7 @@ public:
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
     {"jog mode"},		// send small motions commands immediately
     {"stop jogging"},		// stop jogging
+    {"next end effector"},      // switch to the next end effector
 
     // Preplanned sequences: these will interrupt other Temoto commands (except abort)
     // They can be generally any C++ file

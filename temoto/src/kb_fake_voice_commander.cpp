@@ -62,9 +62,13 @@ public:
             else if (kbCommand.key_code == 0x0024)
                 voiceCommand.data = "jog mode";
 
-            // Stop joggign: "s" key
+            // Stop jogging: "s" key                                    
             else if (kbCommand.key_code == 0x001f)
                 voiceCommand.data = "stop jogging";
+
+            // Next end effector: "tab" key
+            else if (kbCommand.key_code == 0x000f)
+                voiceCommand.data = "next end effector";
 
             else
                 voiceCommand.data = "unrecognized command";
