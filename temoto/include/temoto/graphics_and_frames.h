@@ -46,7 +46,7 @@
 #include "view_controller_msgs/CameraPlacement.h"
 
 // temoto includes
-#include "temoto/temoto_common.h"
+#include "temoto/Status.h"
 
 #ifndef RVIZ_VISUAL_H
 #define RVIZ_VISUAL_H

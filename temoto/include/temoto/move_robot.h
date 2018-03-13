@@ -42,7 +42,7 @@
 #include <tf2_ros/transform_listener.h>
 
 // temoto includes
-#include "temoto/temoto_common.h"
+#include "temoto/Goal.h"
 
 // other includes
 #include "string.h"

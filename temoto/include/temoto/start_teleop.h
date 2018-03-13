@@ -47,6 +47,7 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/Goal.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/move_robot.h"
@@ -54,8 +55,8 @@
 #include "temoto/preplanned_sequences.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
-#include "temoto/temoto_common.h"
 #include "griffin_powermate/PowermateEvent.h"
+
 
 // Other includes
 #include <string>
