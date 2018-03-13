@@ -49,6 +49,7 @@
 // temoto includes
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
+#include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
@@ -67,6 +68,12 @@ class Teleoperator
 public:
   // Constructor
   Teleoperator(ros::NodeHandle& n);
+
+  // Destructor
+  ~Teleoperator()
+  {
+    delete armIFPtr_;
+  }
   
   // Callback functions
   
@@ -104,7 +111,8 @@ public:
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
-
+  MoveRobotInterface* armIFPtr_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time, I think
+  geometry_msgs::PoseStamped current_pose_;  // Latest pose value received for the end effector.
 private:
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;  // Interpret voice commands
@@ -120,9 +128,6 @@ private:
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
-
-  /// Latest pose value received for the end effector.
-  geometry_msgs::PoseStamped current_pose_;
   
   /// For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;
@@ -133,17 +138,13 @@ private:
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
 
-  // ~*~ VARIABLES DESCRIBING THE STATE ~*~
-  // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
-  // INVERTED control: the human operator is facing the robot so that left and right are inverted.
-  bool naturalT_or_invertedF_control_ = true;	///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
 
   // ROS subscribers
-  ros::Subscriber sub_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_end_effector_, sub_scaling_factor_;
+  ros::Subscriber sub_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;

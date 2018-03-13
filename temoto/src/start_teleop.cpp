@@ -54,12 +54,17 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
+  // Object for arm motion interface
+  std::string move_group_name;
+  if ( !n.getParam("temoto/movegroup", move_group_name) )
+    ROS_ERROR("[move_robot/main] No movegroup name was specified. Aborting.");
+  armIFPtr_ = new MoveRobotInterface( move_group_name );
+
   // Subscribers
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
   sub_pose_cmd_ = n.subscribe(temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, this);
   sub_voice_commands_ = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
   sub_executing_preplanned_ = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
-  sub_end_effector_ = n.subscribe("temoto/end_effector_pose", 0, &Teleoperator::updateEndEffectorPose, this);
   sub_scaling_factor_ = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
 
   absolute_pose_cmd_.header.frame_id = "base_link";
@@ -193,11 +198,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Point-to-point motion
     else
     {        
-      // Call temoto/move_robot_service
-      if ( !move_robot_client_.call( motion ) )
-      {
-        ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/move_robot_service");
-      }
+      // Send the motion request
+      armIFPtr_-> req_action_type_ = action_type;
+      armIFPtr_-> target_pose_stamped_ = absolute_pose_cmd_;
+      armIFPtr_-> requestMove();
+
       return;
     }
   }
@@ -223,20 +228,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
 void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target)
 {
   if ( !navT_or_manipF_ )			// currenly implemented only for manipulation mode
-  {
-    temoto::Goal motion;			// create a service request
-    motion.request.action_type = action_type;	// set action_type
-    motion.request.named_target = named_target;	// set named_target as the goal
-    
-    // call for the service to move robot group
-    if ( move_robot_client_.call( motion ) )
-    {
-      ROS_INFO("Successfully called temoto/move_robot_service");
-    }
-    else
-    {
-      ROS_ERROR("Failed to call temoto/move_robot_service");
-    }
+  {   
+    // request arm motion
+    armIFPtr_->req_action_type_ = action_type;
+    armIFPtr_->named_target_ = named_target;
+    armIFPtr_-> requestMove();
   }
   else
   {
@@ -256,7 +252,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   if ( current_pose_.header.frame_id != "base_link" )
   {
     ROS_WARN_THROTTLE(2, "[start_teleop] The current pose is not being published in the base_link frame.");
-    return;
+    //return;
   }
 
   // If rotational components >> translational, ignore translation (and vice versa)
@@ -435,17 +431,6 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     return;
   } // else
 } // end processPowermate()
-
-/** Callback function for /temoto/end_effector_pose.
- *  Sets the received pose of an end effector as current_pose_.
- *  @param end_eff_pose geometry_msgs::PoseStamped for end effector.
- */
-void Teleoperator::updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose)
-{
-  current_pose_ = end_effector_pose;		// sets the position of end effector as current pose
-  return;
-} // end processEndeffector()
-
 
 /** Callback function for /nav_collision_warning/spd_fraction
  *  Scales teleoperated velocity cmds when an obstacle is close.
@@ -696,8 +681,12 @@ int main(int argc, char **argv)
 
   ros::Rate node_rate(50.);
 
+  // Using an async spinner. It is needed for moveit's MoveGroup::plan()
+  ros::AsyncSpinner spinner(2);
+  spinner.start();
+
   Teleoperator temoto_teleop(n);
-  
+
   while ( ros::ok() )
   {
     // Jog?
@@ -705,11 +694,11 @@ int main(int argc, char **argv)
 	!temoto_teleop.executing_preplanned_sequence_ )  	// Can't while doing something else
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
+    temoto_teleop.current_pose_ = temoto_teleop.armIFPtr_->movegroup_.getCurrentPose();
 
     temoto_teleop.graphics_and_frames_.latest_status_ = temoto_teleop.setStatus();
     temoto_teleop.graphics_and_frames_.crunch();
-   
-    ros::spinOnce();
+
     node_rate.sleep();
   } // end main loop
 
