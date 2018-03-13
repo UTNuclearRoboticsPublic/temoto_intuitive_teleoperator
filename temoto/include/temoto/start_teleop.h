@@ -105,7 +105,6 @@ public:
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
   
   // Public members
-  ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
   bool manipulate_ = true;		/// Is manipulation enabled?
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion

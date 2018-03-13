@@ -41,9 +41,6 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 
-// temoto includes
-#include "temoto/Goal.h"
-
 // other includes
 #include "string.h"
 
@@ -61,9 +58,6 @@ class MoveRobotInterface {
    };
    
    moveit::planning_interface::MoveGroup movegroup_;
-   
-   /** Callback function */
-   bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
 
    void requestMove();
 

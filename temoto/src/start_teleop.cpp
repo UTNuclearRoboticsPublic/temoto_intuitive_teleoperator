@@ -75,9 +75,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
 
   // Set initial scale on incoming commands
   setScale();
-  
-  // client for /temoto/move_robot_service
-  move_robot_client_ = n.serviceClient<temoto::Goal>("temoto/move_robot_service");
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
@@ -103,12 +100,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
  */
 void Teleoperator::callRobotMotionInterface(std::string action_type)
 {
-  // Create a service request
-  temoto::Goal motion;	
-  motion.request.action_type = action_type;	// set action_type
-
-  motion.request.goal_pose = absolute_pose_cmd_;
-
   // =================================================
   // === Calling NavigateRobotInterface ==============
   // =================================================
@@ -150,13 +141,13 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       double lm_roll, lm_pitch, lm_yaw;
 
       tf::Quaternion quat_current_cmd_frame;
-      tf::quaternionMsgToTF(motion.request.goal_pose.pose.orientation, quat_current_cmd_frame);
+      tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_current_cmd_frame);
       tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
       
       // Translate current_cmd_frame pose to base_link
       geometry_msgs::PoseStamped goal_in_baselink;
       // absolute_pose_cmd_ is given in current_cmd_frame frame and shall be transformed into base_link
-      transform_listener_.transformPose("base_link", motion.request.goal_pose, goal_in_baselink);
+      transform_listener_.transformPose("base_link", absolute_pose_cmd_, goal_in_baselink);
     
 
       double bl_roll, bl_pitch, bl_yaw;
@@ -171,15 +162,12 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       quat_base_link.normalize();
       tf::quaternionTFToMsg(quat_base_link, goal_in_baselink.pose.orientation);
       
-      // Set goal_in_baselink as the target goal
-      motion.request.goal_pose = goal_in_baselink;
-      
       // Move the robot
       geometry_msgs::PoseStamped filler;
       ROS_WARN_STREAM("Requesting navigation.");
-      if ( !navigateIF_.navRequest( motion.request.action_type, motion.request.goal_pose ) )
+      if ( !navigateIF_.navRequest( action_type, goal_in_baselink ) )
       {
-	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
+	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot/navRequest()");
       }
       return;
     } // else if (action_type == "go")
