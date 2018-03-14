@@ -47,7 +47,6 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
-#include "temoto/Goal.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/move_robot.h"
@@ -83,6 +82,8 @@ public:
   temoto::Status setStatus();
 
   void setScale();
+
+  void switchEE();
 
   void processJoyCmd(sensor_msgs::Joy pose_cmd);
   

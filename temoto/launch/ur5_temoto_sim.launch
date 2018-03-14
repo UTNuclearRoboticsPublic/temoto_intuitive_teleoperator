@@ -27,12 +27,7 @@
   <include file="$(find spacenav_node)/launch/classic.launch"/> 
 
 
-  <!-- Bring up some temoto core components -->
-
-  <!-- MoveIt interface for right_ur5 -->
-  <node name="move_robot" pkg="temoto" type="move_robot" output="screen" />
-
-  
+  <!-- Most of the action happens here -->
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="gnome-terminal --command" />
 
 

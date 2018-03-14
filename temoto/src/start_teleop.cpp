@@ -57,7 +57,8 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
   int num_ee = 1;
-  n.param<int>("/temoto_frames/num_ee", num_ee, 1);
+  if ( !n.getParam("/temoto_frames/num_ee", num_ee) )
+    ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. Aborting.");
 
   // Get the ee names. Shove in vectors.
   std::string ee_names, move_group_name;
@@ -68,7 +69,7 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
     ee_names_.push_back(ee_names);
 
     // Objects for arm motion interface
-    if ( !n.getParam("temoto/movegroup", move_group_name) )
+    if ( !n.getParam("temoto_frames/ee/ee"+std::to_string(i)+"/movegroup", move_group_name) )
       ROS_ERROR("[start_teleop/Teleoperator] This movegroup name was not specified in yaml. Aborting.");
     arm_if_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
   }
@@ -598,7 +599,8 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
     }
     else if (voice_command.cmd_string == "next end effector")
     {
-      ROS_INFO("Controlling the next group from yaml file ...");
+      ROS_INFO("Controlling the next EE from yaml file ...");
+      switchEE();
       return;
     }
   
@@ -674,6 +676,25 @@ void Teleoperator::setScale()
   }
 }
 
+// Switch to the next available EE
+void Teleoperator::switchEE()
+{
+  if (current_movegroup_ee_index_ < ee_names_.size()-1 )
+    current_movegroup_ee_index_++;
+  else
+    current_movegroup_ee_index_ = 0;
+
+  jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
+
+  // Reset the hand marker to be at the EE
+  reset_integrated_cmds_ = true;
+
+  // Set camera at new EE
+  current_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  graphics_and_frames_.latest_status_ = setStatus();
+  graphics_and_frames_.adjust_camera_ = true;
+}
+
 
 // MAIN
 int main(int argc, char **argv)
@@ -698,7 +719,6 @@ int main(int argc, char **argv)
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
     temoto_teleop.current_pose_ = temoto_teleop.arm_if_ptrs_.at( temoto_teleop.current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-
     temoto_teleop.graphics_and_frames_.latest_status_ = temoto_teleop.setStatus();
     temoto_teleop.graphics_and_frames_.crunch();
 

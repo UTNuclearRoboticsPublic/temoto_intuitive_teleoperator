@@ -95,6 +95,9 @@ public:
   // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
   temoto::Status prev_status_;
 
+  // This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.
+  bool adjust_camera_;
+
 private:
   ros::NodeHandle nh_;
 
@@ -122,9 +125,6 @@ private:
   
   // Navigation control frame.
   std::string base_frame_;
-
-  // This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.
-  bool adjust_camera_;
   
   // Arrow-shaped marker that visualizes target displacement of the robot.
   visualization_msgs::Marker displacement_arrow_;
