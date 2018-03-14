@@ -73,22 +73,16 @@ public:
   // Destructor
   ~Teleoperator()
   {
-    delete armIFPtr_;
+    delete arm_if_ptrs_.at(0);
   }
-  
-  // Callback functions
   
   void callRobotMotionInterface(std::string action_type);
   
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
-
-  // Helper functions
   
   temoto::Status setStatus();
 
   void setScale();
-  
-  //Callback functions
 
   void processJoyCmd(sensor_msgs::Joy pose_cmd);
   
@@ -104,20 +98,25 @@ public:
 
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
   
-  // Public members
+  // Public member variables
   bool manipulate_ = true;		/// Is manipulation enabled?
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
-  MoveRobotInterface* armIFPtr_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time, I think
   geometry_msgs::PoseStamped current_pose_;  // Latest pose value received for the end effector.
+  int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
+  std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
+
 private:
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;  // Interpret voice commands
   preplanned_sequence sequence_;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
   NavigateRobotInterface navigateIF_;  // Send motion commands to the base
+
+  // All move_groups/ee's the user might want to control (specified in yaml)
+  std::vector<std::string> ee_names_;
 
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;

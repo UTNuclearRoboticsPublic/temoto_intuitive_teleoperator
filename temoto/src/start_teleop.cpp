@@ -54,11 +54,28 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
-  // Object for arm motion interface
-  std::string move_group_name;
-  if ( !n.getParam("temoto/movegroup", move_group_name) )
-    ROS_ERROR("[move_robot/main] No movegroup name was specified. Aborting.");
-  armIFPtr_ = new MoveRobotInterface( move_group_name );
+  // Get movegroup and frame names of all arms the user might want to control
+  // First, how many ee's are there?
+  int num_ee = 1;
+  n.param<int>("/temoto_frames/num_ee", num_ee, 1);
+
+  // Get the ee names. Shove in vectors.
+  std::string ee_names, move_group_name;
+  for (int i=0; i<num_ee; i++)
+  {
+    if ( !n.getParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", ee_names) )
+      ROS_ERROR("[start_teleop/Teleoperator] This ee name was not specified in yaml. Aborting.");
+    ee_names_.push_back(ee_names);
+
+    // Objects for arm motion interface
+    if ( !n.getParam("temoto/movegroup", move_group_name) )
+      ROS_ERROR("[start_teleop/Teleoperator] This movegroup name was not specified in yaml. Aborting.");
+    arm_if_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
+  }
+
+  // Specify the current ee & move_group
+  current_movegroup_ee_index_ = 0;
+  jog_twist_cmd_.header.frame_id = ee_names_.at( current_movegroup_ee_index_ );
 
   // Subscribers
   sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
@@ -70,8 +87,6 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
   absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
-
-  jog_twist_cmd_.header.frame_id = "r_temoto_end_effector";
 
   // Set initial scale on incoming commands
   setScale();
@@ -187,9 +202,9 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     else
     {        
       // Send the motion request
-      armIFPtr_-> req_action_type_ = action_type;
-      armIFPtr_-> target_pose_stamped_ = absolute_pose_cmd_;
-      armIFPtr_-> requestMove();
+      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> req_action_type_ = action_type;
+      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> target_pose_stamped_ = absolute_pose_cmd_;
+      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
 
       return;
     }
@@ -218,9 +233,9 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
   if ( !navT_or_manipF_ )			// currenly implemented only for manipulation mode
   {   
     // request arm motion
-    armIFPtr_->req_action_type_ = action_type;
-    armIFPtr_->named_target_ = named_target;
-    armIFPtr_-> requestMove();
+    arm_if_ptrs_.at( current_movegroup_ee_index_ )->req_action_type_ = action_type;
+    arm_if_ptrs_.at( current_movegroup_ee_index_ )->named_target_ = named_target;
+    arm_if_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
   }
   else
   {
@@ -631,7 +646,7 @@ temoto::Status Teleoperator::setStatus()
 
 void Teleoperator::setScale()
 {
-  if (navT_or_manipF_)
+  if (navT_or_manipF_) // navigation
   {
     if (in_jog_mode_)  // nav, jog mode
     {
@@ -653,8 +668,8 @@ void Teleoperator::setScale()
     }
     else  // manipulate, pt-to-pt mode
     {
-      pos_scale_ = 0.012;
-      rot_scale_ = 0.015;
+      pos_scale_ = 0.018;
+      rot_scale_ = 0.022;
     }
   }
 }
@@ -667,7 +682,7 @@ int main(int argc, char **argv)
 
   ros::NodeHandle n;
 
-  ros::Rate node_rate(50.);
+  ros::Rate node_rate(90.);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan()
   ros::AsyncSpinner spinner(2);
@@ -682,7 +697,7 @@ int main(int argc, char **argv)
 	!temoto_teleop.executing_preplanned_sequence_ )  	// Can't while doing something else
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
-    temoto_teleop.current_pose_ = temoto_teleop.armIFPtr_->movegroup_.getCurrentPose();
+    temoto_teleop.current_pose_ = temoto_teleop.arm_if_ptrs_.at( temoto_teleop.current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
     temoto_teleop.graphics_and_frames_.latest_status_ = temoto_teleop.setStatus();
     temoto_teleop.graphics_and_frames_.crunch();
