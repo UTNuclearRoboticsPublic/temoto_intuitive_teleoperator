@@ -66,7 +66,6 @@ find_package(catkin REQUIRED
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  Command.msg
   Status.msg
 )
 
@@ -171,7 +170,7 @@ add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
-catkin_install_python(PROGRAMS nodes/level_tf DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#catkin_install_python(PROGRAMS nodes/level_tf DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination

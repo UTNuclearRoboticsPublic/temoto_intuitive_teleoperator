@@ -463,13 +463,13 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
  */
-void Teleoperator::processVoiceCommand(temoto::Command voice_command)
+void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
 {
   //////////////////////////////////////////////////
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
-  if (voice_command.cmd_string == "stop jogging")
+  if (voice_command.data == "stop jogging")
   {
     ROS_INFO("Switching out of jog mode");
     in_jog_mode_ = false;
@@ -481,7 +481,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   /////////////////////////
   //  Handle ABORT commands
   /////////////////////////
-  if (voice_command.cmd_string == "stop stop")
+  if (voice_command.data == "stop stop")
   {
     ROS_INFO("Stopping ...");
     // Stop motions within temoto
@@ -514,7 +514,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   }
 
 
-  if ( voice_command.cmd_string == "manipulation" )  // Switch over to manipulation (MoveIt!) mode
+  if ( voice_command.data == "manipulation" )  // Switch over to manipulation (MoveIt!) mode
   {
     // If not already in manipulation mode
     if ( navT_or_manipF_==true )
@@ -529,7 +529,7 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       ROS_INFO("Already in manipulation mode.");
     return;
   }
-  else if ( voice_command.cmd_string == "navigation" )  // Switch over to navigation mode
+  else if ( voice_command.data == "navigation" )  // Switch over to navigation mode
   {
     // If not already in nav mode
     if ( navT_or_manipF_==false )
@@ -547,16 +547,16 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   }
 
 
-  if(voice_command.cmd_string == "close gripper")  // Close the gripper - a preplanned sequence
+  if(voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
   {
     ROS_INFO("Closing the gripper ...");
-    Teleoperator::triggerSequence(voice_command);
+    Teleoperator::triggerSequence(voice_command.data);
     return;
   }
-  else if(voice_command.cmd_string == "open gripper")  // Open the gripper - a preplanned sequence
+  else if(voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
   {
     ROS_INFO("Opening the gripper ...");
-    Teleoperator::triggerSequence(voice_command);
+    Teleoperator::triggerSequence(voice_command.data);
     return;
   }
 
@@ -567,20 +567,20 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
 
   else  // There's nothing blocking any arbitrary command
   {
-    if (voice_command.cmd_string == "jog mode")
+    if (voice_command.data == "jog mode")
     {
       ROS_INFO("Switching to jog mode");
       in_jog_mode_ = true;
       setScale();
       return;
     }
-    else if (voice_command.cmd_string == "robot please plan")
+    else if (voice_command.data == "robot please plan")
     {
       ROS_INFO("Planning ...");
       callRobotMotionInterface(low_level_cmds::PLAN);
       return;
     }
-    else if (voice_command.cmd_string == "robot please execute")
+    else if (voice_command.data == "robot please execute")
     {
       ROS_INFO("Executing last plan ...");
       callRobotMotionInterface(low_level_cmds::EXECUTE);
@@ -591,13 +591,13 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
       incremental_position_cmd_.z = 0.;
       return;
     }
-    else if (voice_command.cmd_string == "robot plan and go")
+    else if (voice_command.data == "robot plan and go")
     {
       ROS_INFO("Planning and moving ...");
       callRobotMotionInterface(low_level_cmds::GO);
       return;
     }
-    else if (voice_command.cmd_string == "next end effector")
+    else if (voice_command.data == "next end effector")
     {
       ROS_INFO("Controlling the next EE from yaml file ...");
       switchEE();
@@ -613,10 +613,10 @@ void Teleoperator::processVoiceCommand(temoto::Command voice_command)
   return;
 }
 
-void Teleoperator::triggerSequence(temoto::Command& voice_command)
+void Teleoperator::triggerSequence(std::string& voice_command)
 {
   temoto::PreplannedSequenceGoal goal;
-  goal.sequence_name = voice_command.cmd_string;
+  goal.sequence_name = voice_command;
   //while ( !preplanned_sequence_client_.waitForServer( ros::Duration(1.) ))
   //{
   //  ROS_INFO_STREAM("[start_teleop] Waiting for the preplanned action server.");

@@ -92,10 +92,10 @@ public:
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
 
   void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
-  
-  void processVoiceCommand(temoto::Command voice_command);
 
-  void triggerSequence(temoto::Command& voice_command);
+  void processVoiceCommand(std_msgs::String voice_command);
+
+  void triggerSequence(std::string& voice_command);
 
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
   

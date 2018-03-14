@@ -45,9 +45,7 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   // No valid commands by default
   bool valid_command = false;
   
-  // Set namespace for voice command messages
-  temoto::Command latest_command;
-  latest_command.ns = "temoto_voice_command";
+  std_msgs::String latest_command;
   
   // Print the output of speech recognizer
   //ROS_ERROR_STREAM("[interpret_utterance] I think you just said: " << utterance.data);
@@ -56,7 +54,7 @@ void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
   for(int it=0; it<command_list_.size(); ++it)
   {
     if ( utterance.data == command_list_.at(it)) {		// if valid voice command was found in utterance
-      latest_command.cmd_string = command_list_.at(it);		// take the command
+      latest_command.data = command_list_.at(it);		// take the command
       valid_command = true;
     } // end if
   } // end for

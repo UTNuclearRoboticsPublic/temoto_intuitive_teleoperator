@@ -39,9 +39,6 @@
 #include "std_msgs/String.h"
 #include "sound_play/sound_play.h"
 
-// temoto includes
-#include "temoto/Command.h"
-
 // Other includes
 #include "string.h"
 #include <vector>
@@ -62,7 +59,7 @@ public:
     sub_utterances_ = n_.subscribe<std_msgs::String>(input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, this);
 
     // Publish unambiguous commands based on speech recognition
-    pub_voice_commands_ = n_.advertise<temoto::Command>("temoto/voice_commands", 2);
+    pub_voice_commands_ = n_.advertise<std_msgs::String>("temoto/voice_commands", 2);
 
     // Output to the screen all the accepted voice commands
     displayRecognizedVoiceCommands();
