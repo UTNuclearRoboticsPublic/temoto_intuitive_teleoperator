@@ -629,22 +629,17 @@ void Teleoperator::triggerSequence(std::string& voice_command)
 
 /** Puts the latest private variable values into temoto/status message.
  *  This is used in marker publication.
- *  @return temoto::Status message.
+ *  @return void.
  */
-temoto::Status Teleoperator::setStatus()
+void Teleoperator::setGraphicsFramesStatus()
 {
-  temoto::Status status;
-  
-  status.scale_by = pos_scale_;			// Latest pos_scale_ value
+  graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
+  graphics_and_frames_.latest_status_.scale_by = pos_scale_;
+  graphics_and_frames_.latest_status_.end_effector_pose = current_pose_;
+  graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
 
-  status.commanded_pose = absolute_pose_cmd_;
-
-  status.end_effector_pose = current_pose_;			// latest known end effector pose
-
-  status.in_navigation_mode = navT_or_manipF_;
-
-  return status;
-} // end setStatus()
+  return;
+} // end setGraphicsFramesStatus()
 
 void Teleoperator::setScale()
 {
@@ -691,7 +686,7 @@ void Teleoperator::switchEE()
 
   // Set camera at new EE
   current_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-  graphics_and_frames_.latest_status_ = setStatus();
+  setGraphicsFramesStatus();
   graphics_and_frames_.adjust_camera_ = true;
 }
 
@@ -719,7 +714,7 @@ int main(int argc, char **argv)
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
     temoto_teleop.current_pose_ = temoto_teleop.arm_if_ptrs_.at( temoto_teleop.current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-    temoto_teleop.graphics_and_frames_.latest_status_ = temoto_teleop.setStatus();
+    temoto_teleop.setGraphicsFramesStatus(); // Update poses, scale, and nav-or-manip mode for the frames calculation
     temoto_teleop.graphics_and_frames_.crunch();
 
     node_rate.sleep();

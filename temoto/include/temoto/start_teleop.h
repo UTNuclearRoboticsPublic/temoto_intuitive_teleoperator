@@ -79,7 +79,7 @@ public:
   
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
   
-  temoto::Status setStatus();
+  void setGraphicsFramesStatus();
 
   void setScale();
 

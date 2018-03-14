@@ -51,6 +51,14 @@
 #ifndef RVIZ_VISUAL_H
 #define RVIZ_VISUAL_H
 
+struct temoto_status
+{
+  bool in_navigation_mode;
+  geometry_msgs::PoseStamped commanded_pose;
+  double scale_by;
+  geometry_msgs::PoseStamped end_effector_pose;
+};
+
 class Visuals
 {
 public:
@@ -90,10 +98,10 @@ public:
   view_controller_msgs::CameraPlacement point_of_view_;
 
   // Latest recieved full system status published by start_teleop node.
-  temoto::Status latest_status_;
+  temoto_status latest_status_;
 
   // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
-  temoto::Status prev_status_;
+  temoto_status prev_status_;
 
   // This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.
   bool adjust_camera_;
