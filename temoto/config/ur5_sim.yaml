@@ -4,7 +4,7 @@ temoto_frames:
   num_ee: 1 # How many end-effectors might the user want to control?
   ee: # Specify all move_group/ee pairs
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
-      end_effector: "right_temoto_end_effector"
+      end_effector: "temoto_end_effector"
       movegroup: "manipulator"
 
 temoto:

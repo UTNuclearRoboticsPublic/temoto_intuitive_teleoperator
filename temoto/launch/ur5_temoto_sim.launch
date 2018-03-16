@@ -24,7 +24,7 @@
   
 
   <!-- Pose Controller -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/> 
+  <include file="$(find spacenav_node)/launch/classic.launch" ns="temoto"/> 
 
 
   <!-- Most of the action happens here -->
@@ -40,6 +40,6 @@
 
 
   <!-- Arm jogging -->
-  <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>
+  <!--include file="$(find ur_gazebo)/launch/jog_arms.launch" /-->
 
 </launch>
