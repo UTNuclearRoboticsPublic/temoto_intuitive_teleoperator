@@ -112,6 +112,7 @@ public:
   std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
 private:
+
   ros::NodeHandle n_;
 
   // Other Temoto classes (each encapsulating its own functionality)

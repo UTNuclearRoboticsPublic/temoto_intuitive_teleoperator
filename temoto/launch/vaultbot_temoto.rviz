@@ -4,6 +4,7 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
+        - /MotionPlanning1
         - /MotionPlanning1/Scene Robot1
         - /MotionPlanning1/Planning Request1
         - /MotionPlanning1/Planning Metrics1
@@ -420,7 +421,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -779,7 +779,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -1175,7 +1174,7 @@ Visualization Manager:
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        hand_pose_marker: true
+        {}
       Queue Size: 100
       Value: true
     - Alpha: 0.7
