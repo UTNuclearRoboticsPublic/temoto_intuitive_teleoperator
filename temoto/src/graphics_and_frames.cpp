@@ -54,70 +54,6 @@ void Visuals::initCameraFrames()
   point_of_view_.up.header.frame_id = base_frame_;
 }
 
-/** Creates the initial marker that visualizes hand movement as a displacement arrow. */
-void Visuals::initDisplacementArrow()
-{
-  displacement_arrow_.header.frame_id = human_frame_;
-  displacement_arrow_.header.stamp = ros::Time();
-  displacement_arrow_.ns = "displacement_arrow";
-  displacement_arrow_.id = 0;
-  displacement_arrow_.type = visualization_msgs::Marker::ARROW;
-  displacement_arrow_.action = visualization_msgs::Marker::ADD;
-
-  // Defining start and end points for the arrow marker, the actual values don't matter here as they will be overwritten in the main
-  geometry_msgs::Point start_point, end_point;
-  start_point.x = 0.0;
-  start_point.y = 0.0;
-  start_point.z = 0.0;
-  end_point.x = 0.0;
-  end_point.y = -0.2;
-  end_point.z = 0.0;
-
-  // The point at index 0 is assumed to be the start point, and the point at index 1 is assumed to be the end. 
-  displacement_arrow_.points.push_back(start_point);
-  displacement_arrow_.points.push_back(end_point);
-
-  // scale.x is the shaft diameter, and scale.y is the head diameter. If scale.z is not zero, it specifies the head length. 
-  displacement_arrow_.scale.x = 0.001;
-  displacement_arrow_.scale.y = 0.002;
-  displacement_arrow_.scale.z = 0;
-  
-  // Make the arrow visible by setting alpha to 1.
-  displacement_arrow_.color.a = 1.0;  
-  // make the arrow orange
-  displacement_arrow_.color.r = 1.0;
-  displacement_arrow_.color.g = 0.5;
-  displacement_arrow_.color.b = 0.0;
-  
-  return;
-} // end Visuals::initDisplacementArrow()
-
-/** Creates the initial marker that displays front-facing text. */
-void Visuals::initDistanceAsText()
-{
-  distance_as_text_.header.frame_id = human_frame_;
-  distance_as_text_.header.stamp = ros::Time();
-  distance_as_text_.id = 0;
-  distance_as_text_.ns = "distance_as_text";
-  distance_as_text_.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
-  distance_as_text_.action = visualization_msgs::Marker::ADD;
-  distance_as_text_.text = "loading ...";
-  
-  // set the position of text; the actual values don't matter here as they will be overwritten in the main
-  distance_as_text_.pose.position.x = 0.0;
-  distance_as_text_.pose.position.y = 0.2;
-  distance_as_text_.pose.position.z = 0.0;
-  
-  // Text height
-  distance_as_text_.scale.z = 0.1;
-  
-  // Text visible & blue
-  distance_as_text_.color.a = 1;
-  distance_as_text_.color.b = 1;
-  
-  return;
-} // end Visuals::initDistanceAsText()
-
 /** Creates the initial marker that visualizes hand pose */
 void Visuals::initHandPoseMarker()
 {
@@ -144,35 +80,6 @@ void Visuals::initHandPoseMarker()
   
   return;
 } // end Visuals::initHandPoseMarker()
-
-// Creates the initial marker for an active range box around the robot where target position is always in one of the corners.
-void Visuals::initActiveRangeBox()
-{
-  active_range_box_.header.frame_id = human_frame_;
-  active_range_box_.header.stamp = ros::Time();
-  active_range_box_.ns = "active_range_box";
-  active_range_box_.id = 0;
-  active_range_box_.type = visualization_msgs::Marker::CUBE;
-  active_range_box_.action = visualization_msgs::Marker::ADD;
-
-  active_range_box_.scale.x = 0.2;	// side
-  active_range_box_.scale.y = 0.2;	// thickness
-  active_range_box_.scale.z = 0.2;	// depth
-  
-  // begin at the position of end effector
-  active_range_box_.pose.position.x = 0.0;
-  active_range_box_.pose.position.y = 0.0;
-  active_range_box_.pose.position.z = 0.0;
-
-  // Make the box barely visible by setting alpha to 0.2.
-  active_range_box_.color.a = 0.2;  
-  // Make the box red.
-  active_range_box_.color.r = 1.0;
-  active_range_box_.color.g = 0.0;
-  active_range_box_.color.b = 0.0;
-  
-  return;
-} // end Visuals::initActiveRangeBox()
 
 void Visuals::crunch()
 {

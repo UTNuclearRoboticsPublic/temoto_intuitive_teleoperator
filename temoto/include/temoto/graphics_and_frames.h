@@ -72,10 +72,7 @@ public:
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();
-    initDisplacementArrow();
-    initDistanceAsText();
     initHandPoseMarker();
-    initActiveRangeBox();
 
     adjust_camera_ = true;
 
@@ -108,17 +105,8 @@ private:
 
   // ___ INITIALIZERS ___
 
-  /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
-  void initDisplacementArrow();
-  
-  /** Creates the initial marker that displays front-facing text. */
-  void initDistanceAsText();
-
   /** Creates the initial marker that visualizes hand pose as a flattened box. */
   void initHandPoseMarker();
-  
-  /** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
-  void initActiveRangeBox();
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
 

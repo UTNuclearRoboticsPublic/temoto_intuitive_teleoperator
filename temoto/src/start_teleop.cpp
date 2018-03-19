@@ -81,10 +81,6 @@ Teleoperator::Teleoperator() :
   sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
 
-  absolute_pose_cmd_.header.frame_id = "base_link";
-  absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
-  absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
-
   // Set initial scale on incoming commands
   setScale();
 
@@ -104,6 +100,10 @@ Teleoperator::Teleoperator() :
     navT_or_manipF_ = false;		// if only manipulation is enabled, navT_or_manipF_ is FALSE
     AMP_HAND_MOTION_ = 1;		// for manipulation
   }
+
+  // Initial pose
+  current_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ = current_pose_;
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.
