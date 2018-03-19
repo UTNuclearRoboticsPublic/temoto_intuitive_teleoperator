@@ -35,10 +35,6 @@
   <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
 
 
-  <!-- Load preplanned motions from yaml file -->
-  <!-- <rosparam command="load" file="$(find temoto_support)/yaml/preplanned_motions.yaml" /> -->
-
-
   <!-- Arm jogging -->
   <!--include file="$(find ur_gazebo)/launch/jog_arms.launch" /-->
 

@@ -47,6 +47,7 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/move_robot.h"
@@ -67,7 +68,7 @@ class Teleoperator
 {
 public:
   // Constructor
-  Teleoperator(ros::NodeHandle& n);
+  Teleoperator();
 
   // Destructor
   ~Teleoperator()
@@ -111,6 +112,9 @@ public:
   std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
 private:
+
+  ros::NodeHandle n_;
+
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;  // Interpret voice commands
   preplanned_sequence sequence_;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
