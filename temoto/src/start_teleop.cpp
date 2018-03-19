@@ -46,7 +46,7 @@ Teleoperator::Teleoperator() :
   // By default navigation is turned OFF
   bool navigate = get_ros_params::getBoolParam("temoto/navigate", n_);
   // By default manipulation is turned ON
-  manipulate_ = get_ros_params::getBoolParam("temoto/manipulate_", n_);
+  manipulate_ = get_ros_params::getBoolParam("temoto/manipulate", n_);
 
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
