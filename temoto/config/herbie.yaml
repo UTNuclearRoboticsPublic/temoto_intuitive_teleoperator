@@ -1,0 +1,30 @@
+temoto_frames:
+  human_input: "current_cmd_frame"
+  base_frame: "base_link"
+  num_ee: 1 # How many end-effectors might the user want to control?
+  ee: # Specify all move_group/ee pairs
+    ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
+      end_effector: "temoto_end_effector"
+      movegroup: "manipulator"
+
+temoto:
+  temoto_pose_cmd_topic: "/temoto/spacenav/joy"
+
+   # navigate or manipulate
+  navigate: false
+  manipulate: true
+
+  manip_stl: "package://temoto_support/meshes/Shovel.stl" #"package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
+  input_voice_topic: "stt/spoken_text"
+
+  motion_scales:
+    pt_to_pt:
+      nav_pos_scale: 0.048
+      nav_rot_scale: 0.08
+      manip_pos_scale: 0.002
+      manip_rot_scale: 0.014
+    jog:
+      nav_pos_scale: 0.3
+      nav_rot_scale: 0.2
+      manip_pos_scale: 1.
+      manip_rot_scale: 1.

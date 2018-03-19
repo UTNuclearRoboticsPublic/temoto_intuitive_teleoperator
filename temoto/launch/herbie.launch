@@ -6,7 +6,7 @@
 
 
   <!-- Load temoto parameters -->
-  <rosparam command="load" file="$(find temoto)/config/ur5_sim.yaml" />
+  <rosparam command="load" file="$(find temoto)/config/herbie.yaml" />
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
