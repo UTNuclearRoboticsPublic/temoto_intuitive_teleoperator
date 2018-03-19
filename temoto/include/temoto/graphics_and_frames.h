@@ -41,7 +41,12 @@
 #include "std_srvs/Empty.h"
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
-#include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Transform.h>
+#include <tf2/LinearMath/Vector3.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #include "view_controller_msgs/CameraPlacement.h"
 
@@ -138,8 +143,9 @@ private:
   const double EYE_DISPLACEMENT_TOP_ = 1.;
 
   // Show the hand marker frame in RViz
-  tf::TransformBroadcaster tf_br_;
-  tf::Transform spacenav_tf_;
+  tf2_ros::TransformBroadcaster tf_br_;
+  tf2::Transform spacenav_tf_;
+  tf2::Transform leap_motion_tf_;
 
   // Publisher to update the goal state in rviz motion planning plugin
   // Need to enable external comms in MoveIt for this to work
@@ -151,8 +157,6 @@ private:
   // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
   // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
   ros::Publisher pub_pov_camera_;
-
-  tf::TransformListener tf_listener_;
 };
 
 #endif

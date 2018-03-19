@@ -134,20 +134,27 @@ void Visuals::crunch()
 
     pub_rviz_marker_.publish( cmd_pose_marker_ );
 
-    spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
-    spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
-    tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+    tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
+    tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+    spacenav_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
+
+    geometry_msgs::TransformStamped spacenav_tf_msg;
+    spacenav_tf_msg.header.stamp = ros::Time::now();
+    spacenav_tf_msg.header.frame_id = "base_link";
+    spacenav_tf_msg.child_frame_id = "spacenav";
+    spacenav_tf_msg.transform = toMsg(spacenav_tf_);
+    tf_br_.sendTransform(spacenav_tf_msg);
 
 
   	// update the goal position in moveit plugin to display real-time IK
     // Need to enable external comms in MoveIt's RViz plugin for this to work
-  	geometry_msgs::PoseStamped move_goal_msg;
-  	move_goal_msg.header.frame_id = "base_link";
-  	move_goal_msg.header.stamp = ros::Time::now();
-  	move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
-  	move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
-  	move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
-  	quaternionTFToMsg( spacenav_tf_.getRotation(), move_goal_msg.pose.orientation );
+    geometry_msgs::PoseStamped move_goal_msg;
+    move_goal_msg.header.frame_id = "base_link";
+    move_goal_msg.header.stamp = ros::Time::now();
+    move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
+    move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
+    move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
+    move_goal_msg.pose.orientation = tf2::toMsg(spacenav_tf_.getRotation());
     pub_update_rviz_goal_.publish(move_goal_msg);
 
   } // end setting markers in MANIPULATION mode
