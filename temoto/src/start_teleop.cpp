@@ -709,8 +709,10 @@ int main(int argc, char **argv)
   while ( ros::ok() )
   {
     // Jog?
-    if ( temoto_teleop.in_jog_mode_ && 
-	!temoto_teleop.executing_preplanned_sequence_ )  	// Can't while doing something else
+    // For now, can only jog with EE 0
+    // Can't jog while doing something else
+    if ( (temoto_teleop.current_movegroup_ee_index_==0) && temoto_teleop.in_jog_mode_ && 
+	!temoto_teleop.executing_preplanned_sequence_ )
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
     temoto_teleop.current_pose_ = temoto_teleop.arm_if_ptrs_.at( temoto_teleop.current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
