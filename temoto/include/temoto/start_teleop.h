@@ -47,15 +47,17 @@
 #include "tf/transform_listener.h"
 
 // temoto includes
+#include "temoto/graphics_and_frames.h"
+#include "temoto/interpret_utterance.h"
+#include "temoto/move_robot.h"
+#include "temoto/navigate_robot.h"
+#include "temoto/preplanned_sequences.h"
 #include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/low_level_cmds.h"
-#include "temoto/temoto_common.h"
 #include "griffin_powermate/PowermateEvent.h"
 
+
 // Other includes
-#include <cstdlib>
-#include <iostream>
-#include <algorithm>
 #include <string>
 
 #ifndef START_TELEOP_H
@@ -65,24 +67,23 @@ class Teleoperator
 {
 public:
   // Constructor
-  
   Teleoperator(ros::NodeHandle& n);
-  
-  // Callback functions
+
+  // Destructor
+  ~Teleoperator()
+  {
+    delete arm_if_ptrs_.at(0);
+  }
   
   void callRobotMotionInterface(std::string action_type);
   
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
-
-  // Helper functions
   
-  geometry_msgs::Quaternion oneEightyAroundOperatorUp(geometry_msgs::Quaternion operator_input_quaternion_msg);
-  
-  temoto::Status setStatus();
+  void setGraphicsFramesStatus();
 
   void setScale();
-  
-  //Callback functions
+
+  void switchEE();
 
   void processJoyCmd(sensor_msgs::Joy pose_cmd);
   
@@ -91,27 +92,33 @@ public:
   void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
 
   void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
-  
-  void processVoiceCommand(temoto::Command voice_command);
 
-  void triggerSequence(temoto::Command& voice_command);
+  void processVoiceCommand(std_msgs::String voice_command);
+
+  void triggerSequence(std::string& voice_command);
 
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
   
-  // Public members
-  ros::ServiceClient move_robot_client_;		///< Service client for temoto/move_robot_service is global.
-  ros::ServiceClient navigate_robot_client_;		///< Service client for temoto/navigate_robot_srv is global.
-  ros::ServiceClient tf_change_client_;			///< Service client for requesting changes of control mode, i.e., change of orientation for current_cmd_frame frame.
+  // Public member variables
   bool manipulate_ = true;		/// Is manipulation enabled?
-  bool absolute_pose_input_ = true;	/// Specify whether incoming pose commands are absolute or relative
   std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
-  std::string ee_name_;   /// Name of the end effector
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
-  bool spacenav_input_ = true;
+  Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
+  geometry_msgs::PoseStamped current_pose_;  // Latest pose value received for the end effector.
+  int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
+  std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
 private:
+  // Other Temoto classes (each encapsulating its own functionality)
+  Interpreter interpreter;  // Interpret voice commands
+  preplanned_sequence sequence_;  // Process the cmds that trigger short, predefined actions, e.g. open gripper
+  NavigateRobotInterface navigateIF_;  // Send motion commands to the base
+
+  // All move_groups/ee's the user might want to control (specified in yaml)
+  std::vector<std::string> ee_names_;
+
   /// Local TransformListener for transforming poses
   tf::TransformListener transform_listener_;
 
@@ -122,15 +129,7 @@ private:
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
   
-  /// Offsett zero position of the Leap Motion Controller.
-  const double OFFSET_X_ = 0;
-  const double OFFSET_Y_ = 0.2;		// Height of zero
-  const double OFFSET_Z_ = 0;
-
-  /// Latest pose value received for the end effector.
-  geometry_msgs::PoseStamped current_pose_;
-  
-  /// For absolute pose commands, as from LeapMotion
+  /// For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
   geometry_msgs::Vector3 incremental_position_cmd_;
@@ -139,18 +138,13 @@ private:
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
 
-  // ~*~ VARIABLES DESCRIBING THE STATE ~*~
-  // NATURAL control: robot and human are oriented the same way, i.e., the first person perspective
-  // INVERTED control: the human operator is facing the robot so that left and right are inverted.
-  bool naturalT_or_invertedF_control_ = true;	///< Mode of intepration for hand motion: 'true' - natural, i.e., human and robot arms are the same; 'false' - inverted.
-  bool orientation_locked_ = false;		///< Hand orientation info is to be ignored if TRUE.
-  bool position_limited_ = true;		///< Hand position is restricted to a specific direction/plane if TRUE.
-  bool position_fwd_only_ = false;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
-  bool secondary_hand_before_ = false;		///< Presence of secondary hand during the previous iteration of Leap Motion's callback processLeapCmd(..).
   bool reset_integrated_cmds_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
+
+  // ROS subscribers
+  ros::Subscriber sub_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;

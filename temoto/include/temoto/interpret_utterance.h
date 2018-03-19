@@ -39,9 +39,6 @@
 #include "std_msgs/String.h"
 #include "sound_play/sound_play.h"
 
-// temoto includes
-#include "temoto/temoto_common.h"
-
 // Other includes
 #include "string.h"
 #include <vector>
@@ -50,7 +47,7 @@
 class Interpreter
 {
 public:
-  /** Constructor */
+  // Constructor
   Interpreter()
   {
     ros::NodeHandle pn("~");  // NodeHandle for accessing private parameters
@@ -62,17 +59,21 @@ public:
     sub_utterances_ = n_.subscribe<std_msgs::String>(input_voice_topic_, 5, &Interpreter::utteranceToRecognizedCommand, this);
 
     // Publish unambiguous commands based on speech recognition
-    pub_voice_commands_ = n_.advertise<temoto::Command>("temoto/voice_commands", 2);
+    pub_voice_commands_ = n_.advertise<std_msgs::String>("temoto/voice_commands", 2);
 
     // Output to the screen all the accepted voice commands
     displayRecognizedVoiceCommands();
+
+    // wait for for the sound_client server to come up
+    // TODO: change to something that actually checks if the server is online
+    sleep(1);
+    sound_client_.say("Hello! I am ready to receive verbal instructions.");
   };
-  
+
   /** Maps verbal instructions to specific command code. */
   std::vector<std::string> command_list_ =
   {
     // Commands for basic Temoto functionality: moving and navigating
-    {"stop stop"},		// stop or abort command
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
     {"robot plan and go"},		// command PLAN&EXECUTE
@@ -80,12 +81,12 @@ public:
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
     {"jog mode"},		// send small motions commands immediately
     {"stop jogging"},		// stop jogging
+    {"next end effector"},      // switch to the next end effector
 
     // Preplanned sequences: these will interrupt other Temoto commands (except abort)
     // They can be generally any C++ file
     {"open gripper"},		// open gripper, a preplanned sequence
     {"close gripper"},   // close gripper, a preplanned sequence
-    {"go to laser scan"}	// move the left arm to a pose for a laser scan
   };
 
   ros::NodeHandle n_;

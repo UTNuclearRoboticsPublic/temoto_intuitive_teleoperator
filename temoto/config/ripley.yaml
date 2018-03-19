@@ -1,9 +1,16 @@
 temoto_frames:
   human_input: "current_cmd_frame"
-  end_effector: "right_ur5_temoto_ee"
-  mobile_base: "base_link"
+  base_frame: "base_link"
+  num_ee: 2 # How many end-effectors might the user want to control?
+  ee: # Specify all move_group/ee pairs
+    ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
+      end_effector: "right_ur5_temoto_ee"
+      movegroup: "right_ur5_temoto"
+    ee1:
+      end_effector: "left_ur5_temoto_ee"
+      movegroup: "left_ur5"
+
 temoto:
-  spacenav_input: true
   temoto_pose_cmd_topic: "spacenav/joy"
 
   # navigate or manipulate
@@ -12,4 +19,3 @@ temoto:
 
   manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
   input_voice_topic: "stt/spoken_text"
-  movegroup: "right_ur5_temoto"

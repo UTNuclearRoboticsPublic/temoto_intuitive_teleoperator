@@ -36,56 +36,6 @@
 
 #include "temoto/graphics_and_frames.h"
 
-/** Callback function for /temoto/status.
- *  Looks for any changes that would require re-adjustment of the point-of-view camera.
- *  Stores the received status in a class variable latest_status_.
- *  @param status temoto::Status message
- */
-void Visuals::updateStatus (temoto::Status status)
-{
-  // Before overwriting previous status, checks if switch between camera views is necesassry due to switch between navigation and manipulation modes.
-  if (status.in_navigation_mode != latest_status_.in_navigation_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from MANIPULATION to NAVIGATION or vice versa.");
-  }
-
-  // Before overwriting previous status, checks if switch between camera views is necesassry due to limited directions.
-  if (status.position_forward_only && !latest_status_.position_forward_only)
-  {
-    adjust_camera_ = true;
-    camera_is_aligned_ = false;	// Change to top-view as operator has switched to forward only motion pattern
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'not fwd only' to 'fwd only'.");
-  }
-  else if (!status.position_forward_only && latest_status_.position_forward_only)
-  {
-    adjust_camera_ = true;
-    camera_is_aligned_ = true;	// Change to the so-called aligned view because operator has stopped using forward only
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due change from 'fwd only' to 'not fwd only'.");
-  }
-  
-  // Checks if switch between camera views is necesassry due to change in control mode.
-  if (status.in_natural_control_mode && !latest_status_.in_natural_control_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'natural control mode'.");
-  }
-  else if (!status.in_natural_control_mode && latest_status_.in_natural_control_mode)
-  {
-    adjust_camera_ = true;
-    //ROS_INFO("[rviz_visual/updateStatus] adjust_camera is set 'true' due to switch to 'inverted control mode'.");
-  }
-  
-  // Checks if switch between camera views is necesassry due to change in (un)limiting directions.
-  if (status.position_unlimited != latest_status_.position_unlimited)
-  	adjust_camera_ = true;
-  
-  // Overwrite latest_status values with the new status.
-  latest_status_ = status;
-
-  return;
-}
-
 /** Creates the initial CameraPlacment message that is used for positioning point-of-view (POV) camera in RViz.
  */
 void Visuals::initCameraFrames()
@@ -107,7 +57,7 @@ void Visuals::initCameraFrames()
 /** Creates the initial marker that visualizes hand movement as a displacement arrow. */
 void Visuals::initDisplacementArrow()
 {
-  displacement_arrow_.header.frame_id = current_cmd_frame_; // x is horizontal, y is vertical, z is forward-backward // "temoto_end_effector"
+  displacement_arrow_.header.frame_id = human_frame_;
   displacement_arrow_.header.stamp = ros::Time();
   displacement_arrow_.ns = "displacement_arrow";
   displacement_arrow_.id = 0;
@@ -145,7 +95,7 @@ void Visuals::initDisplacementArrow()
 /** Creates the initial marker that displays front-facing text. */
 void Visuals::initDistanceAsText()
 {
-  distance_as_text_.header.frame_id = current_cmd_frame_;
+  distance_as_text_.header.frame_id = human_frame_;
   distance_as_text_.header.stamp = ros::Time();
   distance_as_text_.id = 0;
   distance_as_text_.ns = "distance_as_text";
@@ -190,14 +140,15 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.color.r = 1.0;
   cmd_pose_marker_.color.g = 0.5;
   cmd_pose_marker_.color.b = 0.0;
+  cmd_pose_marker_.color.a = 1;
   
   return;
 } // end Visuals::initHandPoseMarker()
 
-/** Creates the initial marker for an active range box around the robot where target position is always in one of the corners. */
+// Creates the initial marker for an active range box around the robot where target position is always in one of the corners.
 void Visuals::initActiveRangeBox()
 {
-  active_range_box_.header.frame_id = current_cmd_frame_;
+  active_range_box_.header.frame_id = human_frame_;
   active_range_box_.header.stamp = ros::Time();
   active_range_box_.ns = "active_range_box";
   active_range_box_.id = 0;
@@ -223,40 +174,21 @@ void Visuals::initActiveRangeBox()
   return;
 } // end Visuals::initActiveRangeBox()
 
-/** Calculates the distance between two points in meters or millimeters and returns it as a string.
- *  @param twoPointVector vector containing two points.
- *  @return string containing the distance between two points in meters or millimeters followed by ' m' or ' mm', respectively.
- */
-std::string Visuals::getDistanceString (std::vector <geometry_msgs::Point> & twoPointVector)
+void Visuals::crunch()
 {
-  std::string  distance_as_text;
-  std::string  units;
-  int precision = 2;
-  // Calculate the distance between the first two points in the input vector of points
-//  double distance = sqrt( pow(twoPointVector[1].x-twoPointVector[0].x, 2) + pow(twoPointVector[1].y-twoPointVector[0].y, 2) + pow(twoPointVector[1].z-twoPointVector[0].z, 2));
-  double distance = calculateDistance(twoPointVector);
-  if (distance < 1)	// if distance is less than 1 m, use mm instead
-  {
-    // Convert the distance m -> mm
-    distance = distance*1000;
-    units = " mm";
-    if (distance >= 10) precision = 1;
-  }
-  else			// otherwise, use meters as units
-  {
-    units = " m";
-  }
-  // use the number of fractional digits specified by precision to put distance into stringstream and add units.
-  std::ostringstream sstream;
-  sstream << std::fixed << std::setprecision(precision) << distance << units;
+  // ============================================================ 
+  // ==  CHECK FOR REASONABLE EE POSE  ==========================
+  // ============================================================
 
-  // stringstream to string
-  distance_as_text = sstream.str();
-  return distance_as_text;
-}
+  // An uninitialized w-component of quaternion is a good bet that the pose was uninitialized
+  if ( latest_status_.end_effector_pose.pose.orientation.w==0. )
+  {
+    ROS_WARN_THROTTLE(5, "[rviz_visual] Waiting for the initial end effector pose.");
+    ROS_WARN_THROTTLE(5, "[rviz_visual] For distributed systems, are your clocks synched?");
+    return;
+  }
 
-void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publisher)
-{
+
   // ============================================================ 
   // ==  VISUALIZATION MARKERS  =================================
   // ============================================================
@@ -264,21 +196,6 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
   // Setting markers & frames in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
-    /*
-    // ==  ARROW  ============================================ //
-    // Displacement arrow is not needed in NAVIGATION mode, so make it invisible.
-    displacement_arrow_.color.a = 0;
-    
-    // Publish displacement_arrow_
-    marker_publisher.publish( displacement_arrow_ );
-    
-    // ==  ACTIVE RANGE BOX  ================================= //
-    // Active range box is not needed in NAVIGATION mode, so make it invisible.
-    active_range_box_.color.a = 0;
-    
-    // Publish active_range_box_
-    marker_publisher.publish( active_range_box_ );   
-    */
     
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
@@ -289,19 +206,10 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
 
     // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
-    
-    // Paint the marker based on restricted motion latest_status
-    if (latest_status_.orientation_free)
-      cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else
-      cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
 
-    // In NAVIGATION, the hand pose marker must always be visible
-    cmd_pose_marker_.color.a = 1;
+    pub_rviz_marker_.publish( cmd_pose_marker_ );
 
-    marker_publisher.publish( cmd_pose_marker_ );
   }
-
   // Setting markers & frames in MANIPULATION mode
   else
   {
@@ -317,41 +225,38 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     cmd_pose_marker_.header = latest_status_.commanded_pose.header;
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
-    if (!latest_status_.in_natural_control_mode)  //INVERTED CONTROL MODE
-    {
-      // 180* about y (pitch) then 90* about z (yaw)
-      // Multiply by this second quaternion to rotate it.
-      tf::Quaternion q_orig, q_rot( 0, 3.14159, 0 );  // initialized by (yaw, pitch, roll)
-      quaternionMsgToTF(cmd_pose_marker_.pose.orientation , q_orig);  // Get the original orientation
-      q_orig *= q_rot;  // Calculate the new orientation
-      quaternionTFToMsg(q_orig, cmd_pose_marker_.pose.orientation);  // Stuff it back into the marker pose
-    }
+    pub_rviz_marker_.publish( cmd_pose_marker_ );
 
-    // Paint the marker based on restricted motion
-    if (latest_status_.orientation_free) cmd_pose_marker_.color.g = 0.0;	// if hand orientation is to be considered, paint the hand pose marker red 
-    else cmd_pose_marker_.color.g = 0.5;					// else, the marker is orange
-
-    // SPECIAL CASE! Hide hand pose marker when orientation is to be ignored.
-    if (!latest_status_.orientation_free) cmd_pose_marker_.color.a = 0;	// make the marker invisible
-    else cmd_pose_marker_.color.a = 1;
-
-    marker_publisher.publish( cmd_pose_marker_ );
-
-    // Add the spacenav frame
     spacenav_tf_.setOrigin( tf::Vector3(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z) );
     spacenav_tf_.setRotation(  tf::Quaternion(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w)  );
     tf_br_.sendTransform(tf::StampedTransform(spacenav_tf_, ros::Time::now(), "base_link", "spacenav"));
+
+
+  	// update the goal position in moveit plugin to display real-time IK
+    // Need to enable external comms in MoveIt's RViz plugin for this to work
+  	geometry_msgs::PoseStamped move_goal_msg;
+  	move_goal_msg.header.frame_id = "base_link";
+  	move_goal_msg.header.stamp = ros::Time::now();
+  	move_goal_msg.pose.position.x = spacenav_tf_.getOrigin().x();
+  	move_goal_msg.pose.position.y = spacenav_tf_.getOrigin().y();
+  	move_goal_msg.pose.position.z = spacenav_tf_.getOrigin().z();
+  	quaternionTFToMsg( spacenav_tf_.getRotation(), move_goal_msg.pose.orientation );
+    pub_update_rviz_goal_.publish(move_goal_msg);
+
   } // end setting markers in MANIPULATION mode
-    
+
 
   // ============================================================ 
   // ==  CAMERA POSE  ===========================================
   // ============================================================
   // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV) camera.
+  if ( latest_status_.in_navigation_mode != prev_status_.in_navigation_mode )
+    adjust_camera_ = true;
 
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
+    ROS_WARN_STREAM("Adjusting camera for nav mode");
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
@@ -365,141 +270,29 @@ void Visuals::crunch(ros::Publisher &marker_publisher, ros::Publisher &pov_publi
     point_of_view_.focus.point.x = 0;
     point_of_view_.focus.point.y = 0;
 
-    latest_known_camera_mode_ = 11;					// set latest_known_camera_mode to 11, i.e navigation natural
-    pov_publisher.publish( point_of_view_ );				// publish the modified CameraPlacement message
+    pub_pov_camera_.publish( point_of_view_ );				// publish the modified CameraPlacement message
     adjust_camera_ = false;						// set adjust_camera 'false'
   }
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-    // Adjust camera for NATURAL CONTROL MODE
-    if (latest_status_.in_natural_control_mode)
-    {
-      if (camera_is_aligned_)					// here alignment means the so-called bird's eye view
-      {
-    		point_of_view_.up.vector.x = 0;
-    		point_of_view_.up.vector.z = 1;
-
-    		// Camera will be behind current_cmd_frame, somewhat elevated
-    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
-    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
-
-    		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin current_cmd_frame frame, i.e. the palm of robotiq gripper
-    		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-      }
-      else							// natural control mode top view
-      {
-    		//ROS_INFO("NATURAL: Switching to top view.");
-    		// In the latest_known_camera_mode = 1;top view of natural control mode, +X is considered to be 'UP'.
-    		point_of_view_.up.vector.x = 1;
-    		point_of_view_.up.vector.z = 0;
-
-    		// Camera is positioned directly above the end effector
-    		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;
-    		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
-    		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;
-
-    		// Look at the end effector
-    		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
-    		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
-    		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
-    		ROS_INFO_STREAM(point_of_view_);
-      }
-      
-      latest_known_camera_mode_ = 1;				// set latest_known_camera_mode to 1, i.e. natural
-      pov_publisher.publish( point_of_view_ );			// publish a CameraPlacement msg
-      adjust_camera_ = false;					// set adjust_camera 'false'
-    } // if adjust_camera in_natural_control_mode
-      
-    // adjust camera for INVERTED CONTROL MODE
-    if (!latest_status_.in_natural_control_mode)
-    {
-      if (camera_is_aligned_)					// here alignment means the camera is in the front facing the end effector
-      {
-		//ROS_INFO("INVERTED: Switching to aligned view.");
-		// Set +Z as 'UP'
-		point_of_view_.up.vector.z = 1;
+    ROS_WARN_STREAM("Adjusting camera for manipulation mode");
 		point_of_view_.up.vector.x = 0;
+		point_of_view_.up.vector.z = 1;
 
-		// Position camera on the x-axis no closer than virtual FRONT view screen, max distance at 1.5 m.
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x + EYE_DISPLACEMENT_FRONT_;
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// move camera to align with end effector along the y-axis
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z;				// move camera to align with end effector along the z-axis
+		// Camera will be behind end effector, somewhat elevated
+		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
+		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
+		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
 
-		// Look at the origin of current_cmd_frame, i.e. all zeros
+		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end effector frame, i.e. the palm of robotiq gripper
 		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-      }
-      else							// else means camera should be in the top position
-      {
-		//ROS_INFO("INVERTED: Switching to top view.");
-		// In the top view of inverted control mode, -X is considered 'UP'.
-		point_of_view_.up.vector.z = 0;
-		point_of_view_.up.vector.x = -1;
 
-		// Camera is positioned directly above the end effector
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x;				// Above the virtual FRONT view screen
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;	// Never closer than virtual TOP view screen, max distance at 1.5 m
-		  
-		// Look at the end effector
-		point_of_view_.focus.point.x = latest_status_.end_effector_pose.pose.position.x;
-		point_of_view_.focus.point.y = latest_status_.end_effector_pose.pose.position.y;
-		point_of_view_.focus.point.z = latest_status_.end_effector_pose.pose.position.z;
-      }
+	  pub_pov_camera_.publish( point_of_view_ );			// publish a CameraPlacement msg
+	  adjust_camera_ = false;					// set adjust_camera 'false'
       
-      latest_known_camera_mode_ = 2;				// set latest_known_camera_mode to 2, i.e inverted
-      pov_publisher.publish( point_of_view_ );		// publish a CameraPlacement msg
-
-      // RESET
-      adjust_camera_ = false;					// set adjust_camera 'false'
-
-    } // if adjust_camera not in_natural_control_mode
   } // else if (!latest_status.in_navigation_mode && adjust_camera)
+
+  prev_status_ = latest_status_;
+
 } // end Visuals::crunch()
-
-/** Main */
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "rviz_visual");
-  ros::NodeHandle n;
-  
-  // Setting the node rate (Hz)
-  ros::Rate node_rate(30);
-
-  Visuals rviz_visuals;
-  
-  ros::Subscriber sub_status = n.subscribe("temoto/status", 1, &Visuals::updateStatus, &rviz_visuals);
-  
-  // Publisher of CameraPlacement messages (this is picked up by rviz_animated_view_controller).
-  // When latch is true, the last message published is saved and automatically sent to any future subscribers that connect. Using it to set camera during rviz startup.
-  ros::Publisher pub_pov_camera = n.advertise<view_controller_msgs::CameraPlacement>( "/rviz/camera_placement", 3, true );
-
-  // Publisher on /visualization_marker to depict the hand pose with several rviz markers (this is picked up by rviz)
-  ros::Publisher pub_marker = n.advertise<visualization_msgs::Marker>( "visualization_marker", 1 );
-
-  // Wait for initial end-effector position to set camera position
-
-  while ((rviz_visuals.latest_status_.end_effector_pose.pose.position.x==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.y==0) && (rviz_visuals.latest_status_.end_effector_pose.pose.position.z==0) )
-  {
-    ROS_WARN("[rviz_visual] Waiting for the initial end effector pose.");
-    ROS_WARN("[rviz_visual] For distributed systems, are your clocks synched?");
-    ros::spinOnce();
-    ros::Duration(1.).sleep();
-  }
-
-  rviz_visuals.crunch(pub_marker, pub_pov_camera);
- 
-  // Publish the initial CameraPlacement; so that rviz_animated_view_controller might _latch_ on to it
-  pub_pov_camera.publish( rviz_visuals.point_of_view_ );
-  
-  while ( ros::ok() )
-  {
-    // Update point-of-view camera pose and all the visualization markers
-    rviz_visuals.crunch(pub_marker, pub_pov_camera);
-    
-    ros::spinOnce();
-    node_rate.sleep();
-  }
-  
-} // end main()

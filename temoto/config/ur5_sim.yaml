@@ -1,19 +1,16 @@
 temoto_frames:
   human_input: "current_cmd_frame"
   base_frame: "base_link"
-  num_ee: 2 # How many end-effectors might the user want to control?
+  num_ee: 1 # How many end-effectors might the user want to control?
   ee: # Specify all move_group/ee pairs
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
-      end_effector: "r_temoto_end_effector"
-      movegroup: "right_ur5_temoto"
-    ee1:
-      end_effector: "left_ur5_ee_link"
-      movegroup: "left_ur5"
+      end_effector: "right_temoto_end_effector"
+      movegroup: "manipulator"
 
 temoto:
-  temoto_pose_cmd_topic: "spacenav/joy"
+  temoto_pose_cmd_topic: "/temoto/spacenav/joy"
 
-  # navigate or manipulate
+   # navigate or manipulate
   navigate: false
   manipulate: true
 

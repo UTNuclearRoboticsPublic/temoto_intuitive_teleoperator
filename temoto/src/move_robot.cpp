@@ -36,34 +36,6 @@
 #include "temoto/low_level_cmds.h"
 #include "temoto/move_robot.h"
 
-/** This method is executed when temoto/move_robot_service service is called.
- *  It updates the target member variable based on the client's request and sets the new_move_req flag to let main() know that moving of the robot has been requested.
- *  @param req temoto::Goal service request.
- *  @param res temoto::Goal service response.
- *  @return always true.
- */
-bool MoveRobotInterface::serviceUpdate(temoto::Goal::Request  &req,
-				       temoto::Goal::Response &res)
-{
-  // sets the action associated with target pose, e.g. low_level_cmds::PLAN
-  req_action_type_ = req.action_type;
-  
-  target_pose_stamped_ = req.goal_pose;
-
-  joint_deltas_.clear();
-  for( int i=0; i< req.joint_deltas.size(); i++)
-  {
-    joint_deltas_.push_back( req.joint_deltas.at(i) );
-  }
-    					// by default do not use named_target.
-  named_target_ = req.named_target;				// get named_target from the service request.
-    
-  // Set new_move_requested_ TRUE for main() to see it
-  new_move_requested_ = true;
-  
-  return true;
-} // end serviceUpdate
-
 /** Plans and/or executes the motion of the robot.
  *  @param robot MoveGroup object of the robot.
  */
@@ -72,15 +44,6 @@ void MoveRobotInterface::requestMove()
 
   // Set current state as the start state for planner. For some reason the actual built-in function doesn't do that.
   movegroup_.setStartState( *(movegroup_.getCurrentState()) );
-  
-  // Get and print current position of the end effector
-/*
-  geometry_msgs::PoseStamped current_pose = movegroup_.getCurrentPose();
-  ROS_INFO("[move_robot/requestMove] === CURRENT POSE ( as given by MoveGroup::getCurrentPose() ) ===");
-  ROS_INFO("[move_robot/requestMove] Current pose frame: %s", current_pose.header.frame_id.c_str());
-  ROS_INFO("[move_robot/requestMove] Current pose (posit x, y, z): (%f, %f, %f)", current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
-  ROS_INFO("[move_robot/requestMove] Current pose (orien x, y, z, w): (%f, %f, %f, %f)", current_pose.pose.orientation.x, current_pose.pose.orientation.y, current_pose.pose.orientation.z, current_pose.pose.orientation.w);
-*/
  
   ////////////////////////////////////////////////////////////////////////////////
   // Use a named, joint, or pose target. (whichever was populated in the Goal msg)
@@ -88,10 +51,10 @@ void MoveRobotInterface::requestMove()
   ////////////////////////////////////////////////////////////////////////////////
   if (named_target_ != "")
   {
-    if ( movegroup_.setNamedTarget(named_target_) )		// check if setting named target was successful
+    if ( movegroup_.setNamedTarget(named_target_) )   // check if setting named target was successful
     {
       ROS_INFO("[move_robot/requestMove] Failed to set named target. Please retry.");
-      return;								// return if setNamedTarget failed
+      return;               // return if setNamedTarget failed
     }
     else
       ROS_INFO("[move_robot/requestMove] Using NAMED TARGET for planning and/or moving.");
@@ -104,10 +67,10 @@ void MoveRobotInterface::requestMove()
   {
     //ROS_INFO("[move_robot/requestMove] Found end effector link: %s", movegroup_.getEndEffectorLink().c_str());
     // use the stamped target pose to set the target pose for robot
-    if ( !movegroup_.setPoseTarget(target_pose_stamped_ ) )	// check if set target pose failed
+    if ( !movegroup_.setPoseTarget(target_pose_stamped_ ) ) // check if set target pose failed
     {
       ROS_INFO("[move_robot/requestMove] Failed to set pose target. Please retry.");
-      return;								// return if setPoseTarget failed
+      return;               // return if setPoseTarget failed
     }
     else
       ROS_INFO("[move_robot/requestMove] Using POSE TARGET for planning and/or moving.");
@@ -142,38 +105,27 @@ void MoveRobotInterface::requestMove()
   
   // Just checking what is the target pose
   geometry_msgs::PoseStamped current_target = movegroup_.getPoseTarget();
-  //ROS_INFO("[move_robot/requestMove] Target pose frame: %s", current_target.header.frame_id.c_str());
-  //ROS_INFO_STREAM("[move_robot/requestMove] Target pose: " << current_target.pose);
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
   if ( req_action_type_ == low_level_cmds::PLAN )
   {
-    //ROS_INFO("[move_robot/requestMove] Starting to plan ...");
-    //ROS_INFO("[move_robot/requestMove] Planning frame: %s", movegroup_.getPlanningFrame().c_str());
-    movegroup_.plan( latest_plan_ );				// Calculate plan and store it in latest_plan_.
-    new_plan_available_ = true;					// Set new_plan_available_ to TRUE.
-    //ROS_INFO("[move_robot/requestMove] DONE planning.");
+    movegroup_.plan( latest_plan_ );        // Calculate plan and store it in latest_plan_.
+    new_plan_available_ = true;         // Set new_plan_available_ to TRUE.
   }
   else if ( req_action_type_ == low_level_cmds::EXECUTE )
   {
     //ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
-    if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );	// If there is a new plan, execute latest_plan_.
-    else ROS_INFO("[move_robot/requestMove] No plan to execute.");	// Else do nothing but printout "no plan"
-    new_plan_available_ = false;					// Either case, set new_plan_available_ to FALSE.
-    //ROS_INFO("[move_robot/requestMove] DONE executing the plan");
+    if ( new_plan_available_ ) movegroup_.execute( latest_plan_ );  // If there is a new plan, execute latest_plan_.
+    else ROS_INFO("[move_robot/requestMove] No plan to execute.");  // Else do nothing but printout "no plan"
+    new_plan_available_ = false;          // Either case, set new_plan_available_ to FALSE.
   }
   else if ( req_action_type_ == low_level_cmds::GO )
   {
-    //ROS_INFO("[move_robot/requestMove] Starting to move (i.e. plan & execute) ...");
-//     robot.move();						// Plan and execute.
     // Since move() has a bug of start state not being current state, I am going to plan and execute sequentally.
     moveit::planning_interface::MoveGroup::Plan move_plan;
-    //printf("[move_robot/requestMove] Planning ...");
     movegroup_.plan( move_plan );
-    //printf("[DONE] \n[move_robot/requestMove] and Executing ...\n");
     movegroup_.execute( move_plan );
-    //ROS_INFO("[move_robot/requestMove] DONE moving.");
-    new_plan_available_ = false;					// As any previous plan has become invalid, set new_plan_available_ to FALSE.
+    new_plan_available_ = false; // As any previous plan has become invalid, set new_plan_available_ to FALSE.
   }
 
   return;
@@ -216,105 +168,3 @@ void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose
 
   return;
 }
-
-/** Main */
-int main(int argc, char **argv)
-{
-  ros::init(argc, argv, "move_robot");
-  // ROS Nodehandle for normal things
-  ros::NodeHandle n;
-  
-  ros::Rate node_rate(60);
-
-  // Using an async spinner. It is needed for moveit's MoveGroup::plan(), which would get stuck otherwise. Might be a bug.
-  ros::AsyncSpinner spinner(0);
-  spinner.start();
-  
-  // get user-specified name for the movegroup as a private parameter
-  std::string move_group_name;
-  n.getParam("temoto/movegroup", move_group_name);
-  if ( move_group_name.empty() )
-  {
-    ROS_ERROR("[move_robot/main] No movegroup name was specified. Aborting.");
-    return -1;
-  }
-  ROS_INFO("[move_robot/main] Retrieved '%s' from parameter server as a movegroup name.", move_group_name.c_str());
-  
-  MoveRobotInterface moveIF(move_group_name);
-  
-  // FYI
-  ROS_INFO("[move_robot/main] Planning frame: %s", moveIF.movegroup_.getPlanningFrame().c_str());
-  ROS_INFO("[move_robot/main] End effector link: %s", moveIF.movegroup_.getEndEffectorLink().c_str());
-  ROS_INFO("[move_robot/main] End effector: %s", moveIF.movegroup_.getEndEffector().c_str());
-  ROS_INFO("[move_robot/main] Goal position tolerance is: %.6f", moveIF.movegroup_.getGoalPositionTolerance());
-  ROS_INFO("[move_robot/main] Goal orientation tolerance is: %.6f", moveIF.movegroup_.getGoalOrientationTolerance());
-  ROS_INFO("[move_robot/main] Goal joint tolerance is: %.6f", moveIF.movegroup_.getGoalJointTolerance());
-  
-  // Set up service for move_robot_service; if there's a service request, executes serviceUpdate() function
-  ros::ServiceServer service = n.advertiseService("temoto/move_robot_service", &MoveRobotInterface::serviceUpdate, &moveIF);
-  ROS_INFO("[move_robot/main] Service 'temoto/move_robot_service' up and going. Ready to send move commands to %s.", move_group_name.c_str());
-  
-  // Set up publisher for the end effector location
-  ros::Publisher pub_end_effector = n.advertise<geometry_msgs::PoseStamped>( "temoto/end_effector_pose", 1 );
-
-  // For frame transformations
-  tf2_ros::Buffer tfBuffer;
-  tf2_ros::TransformListener tfListener(tfBuffer);
-  geometry_msgs::TransformStamped transform_stamped;
-  geometry_msgs::PoseStamped current_pose;
-
-  // Wait for the moveGroup to initialize
-  ros::Duration(2.).sleep();  // TODO: a better way
-/*
-  while ( current_pose.header.frame_id == "" )
-  {
-    ros::Duration(0.1).sleep();
-    current_pose = moveIF.movegroup_.getCurrentPose();
-  }
-*/
-
-  // MAIN LOOP
-  while ( ros::ok() )
-  {
-    // check if there has been a service request for a new move
-    if ( moveIF.new_move_requested_ )
-    {
-      moveIF.requestMove();			// plan and execute move using move_group
-      moveIF.new_move_requested_ = false;	// set request flag to false
-    }
-
-    // get and publish current end effector pose. Ensure it's in base_link frame
-    current_pose = moveIF.movegroup_.getCurrentPose();
-
-    if ( current_pose.header.frame_id != "base_link" )
-    {
-      // Check for and remove a leading slash
-      std::string frame = current_pose.header.frame_id;
-      if ( frame[0] == '/' )
-      {
-        frame.erase(0,1);
-        current_pose.header.frame_id = frame;
-      }
-
-      try
-      {
-        transform_stamped = tfBuffer.lookupTransform("base_link", frame, ros::Time(0));
-        tf2::doTransform(current_pose, current_pose, transform_stamped);
-      }
-      catch (tf2::TransformException &ex) 
-      {
-        ROS_WARN("%s",ex.what());
-        ros::Duration(1.0).sleep();
-        continue;
-      }
-    }  // if not already in base_link
-
-    pub_end_effector.publish( current_pose );
-   
-    ros::spinOnce();
-    node_rate.sleep();
-    
-  } // end while
-
-  return 0;
-} // end main

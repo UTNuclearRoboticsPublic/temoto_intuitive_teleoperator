@@ -26,7 +26,6 @@ find_package(catkin REQUIRED
   view_controller_msgs
 
   # For preplanned actions
-  pointcloud_processing_server
   pcl_ros
 )
 
@@ -65,18 +64,16 @@ find_package(catkin REQUIRED
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-add_message_files(
-  FILES
-  Command.msg
-  Status.msg
-)
+#add_message_files(
+#  FILES
+#  Status.msg
+#)
 
 ## Generate services in the 'srv' folder
-add_service_files(
-  FILES
-  Goal.srv
-  ChangeTf.srv
-)
+#add_service_files(
+#  FILES
+#  Goal.srv
+#)
 
 ## Generate actions in the 'action' folder
 add_action_files(DIRECTORY action/temoto
@@ -142,63 +139,28 @@ include_directories(
 )
 
 ## Declare a C++ library
+
 # Preplanned sequences:
 
 add_library(close_gripper src/preplanned_sequences/close_gripper.cpp)
 target_link_libraries(close_gripper ${catkin_LIBRARIES})
 
-add_library(go_to_laser_scan src/preplanned_sequences/go_to_laser_scan.cpp)
-target_link_libraries(go_to_laser_scan ${catkin_LIBRARIES})
-
 add_library(open_gripper src/preplanned_sequences/open_gripper.cpp)
 target_link_libraries(open_gripper ${catkin_LIBRARIES})
 
-add_library(robot_please_approach src/preplanned_sequences/robot_please_approach.cpp)
-target_link_libraries(robot_please_approach ${catkin_LIBRARIES} ${move_base_to_manip_LIBRARIES})
-add_dependencies(robot_please_approach temoto_generate_messages_cpp move_base_to_manip)
-
-add_library(robot_push_button src/preplanned_sequences/robot_push_button.cpp)
-target_link_libraries(robot_push_button ${catkin_LIBRARIES})
-
-
-# Temoto common:
-
-add_library(temoto_common src/temoto_common.cpp)
-target_link_libraries(temoto_common ${catkin_LIBRARIES})
-add_dependencies(temoto_common temoto_generate_messages_cpp)
 
 ## Declare a C++ executable
 
-add_executable(move_robot src/move_robot.cpp)
-target_link_libraries(move_robot ${catkin_LIBRARIES} temoto_common)
-add_dependencies(move_robot temoto_generate_messages_cpp)
-
-add_executable(start_teleop src/start_teleop.cpp)
-target_link_libraries(start_teleop ${catkin_LIBRARIES} temoto_common)
-add_dependencies(start_teleop temoto_generate_messages_cpp)
-
-add_executable(graphics_and_frames src/graphics_and_frames.cpp)
-target_link_libraries(graphics_and_frames ${catkin_LIBRARIES} temoto_common)
-add_dependencies(graphics_and_frames temoto_generate_messages_cpp ${catkin_EXPORTED_TARGETS})
-
-add_executable(interpret_utterance src/interpret_utterance.cpp)
-target_link_libraries(interpret_utterance ${catkin_LIBRARIES} temoto_common)
-add_dependencies(interpret_utterance temoto_generate_messages_cpp)
-
-add_executable(human_frame_broadcaster src/human_frame_broadcaster.cpp)
-target_link_libraries(human_frame_broadcaster ${catkin_LIBRARIES} temoto_common)
-add_dependencies(human_frame_broadcaster temoto_generate_messages_cpp)
-
-add_executable(navigate_robot src/navigate_robot.cpp)
-target_link_libraries(navigate_robot ${catkin_LIBRARIES} temoto_common)
-add_dependencies(navigate_robot temoto_generate_messages_cpp)
-
-add_executable(preplanned_sequences src/preplanned_sequences.cpp)
-add_dependencies(preplanned_sequences ${catkin_EXPORTED_TARGETS} )
-target_link_libraries(preplanned_sequences ${catkin_LIBRARIES} close_gripper open_gripper go_to_laser_scan robot_please_approach robot_push_button )
+##########################################
+# This is where most of the action happens
+##########################################
+add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp src/graphics_and_frames.cpp src/move_robot.cpp)
+add_dependencies(start_teleop temoto_generate_messages_cpp )
+# Add one-off commands to trigger short, pre-planned sequences here
+target_link_libraries(start_teleop ${catkin_LIBRARIES} close_gripper open_gripper )
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
-target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} temoto_common)		
+target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} )		
 add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 
 #############
@@ -208,7 +170,7 @@ add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 # all install targets should use catkin DESTINATION variables
 # See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
 
-catkin_install_python(PROGRAMS nodes/level_tf DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+#catkin_install_python(PROGRAMS nodes/level_tf DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 ## Mark executable scripts (Python etc.) for installation
 ## in contrast to setup.py, you can choose the destination

@@ -47,12 +47,6 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
     close_gripper::close_gripper(gripper_publisher_);
   else if (goal->sequence_name == "open gripper")
     open_gripper::open_gripper(gripper_publisher_);
-  else if (goal->sequence_name == "robot please approach")
-    robot_please_approach do_the_approach;
-  else if (goal->sequence_name == "go to laser scan")
-    go_to_laser_scan::go_to_laser_scan(n_);
-  else if (goal->sequence_name == "robot push button")
-    robot_push_button::robot_push_button(n_);
 
   // Action server: signal that the sequence is done
   result_.success = true;
@@ -66,17 +60,4 @@ void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
 {
   if ( msg-> data.c_str() == low_level_cmds::ABORT)
     ROS_INFO_STREAM("[preplanned_sequences] ABORTING");
-}
-
-
-/** MAIN */
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "navigate_robot");
-  preplanned_sequence sequence;  // An object to process incoming commands
-  ros::AsyncSpinner spinner(2);  // 2 threads: execute the given task, and listen for ABORT
-  spinner.start();
-
-  ros::waitForShutdown();
-  return 0;
 }

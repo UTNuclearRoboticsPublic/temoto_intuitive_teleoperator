@@ -41,9 +41,6 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
 
-// temoto includes
-#include "temoto/temoto_common.h"
-
 // other includes
 #include "string.h"
 
@@ -56,14 +53,11 @@ class MoveRobotInterface {
     movegroup_(mg_name)
    {
      movegroup_.setPlannerId("RRTConnectkConfigDefault"/*"RRTstarkConfigDefault"*/);
-     movegroup_.setMaxVelocityScalingFactor(0.05);
+     movegroup_.setMaxVelocityScalingFactor(0.2);
      movegroup_.setPlanningTime(1.9);
    };
    
    moveit::planning_interface::MoveGroup movegroup_;
-   
-   /** Callback function */
-   bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
 
    void requestMove();
 

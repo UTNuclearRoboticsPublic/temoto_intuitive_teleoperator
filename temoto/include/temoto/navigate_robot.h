@@ -39,7 +39,7 @@
 #include "actionlib/client/simple_action_client.h"
 
 // temoto includes
-#include "temoto/temoto_common.h"
+
 
 #ifndef NAVIGATE_ROBOT_H
 #define NAVIGATE_ROBOT_H
@@ -48,50 +48,21 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 
 class NavigateRobotInterface {
 public:
-  /** Constructor */
-  NavigateRobotInterface(std::string mbase_name) :	// I use something called initializer list here, Alex taught me that
+  // Constructor
+  NavigateRobotInterface(std::string mbase_name) :
 	  move_base_aclient_(mbase_name, "true")	// Initialize the action client and tell it that we want to spin a thread by default
   {
-    new_navgoal_requested_ = false;
-    stop_navigation_ = false;
-
-    // Wait for the action server to come up
-    while( !move_base_aclient_.waitForServer( ros::Duration(5.0) ) )
-    {
-      ROS_INFO("[temoto/navigate_robot] Waiting for the move_base action server to come up");
-    }
   };
    
-  /** Simple Action Client for move_base */
+  // Simple Action Client for move_base
   MoveBaseClient move_base_aclient_;
   
-  /** Callback function for navigation service request */
-  bool serviceUpdate(temoto::Goal::Request  &req, temoto::Goal::Response &res);
-  
-  // Functions that actually communicates with move_base action server
-  
-  /** Plans and executes the navigation of the robot to the pose stored in navigation_goal_stamped_. This function is blocking. */
-  void requestNavigation();
-  
-  /** Sends navigation_goal_stamped_ to move_base action server. Non-blocking. */
-  void sendNavigationGoal();
-
-  /** Sends a action request to cancel goal. */
-  void abortNavigation();
-
-  /** Asks for status from action server. */
-  void checkNavigationStatus();
+  // Callback function for navigation service request
+  bool navRequest( std::string action_type, geometry_msgs::PoseStamped goal_pose );
 
   /** Target navigation pose for the robot */
   geometry_msgs::PoseStamped navigation_goal_stamped_;
-   
-  // Public variables describing the state of MoveRobotInterface
-  
-  /** If new move has been requested by a client, it is set to TRUE; after calling sendNavigationGoal(), it is set to FALSE. */
-  bool new_navgoal_requested_;
-  
-  /** TRUE when 'cancel goal' has been requested; FALSE otherwise */
-  bool stop_navigation_;
+
 };
 
 #endif
