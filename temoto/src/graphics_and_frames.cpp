@@ -256,7 +256,6 @@ void Visuals::crunch()
   // Adjust camera in NAVIGATION mode
   if (latest_status_.in_navigation_mode && adjust_camera_)
   {
-    ROS_WARN_STREAM("Adjusting camera for nav mode");
     // For NAVIGATION/NATURAL +X is considered to be 'UP'.
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
@@ -276,7 +275,6 @@ void Visuals::crunch()
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-    ROS_WARN_STREAM("Adjusting camera for manipulation mode");
 		point_of_view_.up.vector.x = 0;
 		point_of_view_.up.vector.z = 1;
 

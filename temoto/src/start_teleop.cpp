@@ -508,6 +508,11 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     // If not already in manipulation mode
     if ( navT_or_manipF_==true )
     {
+      // Make sure we aren't in jog mode
+      ROS_INFO("Switching out of jog mode");
+      in_jog_mode_ = false;
+      setScale();
+
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into MANIPULATION mode  ...");
       AMP_HAND_MOTION_ = 1;
@@ -523,6 +528,11 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     // If not already in nav mode
     if ( navT_or_manipF_==false )
     {
+      // Make sure we aren't in jog mode
+      ROS_INFO("Switching out of jog mode");
+      in_jog_mode_ = false;
+      setScale();
+
       reset_integrated_cmds_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into NAVIGATION mode  ...");
       AMP_HAND_MOTION_ = 100;
@@ -558,9 +568,16 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   {
     if (voice_command.data == "jog mode")
     {
-      ROS_INFO("Switching to jog mode");
-      in_jog_mode_ = true;
-      setScale();
+      // For now, can only jog with EE0 in manipulation mode.
+      // In nav mode or current EE==0  ==> OK to jog.
+      if ( navT_or_manipF_ || current_movegroup_ee_index_==0 )
+      {
+        ROS_INFO("Switching to jog mode");
+        in_jog_mode_ = true;
+        setScale();
+      }
+      else
+        ROS_WARN_STREAM("[temoto_teleop::start_teleop] Can only jog with EE0");
       return;
     }
     else if (voice_command.data == "robot please plan")
@@ -699,9 +716,8 @@ int main(int argc, char **argv)
   while ( ros::ok() )
   {
     // Jog?
-    // For now, can only jog with EE 0
     // Can't jog while doing something else
-    if ( (temoto_teleop.current_movegroup_ee_index_==0) && temoto_teleop.in_jog_mode_ && 
+    if ( temoto_teleop.in_jog_mode_ && 
 	!temoto_teleop.executing_preplanned_sequence_ )
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
