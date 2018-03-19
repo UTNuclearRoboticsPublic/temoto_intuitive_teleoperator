@@ -37,40 +37,36 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator(ros::NodeHandle& n) :
+Teleoperator::Teleoperator() :
  preplanned_sequence_client_("temoto/preplanned_sequence", true),  // true--> don't block the thread
  navigateIF_("move_base")
 {
-  n.param<std::string>("/temoto/temoto_pose_cmd_topic", temoto_pose_cmd_topic_, "temoto_pose_cmd_topic");
+  temoto_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_pose_cmd_topic", n_);
 
   // By default navigation is turned OFF
-  bool navigate;
-  n.param<bool>("/temoto/navigate", navigate, false);
+  bool navigate = get_ros_params::getBoolParam("temoto/navigate", n_);
   // By default manipulation is turned ON
-  n.param<bool>("/temoto/manipulate", manipulate_, true);
+  manipulate_ = get_ros_params::getBoolParam("temoto/manipulate", n_);
 
-  pub_abort_ = n.advertise<std_msgs::String>("temoto/abort", 1, true);
+  pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
   // TODO: parameterize this topic
-  pub_jog_arm_cmds_ = n.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
-  pub_jog_base_cmds_ = n.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
+  pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
+  pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
   int num_ee = 1;
-  if ( !n.getParam("/temoto_frames/num_ee", num_ee) )
+  if ( !n_.getParam("/temoto_frames/num_ee", num_ee) )
     ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. Aborting.");
 
   // Get the ee names. Shove in vectors.
-  std::string ee_names, move_group_name;
   for (int i=0; i<num_ee; i++)
   {
-    if ( !n.getParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", ee_names) )
-      ROS_ERROR("[start_teleop/Teleoperator] This ee name was not specified in yaml. Aborting.");
-    ee_names_.push_back(ee_names);
+    std::string ee_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", n_);
+    ee_names_.push_back(ee_name);
 
     // Objects for arm motion interface
-    if ( !n.getParam("temoto_frames/ee/ee"+std::to_string(i)+"/movegroup", move_group_name) )
-      ROS_ERROR("[start_teleop/Teleoperator] This movegroup name was not specified in yaml. Aborting.");
+    std::string move_group_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/movegroup", n_);
     arm_if_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
   }
 
@@ -79,11 +75,11 @@ Teleoperator::Teleoperator(ros::NodeHandle& n) :
   jog_twist_cmd_.header.frame_id = ee_names_.at( current_movegroup_ee_index_ );
 
   // Subscribers
-  sub_nav_spd_ = n.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
-  sub_pose_cmd_ = n.subscribe(temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, this);
-  sub_voice_commands_ = n.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
-  sub_executing_preplanned_ = n.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
-  sub_scaling_factor_ = n.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
+  sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
+  sub_pose_cmd_ = n_.subscribe(temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, this);
+  sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
+  sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
+  sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
 
   absolute_pose_cmd_.header.frame_id = "base_link";
   absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
@@ -252,13 +248,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
  */
 void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
 {
-  // Ensure incoming data is in the right frame
-  if ( current_pose_.header.frame_id != "base_link" )
-  {
-    ROS_WARN_THROTTLE(2, "[start_teleop] The current pose is not being published in the base_link frame.");
-    //return;
-  }
-
   // If rotational components >> translational, ignore translation (and vice versa)
   double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
   double rot_mag = pow( pose_cmd.axes[3]*pose_cmd.axes[3] + pose_cmd.axes[4]*pose_cmd.axes[4] + pose_cmd.axes[5]*pose_cmd.axes[5], 2);
@@ -583,12 +572,13 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     else if (voice_command.data == "robot please execute")
     {
       ROS_INFO("Executing last plan ...");
-      callRobotMotionInterface(low_level_cmds::EXECUTE);
 
       // Reset the incremental commands integrations
       incremental_position_cmd_.x = 0.;
       incremental_position_cmd_.y = 0.;
       incremental_position_cmd_.z = 0.;
+      callRobotMotionInterface(low_level_cmds::EXECUTE);
+
       return;
     }
     else if (voice_command.data == "robot plan and go")
@@ -647,26 +637,26 @@ void Teleoperator::setScale()
   {
     if (in_jog_mode_)  // nav, jog mode
     {
-      pos_scale_ = 0.3;
-      rot_scale_ = 0.2;
+      pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/nav_pos_scale", n_);
+      rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/nav_rot_scale", n_);
     }
     else  // nav, pt-to-pt mode
     {
-      pos_scale_ = 0.032;
-      rot_scale_ = 0.05;
+      pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/nav_pos_scale", n_);
+      rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/nav_rot_scale", n_);
     }
   }
   else // manipulation
   {
     if (in_jog_mode_)  // manipulate, jog mode
     {
-      pos_scale_ = 1.;
-      rot_scale_ = 1.;
+      pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/manip_pos_scale", n_);
+      rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/manip_rot_scale", n_);
     }
     else  // manipulate, pt-to-pt mode
     {
-      pos_scale_ = 0.018;
-      rot_scale_ = 0.022;
+      pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/manip_pos_scale", n_);
+      rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/manip_rot_scale", n_);
     }
   }
 }
@@ -704,7 +694,7 @@ int main(int argc, char **argv)
   ros::AsyncSpinner spinner(2);
   spinner.start();
 
-  Teleoperator temoto_teleop(n);
+  Teleoperator temoto_teleop;
 
   while ( ros::ok() )
   {
