@@ -248,13 +248,6 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
  */
 void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
 {
-  // Ensure incoming data is in the right frame
-  if ( current_pose_.header.frame_id != "base_link" )
-  {
-    ROS_WARN_THROTTLE(2, "[start_teleop] The current pose is not being published in the base_link frame.");
-    //return;
-  }
-
   // If rotational components >> translational, ignore translation (and vice versa)
   double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
   double rot_mag = pow( pose_cmd.axes[3]*pose_cmd.axes[3] + pose_cmd.axes[4]*pose_cmd.axes[4] + pose_cmd.axes[5]*pose_cmd.axes[5], 2);
@@ -579,12 +572,13 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     else if (voice_command.data == "robot please execute")
     {
       ROS_INFO("Executing last plan ...");
-      callRobotMotionInterface(low_level_cmds::EXECUTE);
 
       // Reset the incremental commands integrations
       incremental_position_cmd_.x = 0.;
       incremental_position_cmd_.y = 0.;
       incremental_position_cmd_.z = 0.;
+      callRobotMotionInterface(low_level_cmds::EXECUTE);
+
       return;
     }
     else if (voice_command.data == "robot plan and go")
