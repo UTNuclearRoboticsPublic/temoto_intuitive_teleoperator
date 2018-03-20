@@ -645,6 +645,7 @@ void Teleoperator::setGraphicsFramesStatus()
 {
   graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
+  graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
 
 GET_CURRENT_POSE:
   graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
@@ -672,8 +673,6 @@ GET_CURRENT_POSE:
   }
   else
     goto GET_CURRENT_POSE;
-
-  graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
 
   return;
 } // end setGraphicsFramesStatus()
