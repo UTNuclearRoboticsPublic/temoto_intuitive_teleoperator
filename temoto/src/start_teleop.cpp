@@ -672,7 +672,10 @@ GET_CURRENT_POSE:
     previous_pose_ = graphics_and_frames_.latest_status_.end_effector_pose;
   }
   else
+  {
+    ROS_ERROR("MoveIt! pose jump");
     goto GET_CURRENT_POSE;
+  }
 
   return;
 } // end setGraphicsFramesStatus()
@@ -736,7 +739,7 @@ int main(int argc, char **argv)
   ros::Rate node_rate(90.);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan()
-  ros::AsyncSpinner spinner(2);
+  ros::AsyncSpinner spinner(3);
   spinner.start();
 
   Teleoperator temoto_teleop;
