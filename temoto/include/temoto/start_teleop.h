@@ -136,8 +136,8 @@ private:
   /// For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
-  geometry_msgs::Vector3 incremental_position_cmd_;
-  geometry_msgs::Vector3 incremental_orientation_cmd_;
+  geometry_msgs::Vector3Stamped incremental_position_cmd_;
+  geometry_msgs::Vector3Stamped incremental_orientation_cmd_;
 
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
