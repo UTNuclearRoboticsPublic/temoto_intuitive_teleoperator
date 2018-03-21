@@ -8,7 +8,7 @@ temoto_frames:
       movegroup: "right_ur5_temoto"
     ee1:
       end_effector: "left_ur5_temoto_ee"
-      movegroup: "left_ur5"
+      movegroup: "left_ur5_temoto"
 
 temoto:
   temoto_pose_cmd_topic: "spacenav/joy"
