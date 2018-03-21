@@ -270,6 +270,10 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   {
     if ( navT_or_manipF_ )  // Navigation --> Center on base_link
     {
+      absolute_pose_cmd_.pose.position.x = 0.;
+      absolute_pose_cmd_.pose.position.y = 0.;
+      absolute_pose_cmd_.pose.position.z = 0.;
+
       absolute_pose_cmd_.pose.orientation.x = 0.;
       absolute_pose_cmd_.pose.orientation.y = 0.;
       absolute_pose_cmd_.pose.orientation.z = 0.;
@@ -320,8 +324,8 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
     // Ignore Z (out of plane)
 
     // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
-    incremental_position_cmd_.vector.y += pos_scale_*pose_cmd.axes[1];   // Y is left/right
+    incremental_position_cmd_.vector.x = absolute_pose_cmd_.pose.position.x + pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
+    incremental_position_cmd_.vector.y = absolute_pose_cmd_.pose.position.y + pos_scale_*pose_cmd.axes[1];   // Y is left/right
 
     // Incoming position cmds are in the spacenav frame
     // So convert them to base_link for nav
