@@ -81,10 +81,6 @@ Teleoperator::Teleoperator() :
   sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
 
-  absolute_pose_cmd_.header.frame_id = "base_link";
-  absolute_pose_cmd_.pose.position.x = 0; absolute_pose_cmd_.pose.position.y = 0; absolute_pose_cmd_.pose.position.z = 0;
-  absolute_pose_cmd_.pose.orientation.x = 0; absolute_pose_cmd_.pose.orientation.y = 0; absolute_pose_cmd_.pose.orientation.z = 0; absolute_pose_cmd_.pose.orientation.w = 1;
-
   // Set initial scale on incoming commands
   setScale();
 
@@ -104,6 +100,10 @@ Teleoperator::Teleoperator() :
     navT_or_manipF_ = false;		// if only manipulation is enabled, navT_or_manipF_ is FALSE
     AMP_HAND_MOTION_ = 1;		// for manipulation
   }
+
+  // Initial pose
+  previous_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ = previous_pose_;
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.
@@ -383,9 +383,12 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
       ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
     }
 
-    absolute_pose_cmd_.pose.position.x = current_pose_.pose.position.x + incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y = current_pose_.pose.position.y + incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = current_pose_.pose.position.z + incoming_position_cmd.vector.z;
+    // In an ideal world, could use "+= incoming_position_cmd.vector.x"
+    // But the incoming cmds can be a little flakey
+    // Settle them by re-basing off current pose
+    absolute_pose_cmd_.pose.position.x = previous_pose_.pose.position.x + incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y = previous_pose_.pose.position.y + incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z = previous_pose_.pose.position.z + incoming_position_cmd.vector.z;
   }
 
   return;
@@ -642,8 +645,37 @@ void Teleoperator::setGraphicsFramesStatus()
 {
   graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
-  graphics_and_frames_.latest_status_.end_effector_pose = current_pose_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
+
+GET_CURRENT_POSE:
+  graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // Check that this newly-returned frame was close to the previous. MoveIt sometimes gives erroneous readings
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  if ( graphics_and_frames_.latest_status_.end_effector_pose.header.frame_id != previous_pose_.header.frame_id )
+  {
+    ROS_ERROR("[temoto/start_teleop] The current pose frame from MoveIt does not match the previous.");
+    goto GET_CURRENT_POSE;
+  }
+
+  // Calculate the twist to target pose
+  double x_dist = graphics_and_frames_.latest_status_.end_effector_pose.pose.position.x - previous_pose_.pose.position.x;
+  double y_dist = graphics_and_frames_.latest_status_.end_effector_pose.pose.position.y - previous_pose_.pose.position.y;
+  double z_dist = graphics_and_frames_.latest_status_.end_effector_pose.pose.position.z - previous_pose_.pose.position.z;
+
+  double total_dist = pow( pow(x_dist,2) + pow(y_dist,2) + pow(z_dist,2), 0.5);
+
+  // If the MoveIt frame matches previous (or close enough)
+  if (total_dist < 2.)
+  {
+    previous_pose_ = graphics_and_frames_.latest_status_.end_effector_pose;
+  }
+  else
+  {
+    ROS_ERROR("MoveIt! pose jump");
+    goto GET_CURRENT_POSE;
+  }
 
   return;
 } // end setGraphicsFramesStatus()
@@ -692,7 +724,6 @@ void Teleoperator::switchEE()
   reset_integrated_cmds_ = true;
 
   // Set camera at new EE
-  current_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
   setGraphicsFramesStatus();
   graphics_and_frames_.adjust_camera_ = true;
 }
@@ -708,7 +739,7 @@ int main(int argc, char **argv)
   ros::Rate node_rate(90.);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan()
-  ros::AsyncSpinner spinner(2);
+  ros::AsyncSpinner spinner(3);
   spinner.start();
 
   Teleoperator temoto_teleop;
@@ -721,7 +752,6 @@ int main(int argc, char **argv)
 	!temoto_teleop.executing_preplanned_sequence_ )
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
-    temoto_teleop.current_pose_ = temoto_teleop.arm_if_ptrs_.at( temoto_teleop.current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
     temoto_teleop.setGraphicsFramesStatus(); // Update poses, scale, and nav-or-manip mode for the frames calculation
     temoto_teleop.graphics_and_frames_.crunch();
 

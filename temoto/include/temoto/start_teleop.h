@@ -107,7 +107,7 @@ public:
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
-  geometry_msgs::PoseStamped current_pose_;  // Latest pose value received for the end effector.
+  geometry_msgs::PoseStamped previous_pose_;  // Latest pose value received for the end effector.
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
   std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
