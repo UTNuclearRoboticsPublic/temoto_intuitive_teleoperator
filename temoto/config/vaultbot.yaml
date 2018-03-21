@@ -25,7 +25,7 @@ temoto:
       nav_pos_scale: 0.048
       nav_rot_scale: 0.08
       manip_pos_scale: 0.008
-      manip_rot_scale: 0.02
+      manip_rot_scale: 0.01
     jog:
       nav_pos_scale: 0.3
       nav_rot_scale: 0.2
