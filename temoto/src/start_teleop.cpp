@@ -107,7 +107,14 @@ Teleoperator::Teleoperator() :
 
   // Initial pose
   previous_pose_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
   absolute_pose_cmd_ = previous_pose_;
+  if ( transform_listener_.waitForTransform(absolute_pose_cmd_.header.frame_id, "base_link", ros::Time::now(), ros::Duration(0.05)) )
+    transform_listener_.transformPose("base_link", absolute_pose_cmd_, absolute_pose_cmd_);
+  else
+  {
+    ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
+  }
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.
@@ -159,29 +166,24 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       tf::Quaternion quat_current_cmd_frame;
       tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_current_cmd_frame);
       tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
-      
-      // Translate current_cmd_frame pose to base_link
-      geometry_msgs::PoseStamped goal_in_baselink;
-      // absolute_pose_cmd_ is given in current_cmd_frame frame and shall be transformed into base_link
-      transform_listener_.transformPose("base_link", absolute_pose_cmd_, goal_in_baselink);
     
 
       double bl_roll, bl_pitch, bl_yaw;
       // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
       tf::Quaternion quat_base_link;
-      tf::quaternionMsgToTF(goal_in_baselink.pose.orientation, quat_base_link);
+      tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_base_link);
 
       // the tf::Quaternion has a method to access roll, pitch, and yaw
       tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);
       
       quat_base_link.setRPY(0., 0., bl_yaw);
       quat_base_link.normalize();
-      tf::quaternionTFToMsg(quat_base_link, goal_in_baselink.pose.orientation);
+      tf::quaternionTFToMsg(quat_base_link, absolute_pose_cmd_.pose.orientation);
       
       // Move the robot
       geometry_msgs::PoseStamped filler;
       ROS_WARN_STREAM("Requesting navigation.");
-      if ( !navigateIF_.navRequest( action_type, goal_in_baselink ) )
+      if ( !navigateIF_.navRequest( action_type, absolute_pose_cmd_ ) )
       {
 	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot/navRequest()");
       }
