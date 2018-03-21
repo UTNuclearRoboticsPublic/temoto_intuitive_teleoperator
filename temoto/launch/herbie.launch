@@ -6,7 +6,7 @@
 
 
   <!-- Load temoto parameters -->
-  <rosparam command="load" file="$(find temoto)/config/ur5_sim.yaml" />
+  <rosparam command="load" file="$(find temoto)/config/herbie.yaml" />
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
@@ -24,7 +24,7 @@
   
 
   <!-- Pose Controller -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/> 
+  <include file="$(find spacenav_node)/launch/classic.launch" ns="temoto"/> 
 
 
   <!-- Most of the action happens here -->
@@ -36,6 +36,6 @@
 
 
   <!-- Arm jogging -->
-  <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>
+  <!--include file="$(find ur_gazebo)/launch/jog_arms.launch" /-->
 
 </launch>
