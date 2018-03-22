@@ -29,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -394,6 +394,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_cam_tilt_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
@@ -649,6 +654,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_cam_tilt_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
@@ -722,19 +732,241 @@ Visualization Manager:
         Show Robot Visual: true
       Value: true
     - Class: rviz/TF
-      Enabled: false
+      Enabled: true
       Frame Timeout: 15
       Frames:
         All Enabled: false
+        SICK_LMS291_link:
+          Value: false
+        base_footprint:
+          Value: false
+        base_link:
+          Value: false
+        bulkhead_link:
+          Value: false
+        camera_aligned_depth_to_color_frame:
+          Value: false
+        camera_aligned_depth_to_infra1_frame:
+          Value: false
+        camera_aligned_depth_to_infra2_frame:
+          Value: false
+        camera_color_frame:
+          Value: false
+        camera_color_optical_frame:
+          Value: false
+        camera_depth_frame:
+          Value: false
+        camera_depth_optical_frame:
+          Value: false
+        camera_infra1_frame:
+          Value: false
+        camera_infra1_optical_frame:
+          Value: false
+        camera_infra2_frame:
+          Value: false
+        camera_infra2_optical_frame:
+          Value: false
+        camera_link:
+          Value: false
+        floorplane_link:
+          Value: false
+        front_bumper_link:
+          Value: false
+        front_left_wheel_link:
+          Value: false
+        front_right_wheel_link:
+          Value: false
+        hokuyo_lidar:
+          Value: false
+        imu_link:
+          Value: false
+        inertial_link:
+          Value: false
+        laser_scan_link:
+          Value: false
+        left_ur5_base:
+          Value: false
+        left_ur5_base_link:
+          Value: false
+        left_ur5_ee_link:
+          Value: false
+        left_ur5_forearm_link:
+          Value: false
+        left_ur5_r200_tower_mount_link:
+          Value: false
+        left_ur5_shoulder_link:
+          Value: false
+        left_ur5_tool0:
+          Value: false
+        left_ur5_tool0_controller:
+          Value: false
+        left_ur5_upper_arm_link:
+          Value: false
+        left_ur5_wrist_1_link:
+          Value: false
+        left_ur5_wrist_2_link:
+          Value: false
+        left_ur5_wrist_3_link:
+          Value: false
+        map:
+          Value: false
+        odom:
+          Value: false
+        r_temoto_end_effector:
+          Value: false
+        rear_bumper_link:
+          Value: false
+        rear_left_wheel_link:
+          Value: false
+        rear_right_wheel_link:
+          Value: false
+        right_ur5_2_finger_140_gripper_link:
+          Value: false
+        right_ur5_base:
+          Value: false
+        right_ur5_base_link:
+          Value: false
+        right_ur5_cam_tilt_link:
+          Value: false
+        right_ur5_ee_link:
+          Value: false
+        right_ur5_forearm_link:
+          Value: false
+        right_ur5_native_frame:
+          Value: false
+        right_ur5_shoulder_link:
+          Value: false
+        right_ur5_sr300_mount_link:
+          Value: false
+        right_ur5_sr300_surrogate:
+          Value: false
+        right_ur5_tool0:
+          Value: false
+        right_ur5_tool0_controller:
+          Value: false
+        right_ur5_upper_arm_link:
+          Value: false
+        right_ur5_wrist_1_link:
+          Value: false
+        right_ur5_wrist_2_link:
+          Value: false
+        right_ur5_wrist_3_link:
+          Value: false
+        scanmatcher_frame:
+          Value: false
+        sensor_mast:
+          Value: false
+        spacenav:
+          Value: true
+        top_chassis_link:
+          Value: false
+        user_rail_link:
+          Value: false
       Marker Scale: 1
       Name: TF
       Show Arrows: false
       Show Axes: true
       Show Names: false
       Tree:
-        {}
+        map:
+          odom:
+            base_link:
+              base_footprint:
+                floorplane_link:
+                  {}
+              bulkhead_link:
+                SICK_LMS291_link:
+                  laser_scan_link:
+                    {}
+                left_ur5_base_link:
+                  left_ur5_base:
+                    {}
+                  left_ur5_shoulder_link:
+                    left_ur5_upper_arm_link:
+                      left_ur5_forearm_link:
+                        left_ur5_wrist_1_link:
+                          left_ur5_wrist_2_link:
+                            left_ur5_wrist_3_link:
+                              left_ur5_ee_link:
+                                hokuyo_lidar:
+                                  {}
+                                left_ur5_r200_tower_mount_link:
+                                  {}
+                              left_ur5_tool0:
+                                {}
+                  left_ur5_tool0_controller:
+                    {}
+                right_ur5_base_link:
+                  right_ur5_base:
+                    {}
+                  right_ur5_native_frame:
+                    {}
+                  right_ur5_shoulder_link:
+                    right_ur5_upper_arm_link:
+                      right_ur5_forearm_link:
+                        right_ur5_wrist_1_link:
+                          right_ur5_wrist_2_link:
+                            right_ur5_wrist_3_link:
+                              right_ur5_ee_link:
+                                r_temoto_end_effector:
+                                  {}
+                                right_ur5_2_finger_140_gripper_link:
+                                  {}
+                                right_ur5_sr300_mount_link:
+                                  right_ur5_cam_tilt_link:
+                                    camera_link:
+                                      camera_aligned_depth_to_color_frame:
+                                        camera_color_optical_frame:
+                                          {}
+                                      camera_aligned_depth_to_infra1_frame:
+                                        camera_infra1_optical_frame:
+                                          {}
+                                      camera_aligned_depth_to_infra2_frame:
+                                        camera_infra2_optical_frame:
+                                          {}
+                                      camera_color_frame:
+                                        {}
+                                      camera_depth_frame:
+                                        camera_depth_optical_frame:
+                                          {}
+                                      camera_infra1_frame:
+                                        {}
+                                      camera_infra2_frame:
+                                        {}
+                                      right_ur5_sr300_surrogate:
+                                        {}
+                              right_ur5_tool0:
+                                {}
+                  right_ur5_tool0_controller:
+                    {}
+              front_bumper_link:
+                {}
+              front_left_wheel_link:
+                {}
+              front_right_wheel_link:
+                {}
+              imu_link:
+                {}
+              inertial_link:
+                {}
+              rear_bumper_link:
+                {}
+              rear_left_wheel_link:
+                {}
+              rear_right_wheel_link:
+                {}
+              sensor_mast:
+                {}
+              spacenav:
+                {}
+              top_chassis_link:
+                {}
+              user_rail_link:
+                {}
+          scanmatcher_frame:
+            {}
       Update Interval: 0
-      Value: false
+      Value: true
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: visualization_marker
@@ -798,7 +1030,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 3428
+      Max Intensity: 3736
       Min Color: 0; 0; 0
       Min Intensity: 102
       Name: LaserScan
@@ -876,13 +1108,13 @@ Visualization Manager:
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -0.473550022
-        Y: -0.855023086
-        Z: 1.32668531
+        X: -0.373800337
+        Y: -0.236229837
+        Z: 1.7328459
       Focus:
-        X: 0.526449978
-        Y: -0.855023086
-        Z: 0.326685309
+        X: 0.626199663
+        Y: -0.236229897
+        Z: 0.732845962
       Invert Z Axis: false
       Maintain Vertical Axis: true
       Mouse Enabled: true
