@@ -99,9 +99,6 @@ public:
   // Latest recieved full system status published by start_teleop node.
   temoto_status latest_status_;
 
-  // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
-  temoto_status prev_status_;
-
   // This is set TRUE, if it is needed to adjust the position of the point-of-view (POW) camera in RViz.
   bool adjust_camera_;
 
@@ -114,6 +111,9 @@ private:
   void initHandPoseMarker();
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
+
+  // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
+  temoto_status prev_status_;
 
   /** STL files for the hand markers. */
   std::string manip_stl_;;

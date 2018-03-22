@@ -80,7 +80,7 @@ public:
   
   void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
   
-  void setGraphicsFramesStatus();
+  void setGraphicsFramesStatus(bool adjust_camera);
 
   void setScale();
 
@@ -131,7 +131,7 @@ private:
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
-  
+
   /// For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;
   // For incremental pose commands, as from the SpaceMouse. These need to be integrated before adding to absolute_pose_cmd_
@@ -141,7 +141,7 @@ private:
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
 
-  bool reset_ee_graphic_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
+  bool reset_ee_graphic_pose_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;

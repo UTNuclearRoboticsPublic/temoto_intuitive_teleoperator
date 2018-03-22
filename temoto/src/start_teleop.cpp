@@ -113,7 +113,7 @@ Teleoperator::Teleoperator() :
   else
     ROS_ERROR("[temoto/start_teleop] Initial absolute_pose_cmd_ could not be transformed to base_link.");
   // Reset the graphic now that we're sure the tf is available.
-  reset_ee_graphic_ = true;
+  reset_ee_graphic_pose_ = true;
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.
@@ -220,7 +220,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   }
 
   // Reset the hand marker to be at the EE
-  reset_ee_graphic_ = true;
+  reset_ee_graphic_pose_ = true;
 
   return;
 } // end callRobotMotionInterface
@@ -267,7 +267,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
 
   // Should we reset the command integrations?
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
-  if (reset_ee_graphic_)
+  if (reset_ee_graphic_pose_)
   {
     if ( navT_or_manipF_ )  // Navigation --> Center on base_link
     {
@@ -284,7 +284,7 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
       absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
     // Reset the flag
-    reset_ee_graphic_ = false;
+    reset_ee_graphic_pose_ = false;
   }
 
   ///////////////////////////////////////////////////////////
@@ -467,7 +467,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   {
     ROS_INFO("Switching out of jog mode");
     in_jog_mode_ = false;
-    reset_ee_graphic_ = true;
+    reset_ee_graphic_pose_ = true;
     setScale();
 
     return;
@@ -519,7 +519,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       in_jog_mode_ = false;
       setScale();
 
-      reset_ee_graphic_ = true;  // Flag that the integrated cmds need to be reset
+      reset_ee_graphic_pose_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into MANIPULATION mode  ...");
       AMP_HAND_MOTION_ = 1;
       navT_or_manipF_ = false;
@@ -539,7 +539,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       in_jog_mode_ = false;
       setScale();
 
-      reset_ee_graphic_ = true;  // Flag that the integrated cmds need to be reset
+      reset_ee_graphic_pose_ = true;  // Flag that the integrated cmds need to be reset
       ROS_INFO("Going into NAVIGATION mode  ...");
       AMP_HAND_MOTION_ = 100;
 
@@ -580,7 +580,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       {
         ROS_INFO("Switching to jog mode");
         in_jog_mode_ = true;
-        reset_ee_graphic_ = true;
+        reset_ee_graphic_pose_ = true;
         setScale();
       }
       else
@@ -597,20 +597,21 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Executing last plan ...");
       callRobotMotionInterface(low_level_cmds::EXECUTE);
-      reset_ee_graphic_ = true;
+      reset_ee_graphic_pose_ = true;
 
       return;
     }
     else if (voice_command.data == "robot plan and go")
     {
       ROS_INFO("Planning and moving ...");
-      reset_ee_graphic_ = true;
+      reset_ee_graphic_pose_ = true;
       callRobotMotionInterface(low_level_cmds::GO);
       return;
     }
     else if (voice_command.data == "next end effector")
     {
       ROS_INFO("Controlling the next EE from yaml file ...");
+      reset_ee_graphic_pose_ = true;  // Flag that the integrated cmds need to be reset
       switchEE();
       return;
     }
@@ -642,12 +643,16 @@ void Teleoperator::triggerSequence(std::string& voice_command)
  *  This is used in marker publication.
  *  @return void.
  */
-void Teleoperator::setGraphicsFramesStatus()
+void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 {
   graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+
+  graphics_and_frames_.adjust_camera_ = adjust_camera;
+
+  graphics_and_frames_.crunch();
 
   return;
 } // end setGraphicsFramesStatus()
@@ -693,11 +698,11 @@ void Teleoperator::switchEE()
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
 
   // Set camera at new EE
-  setGraphicsFramesStatus();
-  graphics_and_frames_.adjust_camera_ = true;
+  bool adjust_camera = true;
+  setGraphicsFramesStatus( adjust_camera );
 
   // Reset the hand marker to be at the EE
-  reset_ee_graphic_ = true;
+  reset_ee_graphic_pose_ = true;
 }
 
 
@@ -724,7 +729,7 @@ int main(int argc, char **argv)
 	!temoto_teleop.executing_preplanned_sequence_ )
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
-    temoto_teleop.setGraphicsFramesStatus(); // Update poses, scale, and nav-or-manip mode for the frames calculation
+    temoto_teleop.setGraphicsFramesStatus(false); // Update poses, scale, and nav-or-manip mode for the frames calculation
     temoto_teleop.graphics_and_frames_.crunch();
 
     node_rate.sleep();
