@@ -8,7 +8,7 @@ temoto_frames:
       movegroup: "manipulator"
 
 temoto:
-  temoto_pose_cmd_topic: "/temoto/spacenav/joy"
+  temoto_pose_cmd_topic: "/spacenav/joy"
 
    # navigate or manipulate
   navigate: false
