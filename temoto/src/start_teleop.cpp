@@ -59,7 +59,7 @@ Teleoperator::Teleoperator() :
   if ( !n_.getParam("/temoto_frames/num_ee", num_ee) )
     ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. Aborting.");
 
-  // Get the ee names. Shove in vectors.
+  // Get the names associated with multiple end effectors. Shove in vectors.
   for (int i=0; i<num_ee; i++)
   {
     std::string ee_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", n_);
@@ -649,6 +649,7 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  graphics_and_frames_.latest_status_.current_movegroup_ee_index = current_movegroup_ee_index_;
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
 

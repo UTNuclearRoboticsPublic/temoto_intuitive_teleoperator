@@ -36,7 +36,7 @@
 // ROS includes
 #include "ros/ros.h"
 #include "std_srvs/Empty.h"
-#include "moveit/move_group_interface/move_group.h"
+#include "moveit/move_group_interface/move_group_interface.h"
 #include "ros/callback_queue.h"
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_listener.h>
@@ -57,7 +57,7 @@ class MoveRobotInterface {
      movegroup_.setPlanningTime(1.9);
    };
    
-   moveit::planning_interface::MoveGroup movegroup_;
+   moveit::planning_interface::MoveGroupInterface movegroup_;
 
    void requestMove();
 
@@ -70,7 +70,7 @@ class MoveRobotInterface {
    geometry_msgs::PoseStamped target_pose_stamped_;		///< Target pose for the robot, if applicable.
    std::vector<double> joint_deltas_;			///< Joint target, if applicable.
    std::string named_target_;					///< Named target for the robot.
-   moveit::planning_interface::MoveGroup::Plan latest_plan_;	///< Latest motion plan.
+   moveit::planning_interface::MoveGroupInterface::Plan latest_plan_;	///< Latest motion plan.
    std::string req_action_type_ = "";					///< Action type associated with target request, i.e. PLAN, EXECUTE PLAN, or PLAN&EXECUTE.
    
    // Public variables describing the state of MoveRobotInterface
