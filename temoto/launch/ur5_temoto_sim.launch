@@ -37,6 +37,6 @@
 <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
 
   <!-- Arm jogging -->
-  <include file="$(find ur_gazebo)/launch/jog_arms.launch"/>
+  <include file="$(find ur_gazebo)/launch/jog_arm.launch"/>
 
 </launch>
