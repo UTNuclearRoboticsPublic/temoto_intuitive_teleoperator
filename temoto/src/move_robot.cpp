@@ -122,7 +122,7 @@ void MoveRobotInterface::requestMove()
   else if ( req_action_type_ == low_level_cmds::GO )
   {
     // Since move() has a bug of start state not being current state, I am going to plan and execute sequentally.
-    moveit::planning_interface::MoveGroup::Plan move_plan;
+    moveit::planning_interface::MoveGroupInterface::Plan move_plan;
     movegroup_.plan( move_plan );
     movegroup_.execute( move_plan );
     new_plan_available_ = false; // As any previous plan has become invalid, set new_plan_available_ to FALSE.

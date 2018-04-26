@@ -6,9 +6,11 @@ temoto_frames:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "r_temoto_end_effector"
       movegroup: "right_ur5_temoto"
+      manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
     ee1:
       end_effector: "left_ur5_ee_link"
       movegroup: "left_ur5"
+      manip_stl: "package://temoto_support/meshes/manip_cube.stl"
 
 temoto:
   temoto_pose_cmd_topic: "spacenav/joy"
@@ -17,7 +19,6 @@ temoto:
   navigate: false
   manipulate: true
 
-  manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
   input_voice_topic: "stt/spoken_text"
 
   motion_scales:

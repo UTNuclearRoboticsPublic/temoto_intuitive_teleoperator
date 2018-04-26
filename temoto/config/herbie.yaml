@@ -6,6 +6,7 @@ temoto_frames:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "temoto_end_effector"
       movegroup: "manipulator"
+      manip_stl: "package://temoto_support/meshes/Shovel.stl" #"package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
 
 temoto:
   temoto_pose_cmd_topic: "/temoto/spacenav/joy"
@@ -14,7 +15,6 @@ temoto:
   navigate: false
   manipulate: true
 
-  manip_stl: "package://temoto_support/meshes/Shovel.stl" #"package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
   input_voice_topic: "stt/spoken_text"
 
   motion_scales:

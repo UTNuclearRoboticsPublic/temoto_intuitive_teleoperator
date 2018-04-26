@@ -39,6 +39,7 @@
 #include "visualization_msgs/Marker.h"
 #include "geometry_msgs/Pose.h"
 #include "std_srvs/Empty.h"
+#include "temoto/get_ros_params.h"
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <tf2_ros/transform_listener.h>
@@ -59,6 +60,7 @@ struct temoto_status
   geometry_msgs::PoseStamped commanded_pose;
   double scale_by;
   geometry_msgs::PoseStamped end_effector_pose;
+  uint current_movegroup_ee_index = 0;
 };
 
 class Visuals
@@ -68,8 +70,16 @@ public:
   Visuals()
   {
     // Get the STL's for the manip/nav hand markers from launch file, if any
-    std::string manip_stl;
-    nh_.param<std::string>("/temoto/manip_stl", manip_stl_, "");
+    // First, how many ee's are there?
+    int num_ee = 1;
+    if ( !nh_.getParam("/temoto_frames/num_ee", num_ee) )
+      ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. Aborting.");
+
+    for (int i=0; i<num_ee; i++)
+    {
+      std::string stl_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/manip_stl", nh_);
+      manip_stl_names_.push_back(stl_name);
+    }
 
     // Get all the relevant frame names from parameter server
     nh_.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
@@ -112,11 +122,11 @@ private:
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
 
+  // A list of end-effector CAD representations
+  std::vector<std::string> manip_stl_names_;
+
   // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
   temoto_status prev_status_;
-
-  /** STL files for the hand markers. */
-  std::string manip_stl_;;
   
   // Human input frame.
   std::string human_frame_;

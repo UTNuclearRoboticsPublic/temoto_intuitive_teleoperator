@@ -62,11 +62,8 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.ns = "hand_pose_marker";
   cmd_pose_marker_.id = 0;
 
-  if ( manip_stl_ == "" )  // No end-effector CAD model was specified.
-    manip_stl_ = "package://temoto_support/meshes/manip_cube.stl";
-
   cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-  cmd_pose_marker_.mesh_resource = manip_stl_;
+  cmd_pose_marker_.mesh_resource = manip_stl_names_.at(latest_status_.current_movegroup_ee_index);
   cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
   cmd_pose_marker_.scale.x = 0.001;
   cmd_pose_marker_.scale.y = 0.001;
@@ -123,7 +120,7 @@ void Visuals::crunch()
     // ==  HAND POSE MARKER  ================================= //
     cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
-    cmd_pose_marker_.mesh_resource = manip_stl_;
+    cmd_pose_marker_.mesh_resource = manip_stl_names_.at(latest_status_.current_movegroup_ee_index);
     cmd_pose_marker_.scale.x = 0.001;
     cmd_pose_marker_.scale.y = 0.001;
     cmd_pose_marker_.scale.z = 0.001;
