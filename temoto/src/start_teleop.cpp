@@ -41,7 +41,8 @@ Teleoperator::Teleoperator() :
  preplanned_sequence_client_("temoto/preplanned_sequence", true),  // true--> don't block the thread
  navigateIF_("move_base")
 {
-  temoto_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_pose_cmd_topic", n_);
+  temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
+  temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
 
   // By default navigation is turned OFF
   bool navigate = get_ros_params::getBoolParam("temoto/navigate", n_);
@@ -52,6 +53,8 @@ Teleoperator::Teleoperator() :
   // TODO: parameterize this topic
   pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
+  
+
 
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
@@ -76,7 +79,8 @@ Teleoperator::Teleoperator() :
 
   // Subscribers
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
-  sub_pose_cmd_ = n_.subscribe(temoto_pose_cmd_topic_, 1,  &Teleoperator::processJoyCmd, this);
+  sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1,  &Teleoperator::processSpaceNavCmd, this);
+  sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1,  &Teleoperator::processXboxCmd, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
   sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
@@ -87,6 +91,7 @@ Teleoperator::Teleoperator() :
   // tf frame for incoming cmds
   incremental_position_cmd_.header.frame_id = "spacenav";
   incremental_orientation_cmd_.header.frame_id = "spacenav";
+
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
   if (manipulate_ && navigate)
@@ -251,7 +256,7 @@ void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_ty
  *  Add the new command to the current RViz marker pose.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
  */
-void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
+void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
 {
   // If rotational components >> translational, ignore translation (and vice versa)
   double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
@@ -394,7 +399,165 @@ void Teleoperator::processJoyCmd(sensor_msgs::Joy pose_cmd)
   }
 
   return;
-} // end processJoyCmd
+} // end processSpaceNavCmd
+
+void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
+{
+  //Mapping xbox controls
+  float x_pos = pose_cmd.axes[1]; float y_pos = pose_cmd.axes[0]; //Left Stick
+  float z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4]; //Back Buttons (Left up, Right down)
+  float x_ori = -1 * pose_cmd.axes[3]; float y_ori = pose_cmd.axes[4]; //Right Stick
+  //z_ori ---> Back Triggers
+  //Back Triggers return analog input btw 1 and -1
+  float r_trig = pose_cmd.axes[5]; float l_trig = pose_cmd.axes[2];
+  r_trig = (r_trig - abs(r_trig))/(-2*r_trig + 0.0000001);
+  l_trig = (l_trig - abs(l_trig))/(-2*l_trig + 0.0000001);
+  float z_ori = r_trig - l_trig;
+  //Buttons
+  int a_button = pose_cmd.buttons[0];
+  int b_button = pose_cmd.buttons[1];
+
+
+  // If rotational components >> translational, ignore translation (and vice versa)
+  double trans_mag = pow( x_pos*x_pos + y_pos*y_pos + z_pos*z_pos, 2 );
+  double rot_mag = pow( x_ori*x_ori + y_ori*y_ori + z_ori*z_ori, 2);
+  if ( trans_mag > 2.*rot_mag )
+  {
+    x_ori = 0.; y_ori = 0.; z_ori = 0.;
+  }
+  else if ( rot_mag > 2.*trans_mag )
+  {
+    x_pos = 0.; y_pos = 0.; z_pos = 0.;
+  }
+
+  // Should we reset the command integrations?
+  // Can be used to reset the hand marker, or when switching betw. manip & nav modes
+  if (reset_ee_graphic_pose_)
+  {
+    if ( navT_or_manipF_ )  // Navigation --> Center on base_link
+    {
+      absolute_pose_cmd_.pose.position.x = 0.;
+      absolute_pose_cmd_.pose.position.y = 0.;
+      absolute_pose_cmd_.pose.position.z = 0.;
+
+      absolute_pose_cmd_.pose.orientation.x = 0.;
+      absolute_pose_cmd_.pose.orientation.y = 0.;
+      absolute_pose_cmd_.pose.orientation.z = 0.;
+      absolute_pose_cmd_.pose.orientation.w = 1.;
+    }
+    else  // Manipulation --> Center on EE
+      absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+
+    // Reset the flag
+    reset_ee_graphic_pose_ = false;
+  }
+
+  ///////////////////////////////////////////////////////////
+  // JOGGING
+  // Can use the same type of command for arm and base teleop
+  ///////////////////////////////////////////////////////////
+  if (in_jog_mode_)
+  {
+    jog_twist_cmd_.header.stamp = ros::Time::now();
+    jog_twist_cmd_.twist.linear.x = pos_scale_*x_pos;
+    jog_twist_cmd_.twist.linear.y = pos_scale_*y_pos;
+    jog_twist_cmd_.twist.linear.z = pos_scale_*z_pos;
+    jog_twist_cmd_.twist.angular.x = rot_scale_*x_ori;
+    jog_twist_cmd_.twist.angular.y = rot_scale_*y_ori;
+    jog_twist_cmd_.twist.angular.z = rot_scale_*z_ori;
+  }
+
+  ////////////////////////////
+  // POINT-TO-POINT NAVIGATION
+  ////////////////////////////
+  if ( navT_or_manipF_ && !in_jog_mode_ )
+  {
+    // ORIENTATION
+    // new incremental yaw command
+    // For nav mode, we want to stay in the plane ==> ignore roll & pitch
+    incremental_orientation_cmd_.vector.z = rot_scale_*z_ori;  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+    // POSITION
+    // Ignore Z (out of plane)
+
+    // Integrate the incremental cmd. It persists even if the robot moves
+    incremental_position_cmd_.vector.x = absolute_pose_cmd_.pose.position.x + pos_scale_*x_pos;  // X is fwd/back in base_link
+    incremental_position_cmd_.vector.y = absolute_pose_cmd_.pose.position.y + pos_scale_*y_pos;   // Y is left/right
+
+    // Incoming position cmds are in the spacenav frame
+    // So convert them to base_link for nav
+    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
+    geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
+    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, "base_link", ros::Time::now(), ros::Duration(0.05)) )
+      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
+    else
+    {
+      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
+    }
+
+    // Ignore Z
+    incoming_position_cmd.vector.z = 0.;
+
+    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
+    absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;
+  }
+
+
+  //////////////////////////////
+  // POINT-TO-POINT MANIPULATION
+  //////////////////////////////
+  if ( !navT_or_manipF_ && !in_jog_mode_ )
+  {
+    // Integrate for point-to-point motion
+    // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the spacenav frame
+
+
+    // ORIENTATION
+    // new incremental rpy command
+    incremental_orientation_cmd_.vector.x = rot_scale_*x_ori;  // about x axis
+    incremental_orientation_cmd_.vector.y = rot_scale_*y_ori;  // about y axis
+    incremental_orientation_cmd_.vector.z = rot_scale_*z_ori;  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+    // POSITION
+    // Again, in "spacenav" frame
+    incremental_position_cmd_.vector.x = pos_scale_*x_pos;  // X is fwd/back in spacenav
+    incremental_position_cmd_.vector.y = pos_scale_*y_pos;   // Y is left/right
+    incremental_position_cmd_.vector.z = pos_scale_*z_pos;  // Z is up/down
+
+    // Incoming position cmds are in the spacenav frame
+    // So convert them the frame of absolute_pose_cmd_
+    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
+    geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
+    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, ros::Time::now(), ros::Duration(0.05)) )
+      transform_listener_.transformVector(absolute_pose_cmd_.header.frame_id, incoming_position_cmd, incoming_position_cmd);
+    else
+      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false");
+
+    absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
+  }
+} // end processXboxCmd
 
 
 /** Callback function for Griffin Powermate events subscriber.

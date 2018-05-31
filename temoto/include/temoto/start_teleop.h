@@ -57,10 +57,6 @@
 #include "temoto/low_level_cmds.h"
 #include "griffin_powermate/PowermateEvent.h"
 
-
-// Other includes
-#include <string>
-
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
 
@@ -86,7 +82,9 @@ public:
 
   void switchEE();
 
-  void processJoyCmd(sensor_msgs::Joy pose_cmd);
+  void processSpaceNavCmd(sensor_msgs::Joy pose_cmd);
+
+  void processXboxCmd(sensor_msgs::Joy pose_cmd);
   
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
   
@@ -102,7 +100,8 @@ public:
   
   // Public member variables
   bool manipulate_ = true;		/// Is manipulation enabled?
-  std::string temoto_pose_cmd_topic_;   /// Topic of incoming pose cmds
+  std::string temoto_spacenav_pose_cmd_topic_;   /// Topic of incoming pose cmds
+  std::string temoto_xbox_pose_cmd_topic_; /// The incoming xbox pose cmds
   bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
   bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
@@ -147,7 +146,7 @@ private:
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
 
   // ROS subscribers
-  ros::Subscriber sub_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
+  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_ , sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;

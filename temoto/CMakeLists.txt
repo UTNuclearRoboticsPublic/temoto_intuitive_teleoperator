@@ -27,6 +27,7 @@ find_package(catkin REQUIRED
   tf2_ros
   tf2_geometry_msgs
   view_controller_msgs
+
 )
 
 ## System dependencies are found with CMake's conventions
@@ -132,6 +133,7 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
+
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
@@ -212,3 +214,5 @@ add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
