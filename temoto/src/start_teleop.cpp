@@ -50,8 +50,7 @@ Teleoperator::Teleoperator() :
   manipulate_ = get_ros_params::getBoolParam("temoto/manipulate", n_);
 
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
-  // TODO: parameterize this topic
-  pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>("/jog_arm_server/delta_jog_cmds", 1);
+  pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>(get_ros_params::getStringParam("/temoto/incoming_jog_topic", n_), 1);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
   
 

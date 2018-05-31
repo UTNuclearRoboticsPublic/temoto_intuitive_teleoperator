@@ -14,6 +14,7 @@ temoto_frames:
 
 temoto:
   temoto_pose_cmd_topic: "spacenav/joy"
+  incoming_jog_topic: "jog_arm_server/delta_jog_cmds"
 
   # navigate or manipulate
   navigate: false
