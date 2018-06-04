@@ -13,7 +13,8 @@ temoto_frames:
       manip_stl: "package://temoto_support/meshes/manip_cube.stl"
 
 temoto:
-  temoto_pose_cmd_topic: "spacenav/joy"
+  temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
+  temoto_xbox_pose_cmd_topic: "/joy"
   incoming_jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
 
   # navigate or manipulate

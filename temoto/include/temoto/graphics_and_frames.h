@@ -82,7 +82,6 @@ public:
     }
 
     // Get all the relevant frame names from parameter server
-    nh_.param<std::string>("/temoto_frames/human_input", human_frame_, "current_cmd_frame");
     nh_.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
 
     // Initialize point-of-view camera placement and all the required markers
@@ -127,9 +126,6 @@ private:
 
   // Previous status. Used in checking if control mode has changed (e.g. nav to manip)
   temoto_status prev_status_;
-  
-  // Human input frame.
-  std::string human_frame_;
   
   // Navigation control frame.
   std::string base_frame_;

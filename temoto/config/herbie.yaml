@@ -9,7 +9,8 @@ temoto_frames:
       manip_stl: "package://temoto_support/meshes/Shovel.stl" #"package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
 
 temoto:
-  temoto_pose_cmd_topic: "/temoto/spacenav/joy"
+  temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
+  temoto_xbox_pose_cmd_topic: "/joy"
   incoming_jog_topic: "/jog_arm_server/delta_jog_cmds"
 
    # navigate or manipulate
