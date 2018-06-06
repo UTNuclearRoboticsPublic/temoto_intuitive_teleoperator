@@ -112,6 +112,7 @@ Teleoperator::Teleoperator() :
 
   // Initial pose
   // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
+  ros::Duration(1).sleep();
   absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
   geometry_msgs::TransformStamped prev_frame_to_new = performTransform(absolute_pose_cmd_.header.frame_id, "base_link");
@@ -284,6 +285,14 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
       absolute_pose_cmd_.pose.orientation.y = 0.;
       absolute_pose_cmd_.pose.orientation.z = 0.;
       absolute_pose_cmd_.pose.orientation.w = 1.;
+
+      incremental_position_cmd_.vector.x = 0.;
+      incremental_position_cmd_.vector.y = 0.;
+      incremental_position_cmd_.vector.z = 0.;
+
+      incremental_orientation_cmd_.vector.x = 0.;
+      incremental_orientation_cmd_.vector.y = 0.;
+      incremental_orientation_cmd_.vector.z = 0.;
     }
     else  // Manipulation --> Center on EE
       absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
@@ -330,8 +339,8 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     // Ignore Z (out of plane)
 
     // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x = absolute_pose_cmd_.pose.position.x + pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link
-    incremental_position_cmd_.vector.y = absolute_pose_cmd_.pose.position.y + pos_scale_*pose_cmd.axes[1];   // Y is left/right
+    incremental_position_cmd_.vector.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link  
+    incremental_position_cmd_.vector.y += pos_scale_*pose_cmd.axes[1];  // Y is left/right
 
     // Incoming position cmds are in the spacenav frame
     // So convert them to base_link for nav
@@ -342,12 +351,10 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
     // Ignore Z
-    incoming_position_cmd.vector.z = 0.;
-
     // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
     absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
     absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;
+    absolute_pose_cmd_.pose.position.z = 0;
   }
 
 
@@ -486,8 +493,8 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // Ignore Z (out of plane)
 
     // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x = absolute_pose_cmd_.pose.position.x + pos_scale_*x_pos;  // X is fwd/back in base_link
-    incremental_position_cmd_.vector.y = absolute_pose_cmd_.pose.position.y + pos_scale_*y_pos;   // Y is left/right
+    incremental_position_cmd_.vector.x += pos_scale_*x_pos;  // X is fwd/back in base_link
+    incremental_position_cmd_.vector.y += pos_scale_*y_pos;   // Y is left/right
 
     // Incoming position cmds are in the spacenav frame
     // So convert them to base_link for nav
@@ -498,12 +505,10 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
     // Ignore Z
-    incoming_position_cmd.vector.z = 0.;
-
     // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
     absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
     absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = incoming_position_cmd.vector.z;
+    absolute_pose_cmd_.pose.position.z = 0;
   }
 
 

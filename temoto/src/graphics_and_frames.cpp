@@ -100,19 +100,16 @@ void Visuals::crunch()
   // Setting markers & frames in NAVIGATION mode
   if (latest_status_.in_navigation_mode)
   {
-    
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
     cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
-    cmd_pose_marker_.scale.x = 1.0;  // Shaft diameter
+    cmd_pose_marker_.scale.x = 1.0;
     cmd_pose_marker_.scale.y = 0.5;
     cmd_pose_marker_.scale.z = 0.1;
 
-    // Hand pose marker
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
     pub_rviz_marker_.publish( cmd_pose_marker_ );
-
   }
   // Setting markers & frames in MANIPULATION mode
   else
