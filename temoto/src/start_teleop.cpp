@@ -39,7 +39,8 @@
  */
 Teleoperator::Teleoperator() :
  preplanned_sequence_client_("temoto/preplanned_sequence", true),  // true--> don't block the thread
- navigateIF_("move_base")
+ navigateIF_("move_base"),
+ tf_listener_(tf_buffer_)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
@@ -112,10 +113,10 @@ Teleoperator::Teleoperator() :
   // Initial pose
   // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
   absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-  if ( transform_listener_.waitForTransform(absolute_pose_cmd_.header.frame_id, "base_link", ros::Time::now(), ros::Duration(0.05)) )
-    transform_listener_.transformPose("base_link", absolute_pose_cmd_, absolute_pose_cmd_);
-  else
-    ROS_ERROR("[temoto/start_teleop] Initial absolute_pose_cmd_ could not be transformed to base_link.");
+
+  geometry_msgs::TransformStamped prev_frame_to_new = performTransform(absolute_pose_cmd_.header.frame_id, "base_link");
+  tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
+
   // Reset the graphic now that we're sure the tf is available.
   reset_ee_graphic_pose_ = true;
 }
@@ -336,12 +337,9 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     // So convert them to base_link for nav
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, "base_link", ros::Time::now(), ros::Duration(0.05)) )
-      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-    else
-    {
-      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
-    }
+
+    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, "base_link" );
+    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
     // Ignore Z
     incoming_position_cmd.vector.z = 0.;
@@ -361,45 +359,39 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the spacenav frame
 
+    // ORIENTATION
+    // new incremental rpy command
+    incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
+    incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
+    incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+    // POSITION
+    // Again, in "spacenav" frame
+    incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
+    incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
+    incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
+
     // Incoming position cmds are in the spacenav frame
     // So convert them the frame of absolute_pose_cmd_
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, ros::Time::now(), ros::Duration(0.2)) )
-    {
-      // ORIENTATION
-      // new incremental rpy command
-      incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-      incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-      incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
 
-      tf::Quaternion q_previous_cmd, q_incremental;
-      q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id );
+    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-      // Add the incremental command to the previously commanded orientation
-      quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-      q_previous_cmd *= q_incremental;  // Calculate the new orientation
-      q_previous_cmd.normalize();
-      quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
-      // POSITION
-      // Again, in "spacenav" frame
-      incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
-      incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
-      incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
-
-      transform_listener_.transformVector(absolute_pose_cmd_.header.frame_id, incoming_position_cmd, incoming_position_cmd);
-      absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
-      absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
-      absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
-    }
-    else
-    {
-      ROS_WARN_STREAM_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false. Incoming Pos Cmd Frame: "
-        << incoming_position_cmd.header.frame_id << ". Abs Pose Cmd: " << absolute_pose_cmd_.header.frame_id);
-    }
-     
-    
+    absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;  
   }
 
   return;
@@ -501,12 +493,9 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // So convert them to base_link for nav
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, "base_link", ros::Time::now(), ros::Duration(0.05)) )
-      transform_listener_.transformVector("base_link", incoming_position_cmd, incoming_position_cmd);
-    else
-    {
-      ROS_WARN_THROTTLE(2, "[temoto/start_teleop] TF between base_link and spacenav timed out.");
-    }
+
+    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, "base_link" );
+    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
     // Ignore Z
     incoming_position_cmd.vector.z = 0.;
@@ -526,43 +515,38 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the spacenav frame
 
+    // ORIENTATION
+    // new incremental rpy command
+    incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
+    incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
+    incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+
+    tf::Quaternion q_previous_cmd, q_incremental;
+    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+
+    // Add the incremental command to the previously commanded orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    q_previous_cmd.normalize();
+    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
+
+    // POSITION
+    // Again, in "spacenav" frame
+    incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
+    incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
+    incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
+
     // Incoming position cmds are in the spacenav frame
     // So convert them the frame of absolute_pose_cmd_
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, ros::Time::now(), ros::Duration(0.2)) )
-      {
-      // ORIENTATION
-      // new incremental rpy command
-      incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-      incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-      incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
 
-      tf::Quaternion q_previous_cmd, q_incremental;
-      q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id );
+    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-      // Add the incremental command to the previously commanded orientation
-      quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-      q_previous_cmd *= q_incremental;  // Calculate the new orientation
-      q_previous_cmd.normalize();
-      quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
-      // POSITION
-      // Again, in "spacenav" frame
-      incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
-      incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
-      incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
-
-      transform_listener_.transformVector(absolute_pose_cmd_.header.frame_id, incoming_position_cmd, incoming_position_cmd);
-      absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
-      absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
-      absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
-    }
-    else
-    {
-      ROS_WARN_STREAM_THROTTLE(2, "[temoto/start_teleop] transform_listener_ waitForTransform returned false. Incoming Pos Cmd Frame: "
-        << incoming_position_cmd.header.frame_id << ". Abs Pose Cmd: " << absolute_pose_cmd_.header.frame_id);
-    }
+    absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
+    absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
+    absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
   }
 } // end processXboxCmd
 
@@ -799,10 +783,6 @@ void Teleoperator::triggerSequence(std::string& voice_command)
 {
   temoto::PreplannedSequenceGoal goal;
   goal.sequence_name = voice_command;
-  //while ( !preplanned_sequence_client_.waitForServer( ros::Duration(1.) ))
-  //{
-  //  ROS_INFO_STREAM("[start_teleop] Waiting for the preplanned action server.");
-  //}
   preplanned_sequence_client_.sendGoal(goal);
 
   // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
@@ -876,6 +856,32 @@ void Teleoperator::switchEE()
   reset_ee_graphic_pose_ = true;
 }
 
+// Return a transform between 2 frames
+geometry_msgs::TransformStamped Teleoperator::performTransform(std::string source_frame, std::string target_frame)
+{
+  geometry_msgs::TransformStamped prev_frame_to_new;
+
+  // If the strings were valid
+  if ( source_frame.length()>0 && target_frame.length()>0 )
+  {
+    // Check for and remove leading '/'
+    if ( source_frame.at(0)=='/' )
+      source_frame.erase(0,1);
+    if ( target_frame.at(0)=='/' )
+      target_frame.erase(0,1);
+
+    try{
+      prev_frame_to_new = tf_buffer_.lookupTransform( source_frame, target_frame, ros::Time(0), ros::Duration(2.0));
+    }
+    catch (tf2::TransformException &ex) {
+      ROS_WARN("%s",ex.what());
+      ros::Duration(1.0).sleep();
+    }
+  }
+
+  return prev_frame_to_new;
+}
+
 
 // MAIN
 int main(int argc, char **argv)
@@ -887,7 +893,7 @@ int main(int argc, char **argv)
   ros::Rate node_rate(90.);
 
   // Using an async spinner. It is needed for moveit's MoveGroup::plan()
-  ros::AsyncSpinner spinner(3);
+  ros::AsyncSpinner spinner(4);
   spinner.start();
 
   Teleoperator temoto_teleop;

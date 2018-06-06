@@ -42,9 +42,8 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
-#include "tf/tf.h"
-#include "tf/transform_datatypes.h"
-#include "tf/transform_listener.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "tf2_ros/transform_listener.h"
 
 // temoto includes
 #include "temoto/get_ros_params.h"
@@ -110,6 +109,7 @@ public:
   std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
 private:
+  geometry_msgs::TransformStamped performTransform(std::string source_frame, std::string target_frame);
 
   ros::NodeHandle n_;
 
@@ -120,9 +120,6 @@ private:
 
   // All move_groups/ee's the user might want to control (specified in yaml)
   std::vector<std::string> ee_names_;
-
-  /// Local TransformListener for transforming poses
-  tf::TransformListener transform_listener_;
 
   /// Scaling factor
   double pos_scale_;
@@ -154,5 +151,8 @@ private:
 
   // ROS services/actions
   actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a preplanned sequence
+
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf_listener_;
 };
 #endif
