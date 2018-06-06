@@ -231,28 +231,6 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   return;
 } // end callRobotMotionInterface
 
-/** Function that actually makes the service call to /temoto/move_robot_service.
- *  @param action_type determines what is requested from MoveGroup, i.e. PLAN, EXECUTE PLAN, or GO (aka plan and execute).
- *  @param named_target uses this named target for target pose.
- */
-// void Teleoperator::callPlanAndMoveNamedTarget(uint8_t action_type, std::string named_target)
-void Teleoperator::callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target)
-{
-  if ( !navT_or_manipF_ )			// currenly implemented only for manipulation mode
-  {   
-    // request arm motion
-    arm_if_ptrs_.at( current_movegroup_ee_index_ )->req_action_type_ = action_type;
-    arm_if_ptrs_.at( current_movegroup_ee_index_ )->named_target_ = named_target;
-    arm_if_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
-  }
-  else
-  {
-    ROS_INFO("[start_teleop/callRobotMotionInterfaceWithNamedTarget] Not available for NavigateRobotInterface.");
-  }
-  return;
-} // end callRobotMotionInterfaceWithNamedTarget
-
-
 /** Callback function for relative position commands.
  *  Add the new command to the current RViz marker pose.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
@@ -362,7 +340,6 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
     incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
 
-
     // Incoming position cmds are in the spacenav frame
     // So convert them the frame of absolute_pose_cmd_
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
@@ -401,11 +378,15 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
   double rot_mag = pow( x_ori*x_ori + y_ori*y_ori + z_ori*z_ori, 2);
   if ( trans_mag > 2.*rot_mag )
   {
-    x_ori = 0.; y_ori = 0.; z_ori = 0.;
+    x_ori = 0.;
+    y_ori = 0.;
+    z_ori = 0.;
   }
   else if ( rot_mag > 2.*trans_mag )
   {
-    x_pos = 0.; y_pos = 0.; z_pos = 0.;
+    x_pos = 0.;
+    y_pos = 0.;
+    z_pos = 0.;
   }
 
   // Should we reset the command integrations?

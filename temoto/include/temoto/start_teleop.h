@@ -70,20 +70,20 @@ public:
   {
     delete arm_if_ptrs_.at(0);
   }
-  
+
   void callRobotMotionInterface(std::string action_type);
-  
-  void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
-  
+
   void setGraphicsFramesStatus(bool adjust_camera);
 
-  void setScale();
+  bool in_jog_mode_ = false;      ///< If true, send new joints/poses immediately. Otherwise, pt-to-pt motion
 
-  void switchEE();
+  bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
 
-  void processSpaceNavCmd(sensor_msgs::Joy pose_cmd);
+  Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
-  void processXboxCmd(sensor_msgs::Joy pose_cmd);
+private:
+ 
+  void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
   
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
   
@@ -96,22 +96,25 @@ public:
   void triggerSequence(std::string& voice_command);
 
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
-  
-  // Public member variables
-  bool manipulate_ = true;		/// Is manipulation enabled?
-  std::string temoto_spacenav_pose_cmd_topic_;   /// Topic of incoming pose cmds
-  std::string temoto_xbox_pose_cmd_topic_; /// The incoming xbox pose cmds
-  bool in_jog_mode_ = false;			///< If true, send new joints/poses immediately. Otehrwise, pt-to-pt motion
-  bool navT_or_manipF_ = false;		///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
-  bool executing_preplanned_sequence_ = false;  ///< TRUE blocks other Temoto cmds
-  Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
-  int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
-  std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
-private:
   geometry_msgs::TransformStamped performTransform(std::string source_frame, std::string target_frame);
 
   void resetEEGraphicPose();
+
+  void setScale();
+
+  void switchEE();
+
+  void processSpaceNavCmd(sensor_msgs::Joy pose_cmd);
+
+  void processXboxCmd(sensor_msgs::Joy pose_cmd);
+
+  bool manipulate_ = true;    /// Is manipulation enabled?
+  std::string temoto_spacenav_pose_cmd_topic_;   /// Topic of incoming pose cmds
+  std::string temoto_xbox_pose_cmd_topic_; /// The incoming xbox pose cmds
+  bool navT_or_manipF_ = false;   ///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
+  int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
+  std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
   ros::NodeHandle n_;
 
