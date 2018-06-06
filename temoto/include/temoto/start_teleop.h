@@ -111,6 +111,8 @@ public:
 private:
   geometry_msgs::TransformStamped performTransform(std::string source_frame, std::string target_frame);
 
+  void resetEEGraphicPose();
+
   ros::NodeHandle n_;
 
   // Other Temoto classes (each encapsulating its own functionality)

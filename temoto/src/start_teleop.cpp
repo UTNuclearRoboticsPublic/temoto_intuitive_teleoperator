@@ -274,32 +274,7 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
   // Should we reset the command integrations?
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_ee_graphic_pose_)
-  {
-    if ( navT_or_manipF_ )  // Navigation --> Center on base_link
-    {
-      absolute_pose_cmd_.pose.position.x = 0.;
-      absolute_pose_cmd_.pose.position.y = 0.;
-      absolute_pose_cmd_.pose.position.z = 0.;
-
-      absolute_pose_cmd_.pose.orientation.x = 0.;
-      absolute_pose_cmd_.pose.orientation.y = 0.;
-      absolute_pose_cmd_.pose.orientation.z = 0.;
-      absolute_pose_cmd_.pose.orientation.w = 1.;
-
-      incremental_position_cmd_.vector.x = 0.;
-      incremental_position_cmd_.vector.y = 0.;
-      incremental_position_cmd_.vector.z = 0.;
-
-      incremental_orientation_cmd_.vector.x = 0.;
-      incremental_orientation_cmd_.vector.y = 0.;
-      incremental_orientation_cmd_.vector.z = 0.;
-    }
-    else  // Manipulation --> Center on EE
-      absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-
-    // Reset the flag
-    reset_ee_graphic_pose_ = false;
-  }
+    resetEEGraphicPose();
 
   ///////////////////////////////////////////////////////////
   // JOGGING
@@ -436,24 +411,7 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
   // Should we reset the command integrations?
   // Can be used to reset the hand marker, or when switching betw. manip & nav modes
   if (reset_ee_graphic_pose_)
-  {
-    if ( navT_or_manipF_ )  // Navigation --> Center on base_link
-    {
-      absolute_pose_cmd_.pose.position.x = 0.;
-      absolute_pose_cmd_.pose.position.y = 0.;
-      absolute_pose_cmd_.pose.position.z = 0.;
-
-      absolute_pose_cmd_.pose.orientation.x = 0.;
-      absolute_pose_cmd_.pose.orientation.y = 0.;
-      absolute_pose_cmd_.pose.orientation.z = 0.;
-      absolute_pose_cmd_.pose.orientation.w = 1.;
-    }
-    else  // Manipulation --> Center on EE
-      absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
-
-    // Reset the flag
-    reset_ee_graphic_pose_ = false;
-  }
+    resetEEGraphicPose();
 
   ///////////////////////////////////////////////////////////
   // JOGGING
@@ -885,6 +843,35 @@ geometry_msgs::TransformStamped Teleoperator::performTransform(std::string sourc
   }
 
   return prev_frame_to_new;
+}
+
+// Reset the end-effector graphic to current robot pose
+void Teleoperator::resetEEGraphicPose()
+{
+  if ( navT_or_manipF_ )  // Navigation --> Center on base_link
+  {
+    absolute_pose_cmd_.pose.position.x = 0.;
+    absolute_pose_cmd_.pose.position.y = 0.;
+    absolute_pose_cmd_.pose.position.z = 0.;
+
+    absolute_pose_cmd_.pose.orientation.x = 0.;
+    absolute_pose_cmd_.pose.orientation.y = 0.;
+    absolute_pose_cmd_.pose.orientation.z = 0.;
+    absolute_pose_cmd_.pose.orientation.w = 1.;
+
+    incremental_position_cmd_.vector.x = 0.;
+    incremental_position_cmd_.vector.y = 0.;
+    incremental_position_cmd_.vector.z = 0.;
+
+    incremental_orientation_cmd_.vector.x = 0.;
+    incremental_orientation_cmd_.vector.y = 0.;
+    incremental_orientation_cmd_.vector.z = 0.;
+  }
+  else  // Manipulation --> Center on EE
+    absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+
+  // Reset the flag
+  reset_ee_graphic_pose_ = false;
 }
 
 
