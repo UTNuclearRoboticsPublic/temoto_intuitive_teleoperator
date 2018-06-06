@@ -530,7 +530,7 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // So convert them the frame of absolute_pose_cmd_
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, ros::Time::now(), ros::Duration(0.05)) )
+    if ( transform_listener_.waitForTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, ros::Time::now(), ros::Duration(0.2)) )
       {
       // ORIENTATION
       // new incremental rpy command
