@@ -89,8 +89,8 @@ Teleoperator::Teleoperator() :
   setScale();
 
   // tf frame for incoming cmds
-  incremental_position_cmd_.header.frame_id = "spacenav";
-  incremental_orientation_cmd_.header.frame_id = "spacenav";
+  incremental_position_cmd_.header.frame_id = "temoto_command_frame";
+  incremental_orientation_cmd_.header.frame_id = "temoto_command_frame";
 
 
   // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
@@ -259,7 +259,7 @@ void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
   double x_pos = pose_cmd.axes[1];
   double y_pos = pose_cmd.axes[0]; //Left Stick
   double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4]; //Back Buttons (Left up, Right down)
-  double x_ori = -1 * pose_cmd.axes[3];
+  double x_ori = -pose_cmd.axes[3];
   double y_ori = pose_cmd.axes[4]; //Right Stick
   //z_ori ---> Back Triggers
   //Back Triggers return analog input btw 1 and -1
@@ -348,7 +348,7 @@ void Teleoperator::processIncrementalPoseCmd(
     incremental_position_cmd_.vector.x += pos_scale_*x_pos;  // X is fwd/back in base_link  
     incremental_position_cmd_.vector.y += pos_scale_*y_pos;  // Y is left/right
 
-    // Incoming position cmds are in the spacenav frame
+    // Incoming position cmds are in the temoto_command_frame
     // So convert them to base_link for nav
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
@@ -374,7 +374,7 @@ void Teleoperator::processIncrementalPoseCmd(
   if ( !navT_or_manipF_ && !in_jog_mode_ )
   {
     // Integrate for point-to-point motion
-    // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the spacenav frame
+    // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the temoto_command_frame
 
     // ORIENTATION
     // new incremental rpy command
@@ -392,12 +392,12 @@ void Teleoperator::processIncrementalPoseCmd(
     quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
 
     // POSITION
-    // Again, in "spacenav" frame
-    incremental_position_cmd_.vector.x = pos_scale_*x_pos;  // X is fwd/back in spacenav
+    // Again, in "temoto_command_frame" frame
+    incremental_position_cmd_.vector.x = pos_scale_*x_pos;  // X is fwd/back in temoto_command_frame
     incremental_position_cmd_.vector.y = pos_scale_*y_pos;   // Y is left/right
     incremental_position_cmd_.vector.z = pos_scale_*z_pos;  // Z is up/down
 
-    // Incoming position cmds are in the spacenav frame
+    // Incoming position cmds are in the temoto_command_frame
     // So convert them the frame of absolute_pose_cmd_
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;

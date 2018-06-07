@@ -150,8 +150,7 @@ private:
 
   // Show the hand marker frame in RViz
   tf2_ros::TransformBroadcaster tf_br_;
-  tf2::Transform spacenav_tf_;
-  tf2::Transform leap_motion_tf_;
+  tf2::Transform command_frame_tf_;
 
   // Publisher to update the goal state in rviz motion planning plugin
   // Need to enable external comms in MoveIt for this to work
