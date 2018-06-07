@@ -97,7 +97,7 @@ private:
 
   void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
 
-  geometry_msgs::TransformStamped performTransform(std::string source_frame, std::string target_frame);
+  bool performTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped &transform);
 
   void resetEEGraphicPose();
 

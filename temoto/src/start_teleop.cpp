@@ -115,7 +115,10 @@ Teleoperator::Teleoperator() :
   ros::Duration(1).sleep();
   absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
-  geometry_msgs::TransformStamped prev_frame_to_new = performTransform(absolute_pose_cmd_.header.frame_id, "base_link");
+  // Wait for this pose to be available
+  geometry_msgs::TransformStamped prev_frame_to_new;
+  while ( !performTransform(absolute_pose_cmd_.header.frame_id, "base_link", prev_frame_to_new) )
+    ROS_WARN_STREAM("Waiting for initial transform from command frame to base_link");
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
   // Reset the graphic now that we're sure the tf is available.
@@ -300,14 +303,18 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
-    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, "base_link" );
-    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
+    geometry_msgs::TransformStamped prev_frame_to_new;
+    // Make sure the transform is available, otherwise skip updating the pose
+    if ( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
+    {
+      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-    // Ignore Z
-    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
-    absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = 0;
+      // Ignore Z
+      // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
+      absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
+      absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
+      absolute_pose_cmd_.pose.position.z = 0;
+    }
   }
 
 
@@ -345,12 +352,16 @@ void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
-    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id );
-    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
+    geometry_msgs::TransformStamped prev_frame_to_new;
+    // Make sure the transform is available, otherwise skip updating the pose
+    if (performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
+    {
+      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-    absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;  
+      absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
+      absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
+      absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
+    } 
   }
 
   return;
@@ -440,14 +451,18 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
-    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, "base_link" );
-    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
+    geometry_msgs::TransformStamped prev_frame_to_new;
+    // Make sure the transform is available, otherwise skip updating the pose
+    if( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
+    {
+      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-    // Ignore Z
-    // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
-    absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z = 0;
+      // Ignore Z
+      // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
+      absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
+      absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
+      absolute_pose_cmd_.pose.position.z = 0;
+    }
   }
 
 
@@ -485,12 +500,16 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
-    geometry_msgs::TransformStamped prev_frame_to_new = performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id );
-    tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
+    geometry_msgs::TransformStamped prev_frame_to_new;
+    // Make sure the transform is available, otherwise skip updating the pose
+    if ( performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
+    {
+      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
-    absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
-    absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
-    absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
+      absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
+      absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
+      absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
+    }
   }
 } // end processXboxCmd
 
@@ -800,10 +819,10 @@ void Teleoperator::switchEE()
   reset_ee_graphic_pose_ = true;
 }
 
-// Return a transform between 2 frames
-geometry_msgs::TransformStamped Teleoperator::performTransform(std::string source_frame, std::string target_frame)
+// Calculate a transform between 2 frames
+bool Teleoperator::performTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped &transform)
 {
-  geometry_msgs::TransformStamped prev_frame_to_new;
+  bool success = false;
 
   // If the strings were valid
   if ( source_frame.length()>0 && target_frame.length()>0 )
@@ -814,16 +833,19 @@ geometry_msgs::TransformStamped Teleoperator::performTransform(std::string sourc
     if ( target_frame.at(0)=='/' )
       target_frame.erase(0,1);
 
-    try{
-      prev_frame_to_new = tf_buffer_.lookupTransform( source_frame, target_frame, ros::Time(0), ros::Duration(2.0));
+    try
+    {
+      transform = tf_buffer_.lookupTransform( source_frame, target_frame, ros::Time(0), ros::Duration(2.0));
+      success = true;
     }
-    catch (tf2::TransformException &ex) {
+    catch (tf2::TransformException &ex)
+    {
       ROS_WARN("%s",ex.what());
       ros::Duration(1.0).sleep();
     }
   }
 
-  return prev_frame_to_new;
+  return success;
 }
 
 // Reset the end-effector graphic to current robot pose
