@@ -105,9 +105,18 @@ private:
 
   void switchEE();
 
-  void processSpaceNavCmd(sensor_msgs::Joy pose_cmd);
+  void spaceNavCallback(sensor_msgs::Joy pose_cmd);
 
-  void processXboxCmd(sensor_msgs::Joy pose_cmd);
+  void xboxCallback(sensor_msgs::Joy pose_cmd);
+
+  void processIncrementalPoseCmd(
+    double &x_pos,
+    double &y_pos,
+    double &z_pos,
+    double &x_ori,
+    double &y_ori,
+    double &z_ori
+  );
 
   bool manipulate_ = true;    /// Is manipulation enabled?
   std::string temoto_spacenav_pose_cmd_topic_;   /// Topic of incoming pose cmds

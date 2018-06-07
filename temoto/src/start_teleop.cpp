@@ -79,8 +79,8 @@ Teleoperator::Teleoperator() :
 
   // Subscribers
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
-  sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1,  &Teleoperator::processSpaceNavCmd, this);
-  sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1,  &Teleoperator::processXboxCmd, this);
+  sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1,  &Teleoperator::spaceNavCallback, this);
+  sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1,  &Teleoperator::xboxCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
   sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
@@ -238,152 +238,54 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
  *  Add the new command to the current RViz marker pose.
  *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
  */
-void Teleoperator::processSpaceNavCmd(sensor_msgs::Joy pose_cmd)
+void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
 {
-  // If rotational components >> translational, ignore translation (and vice versa)
-  double trans_mag = pow( pose_cmd.axes[0]*pose_cmd.axes[0] + pose_cmd.axes[1]*pose_cmd.axes[1] + pose_cmd.axes[2]*pose_cmd.axes[2], 2 );
-  double rot_mag = pow( pose_cmd.axes[3]*pose_cmd.axes[3] + pose_cmd.axes[4]*pose_cmd.axes[4] + pose_cmd.axes[5]*pose_cmd.axes[5], 2);
-  if ( trans_mag > 2.*rot_mag )
-  {
-    pose_cmd.axes[3] = 0.; pose_cmd.axes[4] = 0.; pose_cmd.axes[5] = 0.;
-  }
-  else if ( rot_mag > 2.*trans_mag )
-  {
-    pose_cmd.axes[0] = 0.; pose_cmd.axes[1] = 0.; pose_cmd.axes[2] = 0.;
-  }
+  //Mapping spacenav controls
+  double x_pos = pose_cmd.axes[0];
+  double y_pos = pose_cmd.axes[1];
+  double z_pos = pose_cmd.axes[2];
+  double x_ori = pose_cmd.axes[3];
+  double y_ori = pose_cmd.axes[4];
+  double z_ori = pose_cmd.axes[5];
 
-  // Should we reset the command integrations?
-  // Can be used to reset the hand marker, or when switching betw. manip & nav modes
-  if (reset_ee_graphic_pose_)
-    resetEEGraphicPose();
-
-  ///////////////////////////////////////////////////////////
-  // JOGGING
-  // Can use the same type of command for arm and base teleop
-  ///////////////////////////////////////////////////////////
-  if (in_jog_mode_)
-  {
-    jog_twist_cmd_.header.stamp = ros::Time::now();
-    jog_twist_cmd_.twist.linear.x = pos_scale_*pose_cmd.axes[0];
-    jog_twist_cmd_.twist.linear.y = pos_scale_*pose_cmd.axes[1];
-    jog_twist_cmd_.twist.linear.z = pos_scale_*pose_cmd.axes[2];
-    jog_twist_cmd_.twist.angular.x = rot_scale_*pose_cmd.axes[3];
-    jog_twist_cmd_.twist.angular.y = rot_scale_*pose_cmd.axes[4];
-    jog_twist_cmd_.twist.angular.z = rot_scale_*pose_cmd.axes[5];
-  }
-
-  ////////////////////////////
-  // POINT-TO-POINT NAVIGATION
-  ////////////////////////////
-  if ( navT_or_manipF_ && !in_jog_mode_ )
-  {
-    // ORIENTATION
-    // new incremental yaw command
-    // For nav mode, we want to stay in the plane ==> ignore roll & pitch
-    incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
-
-    tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
-
-    // Add the incremental command to the previously commanded orientation
-    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-    q_previous_cmd *= q_incremental;  // Calculate the new orientation
-    q_previous_cmd.normalize();
-    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
-    // POSITION
-    // Ignore Z (out of plane)
-
-    // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x += pos_scale_*pose_cmd.axes[0];  // X is fwd/back in base_link  
-    incremental_position_cmd_.vector.y += pos_scale_*pose_cmd.axes[1];  // Y is left/right
-
-    // Incoming position cmds are in the spacenav frame
-    // So convert them to base_link for nav
-    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
-    geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-
-    geometry_msgs::TransformStamped prev_frame_to_new;
-    // Make sure the transform is available, otherwise skip updating the pose
-    if ( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
-    {
-      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
-
-      // Ignore Z
-      // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
-      absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
-      absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
-      absolute_pose_cmd_.pose.position.z = 0;
-    }
-  }
-
-
-  //////////////////////////////
-  // POINT-TO-POINT MANIPULATION
-  //////////////////////////////
-  if ( !navT_or_manipF_ && !in_jog_mode_ )
-  {
-    // Integrate for point-to-point motion
-    // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the spacenav frame
-
-    // ORIENTATION
-    // new incremental rpy command
-    incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-    incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-    incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
-
-    tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
-
-    // Add the incremental command to the previously commanded orientation
-    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-    q_previous_cmd *= q_incremental;  // Calculate the new orientation
-    q_previous_cmd.normalize();
-    quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
-
-    // POSITION
-    // Again, in "spacenav" frame
-    incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
-    incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
-    incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
-
-    // Incoming position cmds are in the spacenav frame
-    // So convert them the frame of absolute_pose_cmd_
-    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
-    geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
-
-    geometry_msgs::TransformStamped prev_frame_to_new;
-    // Make sure the transform is available, otherwise skip updating the pose
-    if (performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
-    {
-      tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
-
-      absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
-      absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
-      absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
-    } 
-  }
+  processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
 
   return;
-} // end processSpaceNavCmd
+} // end spaceNavCallback
 
-void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
+void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
 {
   //Mapping xbox controls
-  float x_pos = pose_cmd.axes[1]; float y_pos = pose_cmd.axes[0]; //Left Stick
-  float z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4]; //Back Buttons (Left up, Right down)
-  float x_ori = -1 * pose_cmd.axes[3]; float y_ori = pose_cmd.axes[4]; //Right Stick
+  double x_pos = pose_cmd.axes[1];
+  double y_pos = pose_cmd.axes[0]; //Left Stick
+  double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4]; //Back Buttons (Left up, Right down)
+  double x_ori = -1 * pose_cmd.axes[3];
+  double y_ori = pose_cmd.axes[4]; //Right Stick
   //z_ori ---> Back Triggers
   //Back Triggers return analog input btw 1 and -1
-  float r_trig = pose_cmd.axes[5]; float l_trig = pose_cmd.axes[2];
+  double r_trig = pose_cmd.axes[5]; double l_trig = pose_cmd.axes[2];
   r_trig = (r_trig - abs(r_trig))/(-2*r_trig + 0.0000001);
   l_trig = (l_trig - abs(l_trig))/(-2*l_trig + 0.0000001);
-  float z_ori = r_trig - l_trig;
+  double z_ori = r_trig - l_trig;
   //Buttons
   int a_button = pose_cmd.buttons[0];
   int b_button = pose_cmd.buttons[1];
 
+  processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
 
+  return;
+} // end xboxCallback
+
+// Do most of the calculations for an incremental-type pose command (like SpaceNav or XBox)
+void Teleoperator::processIncrementalPoseCmd(
+  double &x_pos,
+  double &y_pos,
+  double &z_pos,
+  double &x_ori,
+  double &y_ori,
+  double &z_ori
+)
+{
   // If rotational components >> translational, ignore translation (and vice versa)
   double trans_mag = pow( x_pos*x_pos + y_pos*y_pos + z_pos*z_pos, 2 );
   double rot_mag = pow( x_ori*x_ori + y_ori*y_ori + z_ori*z_ori, 2);
@@ -443,8 +345,8 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
     // Ignore Z (out of plane)
 
     // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x += pos_scale_*x_pos;  // X is fwd/back in base_link
-    incremental_position_cmd_.vector.y += pos_scale_*y_pos;   // Y is left/right
+    incremental_position_cmd_.vector.x += pos_scale_*x_pos;  // X is fwd/back in base_link  
+    incremental_position_cmd_.vector.y += pos_scale_*y_pos;  // Y is left/right
 
     // Incoming position cmds are in the spacenav frame
     // So convert them to base_link for nav
@@ -453,7 +355,7 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
+    if ( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
@@ -476,9 +378,9 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
 
     // ORIENTATION
     // new incremental rpy command
-    incremental_orientation_cmd_.vector.x = rot_scale_*pose_cmd.axes[3];  // about x axis
-    incremental_orientation_cmd_.vector.y = rot_scale_*pose_cmd.axes[4];  // about y axis
-    incremental_orientation_cmd_.vector.z = rot_scale_*pose_cmd.axes[5];  // about z axis
+    incremental_orientation_cmd_.vector.x = rot_scale_*x_ori;  // about x axis
+    incremental_orientation_cmd_.vector.y = rot_scale_*y_ori;  // about y axis
+    incremental_orientation_cmd_.vector.z = rot_scale_*z_ori;  // about z axis
 
     tf::Quaternion q_previous_cmd, q_incremental;
     q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
@@ -491,9 +393,9 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
 
     // POSITION
     // Again, in "spacenav" frame
-    incremental_position_cmd_.vector.x = pos_scale_*pose_cmd.axes[0];  // X is fwd/back in spacenav
-    incremental_position_cmd_.vector.y = pos_scale_*pose_cmd.axes[1];   // Y is left/right
-    incremental_position_cmd_.vector.z = pos_scale_*pose_cmd.axes[2];  // Z is up/down
+    incremental_position_cmd_.vector.x = pos_scale_*x_pos;  // X is fwd/back in spacenav
+    incremental_position_cmd_.vector.y = pos_scale_*y_pos;   // Y is left/right
+    incremental_position_cmd_.vector.z = pos_scale_*z_pos;  // Z is up/down
 
     // Incoming position cmds are in the spacenav frame
     // So convert them the frame of absolute_pose_cmd_
@@ -502,17 +404,16 @@ void Teleoperator::processXboxCmd(sensor_msgs::Joy pose_cmd)
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if ( performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
+    if (performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
       absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
       absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
       absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
-    }
+    } 
   }
-} // end processXboxCmd
-
+}
 
 /** Callback function for Griffin Powermate events subscriber.
  *  It either reacts to push button being pressed or it updates the scaling factor.
