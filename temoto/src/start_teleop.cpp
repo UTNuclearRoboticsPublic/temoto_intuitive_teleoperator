@@ -736,7 +736,7 @@ bool Teleoperator::performTransform(std::string source_frame, std::string target
 
     try
     {
-      transform = tf_buffer_.lookupTransform( source_frame, target_frame, ros::Time(0), ros::Duration(2.0));
+      transform = tf_buffer_.lookupTransform( target_frame, source_frame, ros::Time(0), ros::Duration(0.1));
       success = true;
     }
     catch (tf2::TransformException &ex)
