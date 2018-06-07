@@ -481,9 +481,9 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
-  if (voice_command.data == "stop jogging")
+  if (voice_command.data == "point to point mode")
   {
-    ROS_INFO("Switching out of jog mode");
+    ROS_INFO("Switching to point-to-point mode");
     in_jog_mode_ = false;
     reset_ee_graphic_pose_ = true;
     setScale();
@@ -619,7 +619,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
 
       return;
     }
-    else if (voice_command.data == "robot plan and go")
+    else if (voice_command.data == "base move")
     {
       ROS_INFO("Planning and moving ...");
       reset_ee_graphic_pose_ = true;

@@ -23,6 +23,7 @@ public:
     }
 
     // Process keypresses
+    // To determine these keys, run: "rosrun keyboard_reader keyboard_event_publisher"
     void keyboardCallback(keyboard_reader::Key kbCommand)
     {
         if (kbCommand.key_pressed == true)
@@ -46,9 +47,9 @@ public:
             else if (kbCommand.key_code == 0x0031)
                 voiceCommand.data = "navigation";
 
-            // Robot please go: "g" key
-            else if (kbCommand.key_code == 0x0022)
-                voiceCommand.data = "robot plan and go";
+            // Robot please go: "b" key
+            else if (kbCommand.key_code == 0x0030)
+                voiceCommand.data = "base move";
 
             // Open gripper: "o" key
             else if (kbCommand.key_code == 0x0018)
@@ -58,13 +59,13 @@ public:
             else if (kbCommand.key_code == 0x002e)
                 voiceCommand.data = "close gripper";
 
-            // Start jogging: "j" key
+            // Jog mode: "j" key
             else if (kbCommand.key_code == 0x0024)
                 voiceCommand.data = "jog mode";
 
-            // Stop jogging: "s" key                                    
-            else if (kbCommand.key_code == 0x001f)
-                voiceCommand.data = "stop jogging";
+            // Point-to-point mode: "p" key                                    
+            else if (kbCommand.key_code == 0x0019)
+                voiceCommand.data = "point to point mode";
 
             // Next end effector: "tab" key
             else if (kbCommand.key_code == 0x000f)

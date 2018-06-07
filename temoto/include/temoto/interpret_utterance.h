@@ -76,11 +76,11 @@ public:
     // Commands for basic Temoto functionality: moving and navigating
     {"robot please plan"},	// command PLAN
     {"robot please execute"},	// command EXECUTE plan
-    {"robot plan and go"},		// command PLAN&EXECUTE
+    {"base move"},		// command PLAN&EXECUTE
     {"manipulation"},		// operator controls robot manipulator (MoveIt!)
     {"navigation"},		// operator navigates the robot base (ROS_navigation)
     {"jog mode"},		// send small motions commands immediately
-    {"stop jogging"},		// stop jogging
+    {"point to point mode"},		// plan to one point at a time
     {"next end effector"},      // switch to the next end effector
 
     // Preplanned sequences: these will interrupt other Temoto commands (except abort)
