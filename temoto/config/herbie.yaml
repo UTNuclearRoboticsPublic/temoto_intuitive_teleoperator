@@ -23,8 +23,8 @@ temoto:
     pt_to_pt:
       nav_pos_scale: 0.048
       nav_rot_scale: 0.08
-      manip_pos_scale: 0.002
-      manip_rot_scale: 0.014
+      manip_pos_scale: 0.005
+      manip_rot_scale: 0.012
     jog:
       nav_pos_scale: 0.3
       nav_rot_scale: 0.2

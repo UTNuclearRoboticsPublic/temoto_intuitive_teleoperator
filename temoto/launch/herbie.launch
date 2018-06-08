@@ -24,7 +24,7 @@
   
 
   <!-- Pose Controller -->
-  <include file="$(find spacenav_node)/launch/classic.launch" ns="temoto"/> 
+  <include file="$(find spacenav_node)/launch/classic.launch" /> 
 
 
   <!-- Most of the action happens here -->
