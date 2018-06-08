@@ -53,8 +53,6 @@ Teleoperator::Teleoperator() :
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
   pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>(get_ros_params::getStringParam("/temoto/incoming_jog_topic", n_), 1);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
-  
-
 
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
@@ -123,6 +121,7 @@ Teleoperator::Teleoperator() :
 
   // Reset the graphic now that we're sure the tf is available.
   reset_ee_graphic_pose_ = true;
+  setGraphicsFramesStatus(true);
 }
 
 /** Function that actually makes the service call to appropriate robot motion interface.

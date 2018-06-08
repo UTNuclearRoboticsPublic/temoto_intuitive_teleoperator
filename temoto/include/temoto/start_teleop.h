@@ -82,12 +82,8 @@ public:
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
 private:
- 
-  void callRobotMotionInterfaceWithNamedTarget(std::string action_type, std::string named_target);
   
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more general case, e.g. processScaleFactor
-  
-  void updateEndEffectorPose(geometry_msgs::PoseStamped end_effector_pose);
 
   void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
 
