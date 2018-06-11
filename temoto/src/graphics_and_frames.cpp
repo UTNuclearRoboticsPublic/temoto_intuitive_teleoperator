@@ -57,7 +57,7 @@ void Visuals::initCameraFrames()
 /** Creates the initial marker that visualizes hand pose */
 void Visuals::initHandPoseMarker()
 {
-  cmd_pose_marker_.header.frame_id = "base_link";
+  cmd_pose_marker_.header.frame_id = latest_status_.moveit_planning_frame;
   cmd_pose_marker_.header.stamp = ros::Time();
   cmd_pose_marker_.ns = "hand_pose_marker";
   cmd_pose_marker_.id = 0;
@@ -134,7 +134,7 @@ void Visuals::crunch()
 
     geometry_msgs::TransformStamped command_frame_tf_msg;
     command_frame_tf_msg.header.stamp = ros::Time::now();
-    command_frame_tf_msg.header.frame_id = "base_link";
+    command_frame_tf_msg.header.frame_id = latest_status_.moveit_planning_frame;
     command_frame_tf_msg.child_frame_id = "temoto_command_frame";
     command_frame_tf_msg.transform = toMsg(command_frame_tf_);
     tf_br_.sendTransform(command_frame_tf_msg);
@@ -143,7 +143,7 @@ void Visuals::crunch()
   	// update the goal position in moveit plugin to display real-time IK
     // Need to enable external comms in MoveIt's RViz plugin for this to work
     geometry_msgs::PoseStamped move_goal_msg;
-    move_goal_msg.header.frame_id = "base_link";
+    move_goal_msg.header.frame_id = latest_status_.moveit_planning_frame;
     move_goal_msg.header.stamp = ros::Time::now();
     move_goal_msg.pose.position.x = command_frame_tf_.getOrigin().x();
     move_goal_msg.pose.position.y = command_frame_tf_.getOrigin().y();
@@ -168,12 +168,12 @@ void Visuals::crunch()
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
 
-    // Camera is positioned directly above the origin of base_link
+    // Camera is positioned directly above the origin of nav frame (usually base_link)
     point_of_view_.eye.point.x = 0;
     point_of_view_.eye.point.y = 0;
     point_of_view_.eye.point.z = 12. + 10.*latest_status_.scale_by;	// Never closer than 2 m, max distance at 12 m
 
-    // Focus camera at the origin of base_link
+    // Focus camera at the origin
     point_of_view_.focus.point.x = 0;
     point_of_view_.focus.point.y = 0;
 

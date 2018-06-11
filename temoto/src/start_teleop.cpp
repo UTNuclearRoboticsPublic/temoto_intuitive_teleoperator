@@ -663,6 +663,7 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
   graphics_and_frames_.latest_status_.current_movegroup_ee_index = current_movegroup_ee_index_;
+  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
 
