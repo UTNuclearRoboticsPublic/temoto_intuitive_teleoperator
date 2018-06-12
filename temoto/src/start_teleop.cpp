@@ -44,6 +44,7 @@ Teleoperator::Teleoperator() :
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
+  temoto_leap_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_leap_pose_cmd_topic", n_);
 
   // By default navigation is turned OFF
   bool navigate = get_ros_params::getBoolParam("temoto/navigate", n_);
@@ -79,6 +80,7 @@ Teleoperator::Teleoperator() :
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
   sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1,  &Teleoperator::spaceNavCallback, this);
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1,  &Teleoperator::xboxCallback, this);
+  sub_leap_pose_cmd_ = n_.subscribe(temoto_leap_pose_cmd_topic_, 1, &Teleoperator::leapCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
   sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
@@ -274,6 +276,81 @@ void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
 
   return;
 } // end xboxCallback
+
+void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
+{
+  //Define and Set contol hand as left hand
+  //Check if left hand is present
+  //Get number of fingers
+  geometry_msgs::Pose hand;
+  hand = leap_data.left_hand.palm_pose.pose;
+  bool hand_present = leap_data.left_hand.is_present;
+  int fingers = leap_data.extended_fingers;
+
+  //Get current position and orientation of the end effector
+  geometry_msgs::Pose EE_pose;
+  EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
+  EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
+
+  /* Scale the xyz coordinates
+    leap_data  -------> rviz
+     x -> -y
+     y -> z
+     z -> -x */
+
+  geometry_msgs::Pose scaled_pose;
+  scaled_pose.position.x = pos_scale_*-750*hand.position.z + EE_pose.position.x;
+  scaled_pose.position.y = pos_scale_*-1000*hand.position.x + EE_pose.position.y;
+  scaled_pose.position.z = pos_scale_*750*(hand.position.y - 0.15) + EE_pose.position.z;
+
+   /* Scale the orientation
+    leap_data  -------> rviz
+     x -> -y
+     y -> z
+     z -> -x 
+
+    Because rotation of had is limited I included option z axis 360 rotation
+
+    1 finger --> z spin cw
+    2 finger --> z spin ccw
+     */
+
+  scaled_pose.orientation.x = -1.5*hand.orientation.z + EE_pose.orientation.x;
+  scaled_pose.orientation.y = -1.5*hand.orientation.x + EE_pose.orientation.y;
+  
+  scaled_pose.orientation.w = 1.5*hand.orientation.w + EE_pose.orientation.w;
+  
+  //  double q_hand_sum = hand.orientation.x 
+  //                  + hand.orientation.y
+  //                  + hand.orientation.z
+  //                  + hand.orientation.w;
+  
+  if (fingers == 2)
+  {
+    scaled_pose.orientation.z = 1.5 + absolute_pose_cmd_.pose.orientation.z;
+  }
+  else if (fingers == 1)
+  {
+    scaled_pose.orientation.z = -1 + absolute_pose_cmd_.pose.orientation.z;
+  }
+  else
+  {
+    scaled_pose.orientation.z = 1.5*hand.orientation.y + EE_pose.orientation.z;
+  }
+  tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z, scaled_pose.orientation.w);
+  //if (q_hand_sum != 0)
+
+  //if hand is present set absolute pose equal to hand position and orientatio
+  if (hand_present)
+  {
+    
+    quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
+    absolute_pose_cmd_.pose.position = scaled_pose.position;
+  }
+
+  return;
+
+} // end leapCallback
 
 // Do most of the calculations for an incremental-type pose command (like SpaceNav or XBox)
 void Teleoperator::processIncrementalPoseCmd(

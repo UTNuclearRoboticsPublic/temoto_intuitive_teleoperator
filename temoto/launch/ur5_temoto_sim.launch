@@ -11,6 +11,7 @@
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
   <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
+
   <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/>
   <!-- <include file="$(find google_speech_to_text)/launch/en-US.launch" /> -->
 
@@ -21,14 +22,12 @@
   
   
 
-  <!-- Pose Controller, Launch spacenav and joy node-->
+  <!-- Pose Controllers, Launch spacenav, xbox, and hand tracker -->
   <include file="$(find spacenav_node)/launch/classic.launch"/>
   <node name="joy_node" pkg="joy" type="joy_node">
     <param name="autorepeat_rate" value="30" />
   </node>
-
-
-
+  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
 
   <!-- Bring up Griffin Powermate -->
   <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />

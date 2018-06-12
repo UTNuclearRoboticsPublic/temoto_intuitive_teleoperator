@@ -56,6 +56,8 @@
 #include "temoto/low_level_cmds.h"
 #include "griffin_powermate/PowermateEvent.h"
 
+#include "leap_motion_controller/Set.h"
+
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
 
@@ -105,6 +107,8 @@ private:
 
   void xboxCallback(sensor_msgs::Joy pose_cmd);
 
+  void leapCallback(leap_motion_controller::Set leap_data);
+
   void processIncrementalPoseCmd(
     double &x_pos,
     double &y_pos,
@@ -117,6 +121,7 @@ private:
   bool manipulate_ = true;    /// Is manipulation enabled?
   std::string temoto_spacenav_pose_cmd_topic_;   /// Topic of incoming pose cmds
   std::string temoto_xbox_pose_cmd_topic_; /// The incoming xbox pose cmds
+  std::string temoto_leap_pose_cmd_topic_;
   bool navT_or_manipF_ = false;   ///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
   std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
@@ -153,7 +158,7 @@ private:
   ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
 
   // ROS subscribers
-  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_ , sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
+  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_ , sub_leap_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
@@ -164,5 +169,6 @@ private:
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
+
 };
 #endif
