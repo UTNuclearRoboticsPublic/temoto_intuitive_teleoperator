@@ -318,17 +318,11 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
 
   scaled_pose.orientation.x = -1.5*hand.orientation.z + EE_pose.orientation.x;
   scaled_pose.orientation.y = -1.5*hand.orientation.x + EE_pose.orientation.y;
-  
   scaled_pose.orientation.w = 1.5*hand.orientation.w + EE_pose.orientation.w;
-  
-  //  double q_hand_sum = hand.orientation.x 
-  //                  + hand.orientation.y
-  //                  + hand.orientation.z
-  //                  + hand.orientation.w;
   
   if (fingers == 2)
   {
-    scaled_pose.orientation.z = 1.5 + absolute_pose_cmd_.pose.orientation.z;
+    scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
   }
   else if (fingers == 1)
   {
@@ -339,12 +333,10 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     scaled_pose.orientation.z = 1.5*hand.orientation.y + EE_pose.orientation.z;
   }
   tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z, scaled_pose.orientation.w);
-  //if (q_hand_sum != 0)
 
-  //if hand is present set absolute pose equal to hand position and orientatio
+  //if hand is present set absolute pose equal to hand position and orientation
   if (hand_present)
   {
-    
     quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
     absolute_pose_cmd_.pose.position = scaled_pose.position;
   }
