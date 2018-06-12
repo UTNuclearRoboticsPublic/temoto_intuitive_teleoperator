@@ -510,8 +510,10 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     rot_scale_ = rot_scale_ + step;
 
     // cap the scales
-    if (pos_scale_ > 1.) pos_scale_ = 1.;
-    if (rot_scale_ > 0.01) rot_scale_ = 0.01;
+    if (pos_scale_ > pos_scale_max_)
+      pos_scale_ = pos_scale_max_;
+    if (rot_scale_ > rot_scale_max_)
+      rot_scale_ = rot_scale_max_;
 
     return;
   } // else
@@ -769,6 +771,10 @@ void Teleoperator::setScale()
       rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/manip_rot_scale", n_);
     }
   }
+
+  // Set the max scaling factors as multiples of the defaults
+  pos_scale_max_ = 5*pos_scale_;
+  rot_scale_max_ = 5*rot_scale_;
 }
 
 // Switch to the next available EE
@@ -788,6 +794,9 @@ void Teleoperator::switchEE()
 
   // Reset the hand marker to be at the EE
   reset_ee_graphic_pose_ = true;
+
+  // Reset the scale when switching EE's
+  setScale();
 }
 
 // Calculate a transform between 2 frames
