@@ -139,6 +139,9 @@ private:
   /// Scaling factor
   double pos_scale_;
   double rot_scale_;
+
+  // Scaling factor maxs
+  double pos_scale_max_, rot_scale_max_;
   
   /// Amplification of input hand motion. (Scaling factor scales the amplification.)
   int8_t AMP_HAND_MOTION_;
