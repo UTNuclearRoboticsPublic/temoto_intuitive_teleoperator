@@ -61,6 +61,7 @@ struct temoto_status
   double scale_by;
   geometry_msgs::PoseStamped end_effector_pose;
   uint current_movegroup_ee_index = 0;
+  std::string moveit_planning_frame;
 };
 
 class Visuals

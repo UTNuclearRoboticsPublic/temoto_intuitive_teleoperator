@@ -122,6 +122,7 @@ Teleoperator::Teleoperator() :
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
   // Reset the graphic now that we're sure the tf is available.
+  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
   reset_ee_graphic_pose_ = true;
   setGraphicsFramesStatus(true);
 }
@@ -787,6 +788,7 @@ void Teleoperator::switchEE()
     current_movegroup_ee_index_ = 0;
 
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
+  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
 
   // Set camera at new EE
   bool adjust_camera = true;
