@@ -510,8 +510,10 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     rot_scale_ = rot_scale_ + step;
 
     // cap the scales
-    if (pos_scale_ > pos_scale_max_) pos_scale_ = pos_scale_max_;
-    if (rot_scale_ > rot_scale_max_) rot_scale_ = rot_scale_max_;
+    if (pos_scale_ > pos_scale_max_)
+      pos_scale_ = pos_scale_max_;
+    if (rot_scale_ > rot_scale_max_)
+      rot_scale_ = rot_scale_max_;
 
     return;
   } // else
