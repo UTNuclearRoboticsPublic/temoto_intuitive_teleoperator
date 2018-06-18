@@ -15,6 +15,7 @@ temoto_frames:
 temoto:
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: "/joy"
+  temoto_leap_pose_cmd_topic: "/leap_motion_output"
   incoming_jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
 
   # navigate or manipulate
