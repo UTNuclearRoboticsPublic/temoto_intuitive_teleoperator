@@ -867,7 +867,7 @@ int main(int argc, char **argv)
 
   ros::Rate node_rate(90.);
 
-  // Using an async spinner. It is needed for moveit's MoveGroup::plan()
+  // An async spinner is needed for moveit's MoveGroup::plan()
   ros::AsyncSpinner spinner(4);
   spinner.start();
 
@@ -881,7 +881,8 @@ int main(int argc, char **argv)
 	!temoto_teleop.executing_preplanned_sequence_ )
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
-    temoto_teleop.setGraphicsFramesStatus(false); // Update poses, scale, and nav-or-manip mode for the frames calculation
+    // Update poses, scale, and nav-or-manip mode for the frames calculation
+    temoto_teleop.setGraphicsFramesStatus(false);
     temoto_teleop.graphics_and_frames_.crunch();
 
     node_rate.sleep();
