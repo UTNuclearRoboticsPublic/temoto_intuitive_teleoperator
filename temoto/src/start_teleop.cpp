@@ -52,7 +52,6 @@ Teleoperator::Teleoperator() :
   manipulate_ = get_ros_params::getBoolParam("temoto/manipulate", n_);
 
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
-  pub_jog_arm_cmds_ = n_.advertise<geometry_msgs::TwistStamped>(get_ros_params::getStringParam("/temoto/incoming_jog_topic", n_), 1);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
 
   // Get movegroup and frame names of all arms the user might want to control
@@ -64,12 +63,17 @@ Teleoperator::Teleoperator() :
   // Get the names associated with multiple end effectors. Shove in vectors.
   for (int i=0; i<num_ee; i++)
   {
-    std::string ee_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", n_);
-    ee_names_.push_back(ee_name);
+    ee_names_.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", n_) );
 
     // Objects for arm motion interface
     std::string move_group_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/movegroup", n_);
-    arm_if_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
+    arm_interface_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
+
+    std::string jog_topic = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/jog_topic", n_);
+    ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
+    // Create a 'new' copy of this jog publisher, to persist until deleted.
+    ros::Publisher* jog_pub_ptr = new ros::Publisher( jog_pub );
+    jog_publishers_.push_back( jog_pub_ptr );
   }
 
   // Specify the current ee & move_group
@@ -113,7 +117,7 @@ Teleoperator::Teleoperator() :
   // Initial pose
   // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
   ros::Duration(1).sleep();
-  absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
@@ -122,7 +126,7 @@ Teleoperator::Teleoperator() :
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
   // Reset the graphic now that we're sure the tf is available.
-  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
+  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
   reset_ee_graphic_pose_ = true;
   setGraphicsFramesStatus(true);
 }
@@ -208,16 +212,16 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (in_jog_mode_)
     {
-      pub_jog_arm_cmds_.publish(jog_twist_cmd_);
+      jog_publishers_.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
       return;
     }
     // Point-to-point motion
     else
     {        
       // Send the motion request
-      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> req_action_type_ = action_type;
-      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> target_pose_stamped_ = absolute_pose_cmd_;
-      arm_if_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
+      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> req_action_type_ = action_type;
+      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> target_pose_stamped_ = absolute_pose_cmd_;
+      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
 
       return;
     }
@@ -603,7 +607,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     // If not already in manipulation mode
     if ( navT_or_manipF_==true )
     {
-      // Make sure we aren't in jog mode
+      // Make sure we aren't in jog mode. Don't want to start jogging an arm suddenly
       ROS_INFO("Switching out of jog mode");
       in_jog_mode_ = false;
       setScale();
@@ -623,7 +627,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     // If not already in nav mode
     if ( navT_or_manipF_==false )
     {
-      // Make sure we aren't in jog mode
+      // Make sure we aren't in jog mode, for safety
       ROS_INFO("Switching out of jog mode");
       in_jog_mode_ = false;
       setScale();
@@ -653,27 +657,31 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     Teleoperator::triggerSequence(voice_command.data);
     return;
   }
+  else if (voice_command.data == "next end effector")
+  {
+    ROS_INFO("Controlling the next EE from yaml file ...");
+    // Flag that the integrated cmds need to be reset
+    reset_ee_graphic_pose_ = true;
+    // No joggign, initially, for safety
+    in_jog_mode_ = false;
+    switchEE();
+    return;
+  }
 
-
-  if ( in_jog_mode_ )  // Avoid planning, executing, etc. while in jog mode
+  // Avoid planning, executing, etc. while in jog mode
+  if ( in_jog_mode_ )
     return;
 
-
-  else  // There's nothing blocking any arbitrary command
+  // There's nothing blocking any arbitrary command
+  else
   {
     if (voice_command.data == "jog mode")
     {
-      // For now, can only jog with EE0 in manipulation mode.
-      // In nav mode or current EE==0  ==> OK to jog.
-      if ( navT_or_manipF_ || current_movegroup_ee_index_==0 )
-      {
-        ROS_INFO("Switching to jog mode");
-        in_jog_mode_ = true;
-        reset_ee_graphic_pose_ = true;
-        setScale();
-      }
-      else
-        ROS_WARN_STREAM("[temoto_teleop::start_teleop] Can only jog with EE0");
+      ROS_INFO("Switching to jog mode");
+      in_jog_mode_ = true;
+      reset_ee_graphic_pose_ = true;
+      setScale();
+      
       return;
     }
     else if (voice_command.data == "robot please plan")
@@ -687,7 +695,6 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       ROS_INFO("Executing last plan ...");
       callRobotMotionInterface(low_level_cmds::EXECUTE);
       reset_ee_graphic_pose_ = true;
-
       return;
     }
     else if (voice_command.data == "base move")
@@ -695,13 +702,6 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       ROS_INFO("Planning and moving ...");
       reset_ee_graphic_pose_ = true;
       callRobotMotionInterface(low_level_cmds::GO);
-      return;
-    }
-    else if (voice_command.data == "next end effector")
-    {
-      ROS_INFO("Controlling the next EE from yaml file ...");
-      reset_ee_graphic_pose_ = true;  // Flag that the integrated cmds need to be reset
-      switchEE();
       return;
     }
   
@@ -733,7 +733,7 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
-  graphics_and_frames_.latest_status_.end_effector_pose = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  graphics_and_frames_.latest_status_.end_effector_pose = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
   graphics_and_frames_.latest_status_.current_movegroup_ee_index = current_movegroup_ee_index_;
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
@@ -786,7 +786,7 @@ void Teleoperator::switchEE()
     current_movegroup_ee_index_ = 0;
 
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
-  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
+  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
 
   // Set camera at new EE
   bool adjust_camera = true;
@@ -851,7 +851,7 @@ void Teleoperator::resetEEGraphicPose()
     incremental_orientation_cmd_.vector.z = 0.;
   }
   else  // Manipulation --> Center on EE
-    absolute_pose_cmd_ = arm_if_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+    absolute_pose_cmd_ = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
 
   // Reset the flag
   reset_ee_graphic_pose_ = false;

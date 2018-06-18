@@ -70,7 +70,11 @@ public:
   // Destructor
   ~Teleoperator()
   {
-    delete arm_if_ptrs_.at(0);
+    for (int i=0; i<ee_names_.size(); ++i)
+    {
+      delete arm_interface_ptrs_.at(i);
+      delete jog_publishers_.at(i);
+    }
   }
 
   void callRobotMotionInterface(std::string action_type);
@@ -124,7 +128,6 @@ private:
   std::string temoto_leap_pose_cmd_topic_;
   bool navT_or_manipF_ = false;   ///< TRUE: interpret absolute_pose_cmd_ as 2D navigation goal; FALSE: absolute_pose_cmd_ is the motion planning target for robot EEF.
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
-  std::vector<MoveRobotInterface*> arm_if_ptrs_; // Send motion commands to the arm. Ptr needed cause the MoveGroup name is determined at run time
 
   ros::NodeHandle n_;
 
@@ -135,6 +138,12 @@ private:
 
   // All move_groups/ee's the user might want to control (specified in yaml)
   std::vector<std::string> ee_names_;
+
+  // Jogging publishers for each end-effector. Ptr needed because the MoveGroup name is determined at run time
+  std::vector<ros::Publisher*> jog_publishers_;
+
+  // Send motion commands to the arm. Ptr needed because the MoveGroup name is determined at run time
+  std::vector<MoveRobotInterface*> arm_interface_ptrs_;
 
   /// Scaling factor
   double pos_scale_;
@@ -158,7 +167,7 @@ private:
   bool reset_ee_graphic_pose_ = false;		///< TRUE ==> reset the integration of incremental (e.g. SpaceNav cmds). Typically set to true when switching between nav/manip modes.
 
   // ROS publishers
-  ros::Publisher pub_abort_, pub_jog_arm_cmds_, pub_jog_base_cmds_;
+  ros::Publisher pub_abort_, pub_jog_base_cmds_;
 
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_ , sub_leap_pose_cmd_, sub_voice_commands_, sub_executing_preplanned_, sub_scaling_factor_;
