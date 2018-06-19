@@ -9,8 +9,7 @@ Panels:
         - /MotionPlanning1/Planning Metrics1
         - /MotionPlanning1/Planned Path1
         - /TF1/Frames1
-        - /Map2/Status1
-      Splitter Ratio: 0.680510998
+      Splitter Ratio: 0.680511
     Tree Height: 197
   - Class: rviz/Selection
     Name: Selection
@@ -20,7 +19,7 @@ Panels:
       - /2D Nav Goal1
       - /Publish Point1
     Name: Tool Properties
-    Splitter Ratio: 0.588679016
+    Splitter Ratio: 0.588679
   - Class: rviz/Views
     Expanded:
       - /Current View1
@@ -30,7 +29,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
   - Class: teach_motions_gui/TeachMotions
     FilePrefix: cabinet_door1
     Name: TeachMotions
@@ -43,7 +42,7 @@ Visualization Manager:
       Color: 160; 160; 164
       Enabled: true
       Line Style:
-        Line Width: 0.0299999993
+        Line Width: 0.03
         Value: Lines
       Name: Grid
       Normal Cell Count: 0
@@ -55,7 +54,7 @@ Visualization Manager:
       Plane Cell Count: 10
       Reference Frame: <Fixed Frame>
       Value: true
-    - Alpha: 0.699999988
+    - Alpha: 0.7
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
@@ -63,18 +62,17 @@ Visualization Manager:
       Name: Map
       Topic: /map
       Unreliable: false
-      Use Timestamp: false
       Value: true
     - Alpha: 1
       Buffer Length: 1
       Class: rviz/Path
       Color: 25; 255; 0
       Enabled: false
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
+      Head Diameter: 0.3
+      Head Length: 0.2
+      Length: 0.3
       Line Style: Lines
-      Line Width: 0.0299999993
+      Line Width: 0.03
       Name: Trajectory
       Offset:
         X: 0
@@ -82,23 +80,23 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
+      Radius: 0.03
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
       Topic: /trajectory
       Unreliable: false
       Value: false
     - Alpha: 1
       Axes Length: 1
-      Axes Radius: 0.100000001
+      Axes Radius: 0.1
       Class: rviz/Pose
       Color: 255; 25; 0
       Enabled: false
-      Head Length: 0.300000012
-      Head Radius: 0.100000001
+      Head Length: 0.3
+      Head Radius: 0.1
       Name: Robot Pose
       Shaft Length: 1
-      Shaft Radius: 0.0500000007
+      Shaft Radius: 0.05
       Shape: Axes
       Topic: /slam_out_pose
       Unreliable: false
@@ -118,7 +116,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 24.5100002
+      Max Intensity: 24.51
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
@@ -126,14 +124,14 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 6
-      Size (m): 0.0199999996
+      Size (m): 0.02
       Style: Points
       Topic: /camera_ee/depth_registered/points
       Unreliable: false
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Alpha: 0.699999988
+    - Alpha: 0.7
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
@@ -141,9 +139,8 @@ Visualization Manager:
       Name: Local Costmap
       Topic: /move_base/local_costmap/costmap
       Unreliable: false
-      Use Timestamp: false
       Value: false
-    - Alpha: 0.699999988
+    - Alpha: 0.7
       Class: rviz/Map
       Color Scheme: costmap
       Draw Behind: false
@@ -151,7 +148,6 @@ Visualization Manager:
       Name: Global Costmap
       Topic: /move_base/global_costmap/costmap
       Unreliable: false
-      Use Timestamp: false
       Value: false
     - Alpha: 1
       Class: rviz/Polygon
@@ -166,11 +162,11 @@ Visualization Manager:
       Class: rviz/Path
       Color: 25; 255; 0
       Enabled: true
-      Head Diameter: 0.300000012
-      Head Length: 0.200000003
-      Length: 0.300000012
+      Head Diameter: 0.3
+      Head Length: 0.2
+      Length: 0.3
       Line Style: Lines
-      Line Width: 0.0299999993
+      Line Width: 0.03
       Name: Path Plan
       Offset:
         X: 0
@@ -178,9 +174,9 @@ Visualization Manager:
         Z: 0
       Pose Color: 255; 85; 255
       Pose Style: None
-      Radius: 0.0299999993
-      Shaft Diameter: 0.100000001
-      Shaft Length: 0.100000001
+      Radius: 0.03
+      Shaft Diameter: 0.1
+      Shaft Length: 0.1
       Topic: /move_base/NavfnROS/plan
       Unreliable: false
       Value: true
@@ -231,8 +227,6 @@ Visualization Manager:
     - Class: moveit_rviz_plugin/MotionPlanning
       Enabled: true
       Move Group Namespace: ""
-      MoveIt_Allow_Approximate_IK: false
-      MoveIt_Allow_External_Program: false
       MoveIt_Goal_Tolerance: 0
       MoveIt_Planning_Attempts: 10
       MoveIt_Planning_Time: 5
@@ -277,7 +271,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_link:
+          camera_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -310,6 +304,10 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          laser:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           laser_scan_link:
             Alpha: 1
             Show Axes: false
@@ -319,6 +317,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
           left_ur5_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_cam_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -333,7 +336,52 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_r200_tower_mount_link:
+          left_ur5_ft_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -343,11 +391,20 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          left_ur5_temoto_ee:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           left_ur5_tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
           left_ur5_upper_arm_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_webcam_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -367,10 +424,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          r_temoto_end_effector:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -386,11 +439,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_2_finger_140_gripper_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           right_ur5_base:
             Alpha: 1
             Show Axes: false
@@ -400,16 +448,62 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_cam_tilt_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_forearm_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_ft_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -429,6 +523,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_temoto_ee:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           right_ur5_tool0:
             Alpha: 1
             Show Axes: false
@@ -453,7 +551,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          sensor_mast:
+          screen_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -483,12 +581,12 @@ Visualization Manager:
         Show Manipulability: false
         Show Manipulability Index: true
         Show Weight Limit: false
-        TextHeight: 0.0799999982
+        TextHeight: 0.08
       Planning Request:
         Colliding Link Color: 255; 0; 0
         Goal State Alpha: 1
         Goal State Color: 250; 128; 0
-        Interactive Marker Size: 0.200000003
+        Interactive Marker Size: 0.2
         Joint Violation Color: 255; 0; 255
         Planning Group: arms
         Query Goal State: false
@@ -499,9 +597,9 @@ Visualization Manager:
       Planning Scene Topic: /move_group/monitored_planning_scene
       Robot Description: robot_description
       Scene Geometry:
-        Scene Alpha: 0.899999976
+        Scene Alpha: 0.9
         Scene Color: 50; 230; 50
-        Scene Display Time: 0.200000003
+        Scene Display Time: 0.2
         Show Scene Geometry: false
         Voxel Coloring: Z-Axis
         Voxel Rendering: Occupied Voxels
@@ -532,7 +630,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_link:
+          camera_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -565,6 +663,10 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          laser:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           laser_scan_link:
             Alpha: 1
             Show Axes: false
@@ -574,6 +676,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
           left_ur5_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_cam_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -588,7 +695,52 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_r200_tower_mount_link:
+          left_ur5_ft_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger1_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -598,11 +750,20 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          left_ur5_temoto_ee:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           left_ur5_tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
           left_ur5_upper_arm_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          left_ur5_webcam_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -622,10 +783,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          r_temoto_end_effector:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -641,11 +798,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_2_finger_140_gripper_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           right_ur5_base:
             Alpha: 1
             Show Axes: false
@@ -655,16 +807,62 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_cam_tilt_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_forearm_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_ft_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_base_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger1_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_finger_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_finger_tip_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_inner_knuckle_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          right_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -684,6 +882,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_temoto_ee:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           right_ur5_tool0:
             Alpha: 1
             Show Axes: false
@@ -708,7 +910,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          sensor_mast:
+          screen_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -740,29 +942,7 @@ Visualization Manager:
           Value: false
         bulkhead_link:
           Value: false
-        camera_aligned_depth_to_color_frame:
-          Value: false
-        camera_aligned_depth_to_infra1_frame:
-          Value: false
-        camera_aligned_depth_to_infra2_frame:
-          Value: false
-        camera_color_frame:
-          Value: false
-        camera_color_optical_frame:
-          Value: false
-        camera_depth_frame:
-          Value: false
-        camera_depth_optical_frame:
-          Value: false
-        camera_infra1_frame:
-          Value: false
-        camera_infra1_optical_frame:
-          Value: false
-        camera_infra2_frame:
-          Value: false
-        camera_infra2_optical_frame:
-          Value: false
-        camera_link:
+        camera_ee_link:
           Value: false
         floorplane_link:
           Value: false
@@ -776,25 +956,49 @@ Visualization Manager:
           Value: false
         inertial_link:
           Value: false
+        laser:
+          Value: false
         laser_scan_link:
           Value: false
         left_ur5_base:
           Value: false
         left_ur5_base_link:
           Value: false
+        left_ur5_cam_mount_link:
+          Value: false
         left_ur5_ee_link:
           Value: false
         left_ur5_forearm_link:
           Value: false
-        left_ur5_r200_tower_mount_link:
+        left_ur5_ft_link:
+          Value: false
+        left_ur5_gripper_base_link:
+          Value: false
+        left_ur5_gripper_finger1_finger_link:
+          Value: false
+        left_ur5_gripper_finger1_finger_tip_link:
+          Value: false
+        left_ur5_gripper_finger1_inner_knuckle_link:
+          Value: false
+        left_ur5_gripper_finger1_knuckle_link:
+          Value: false
+        left_ur5_gripper_finger2_finger_link:
+          Value: false
+        left_ur5_gripper_finger2_finger_tip_link:
+          Value: false
+        left_ur5_gripper_finger2_inner_knuckle_link:
+          Value: false
+        left_ur5_gripper_finger2_knuckle_link:
           Value: false
         left_ur5_shoulder_link:
           Value: false
+        left_ur5_temoto_ee:
+          Value: false
         left_ur5_tool0:
           Value: false
-        left_ur5_tool0_controller:
-          Value: false
         left_ur5_upper_arm_link:
+          Value: false
+        left_ur5_webcam_surrogate:
           Value: false
         left_ur5_wrist_1_link:
           Value: false
@@ -802,29 +1006,39 @@ Visualization Manager:
           Value: false
         left_ur5_wrist_3_link:
           Value: false
-        map:
-          Value: false
-        odom:
-          Value: false
-        r_temoto_end_effector:
-          Value: false
         rear_bumper_link:
           Value: false
         rear_left_wheel_link:
           Value: false
         rear_right_wheel_link:
           Value: false
-        right_ur5_2_finger_140_gripper_link:
-          Value: false
         right_ur5_base:
           Value: false
         right_ur5_base_link:
           Value: false
-        right_ur5_cam_tilt_link:
-          Value: false
         right_ur5_ee_link:
           Value: false
         right_ur5_forearm_link:
+          Value: false
+        right_ur5_ft_link:
+          Value: false
+        right_ur5_gripper_base_link:
+          Value: false
+        right_ur5_gripper_finger1_finger_link:
+          Value: false
+        right_ur5_gripper_finger1_finger_tip_link:
+          Value: false
+        right_ur5_gripper_finger1_inner_knuckle_link:
+          Value: false
+        right_ur5_gripper_finger1_knuckle_link:
+          Value: false
+        right_ur5_gripper_finger2_finger_link:
+          Value: false
+        right_ur5_gripper_finger2_finger_tip_link:
+          Value: false
+        right_ur5_gripper_finger2_inner_knuckle_link:
+          Value: false
+        right_ur5_gripper_finger2_knuckle_link:
           Value: false
         right_ur5_shoulder_link:
           Value: false
@@ -832,9 +1046,9 @@ Visualization Manager:
           Value: false
         right_ur5_sr300_surrogate:
           Value: false
-        right_ur5_tool0:
+        right_ur5_temoto_ee:
           Value: false
-        right_ur5_tool0_controller:
+        right_ur5_tool0:
           Value: false
         right_ur5_upper_arm_link:
           Value: false
@@ -844,9 +1058,7 @@ Visualization Manager:
           Value: false
         right_ur5_wrist_3_link:
           Value: false
-        scanmatcher_frame:
-          Value: false
-        sensor_mast:
+        screen_link:
           Value: false
         temoto_command_frame:
           Value: true
@@ -860,98 +1072,104 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        map:
-          odom:
-            base_link:
-              base_footprint:
-                floorplane_link:
-                  {}
-              bulkhead_link:
-                SICK_LMS291_link:
-                  laser_scan_link:
-                    {}
-                left_ur5_base_link:
-                  left_ur5_base:
-                    {}
-                  left_ur5_shoulder_link:
-                    left_ur5_upper_arm_link:
-                      left_ur5_forearm_link:
-                        left_ur5_wrist_1_link:
-                          left_ur5_wrist_2_link:
-                            left_ur5_wrist_3_link:
-                              left_ur5_ee_link:
-                                left_ur5_r200_tower_mount_link:
-                                  {}
-                              left_ur5_tool0:
+        base_link:
+          base_footprint:
+            floorplane_link:
+              {}
+          bulkhead_link:
+            SICK_LMS291_link:
+              laser:
+                {}
+              laser_scan_link:
+                {}
+            left_ur5_base_link:
+              left_ur5_base:
+                {}
+              left_ur5_shoulder_link:
+                left_ur5_upper_arm_link:
+                  left_ur5_forearm_link:
+                    left_ur5_wrist_1_link:
+                      left_ur5_wrist_2_link:
+                        left_ur5_wrist_3_link:
+                          left_ur5_ee_link:
+                            left_ur5_cam_mount_link:
+                              left_ur5_webcam_surrogate:
                                 {}
-                  left_ur5_tool0_controller:
-                    {}
-                right_ur5_base_link:
-                  right_ur5_base:
-                    {}
-                  right_ur5_shoulder_link:
-                    right_ur5_upper_arm_link:
-                      right_ur5_forearm_link:
-                        right_ur5_wrist_1_link:
-                          right_ur5_wrist_2_link:
-                            right_ur5_wrist_3_link:
-                              right_ur5_ee_link:
-                                r_temoto_end_effector:
+                            left_ur5_ft_link:
+                              {}
+                            left_ur5_gripper_base_link:
+                              left_ur5_gripper_finger1_inner_knuckle_link:
+                                left_ur5_gripper_finger1_finger_tip_link:
                                   {}
-                                right_ur5_2_finger_140_gripper_link:
+                              left_ur5_gripper_finger1_knuckle_link:
+                                left_ur5_gripper_finger1_finger_link:
                                   {}
-                                right_ur5_sr300_mount_link:
-                                  right_ur5_cam_tilt_link:
-                                    camera_link:
-                                      camera_aligned_depth_to_color_frame:
-                                        camera_color_optical_frame:
-                                          {}
-                                      camera_aligned_depth_to_infra1_frame:
-                                        camera_infra1_optical_frame:
-                                          {}
-                                      camera_aligned_depth_to_infra2_frame:
-                                        camera_infra2_optical_frame:
-                                          {}
-                                      camera_color_frame:
-                                        {}
-                                      camera_depth_frame:
-                                        camera_depth_optical_frame:
-                                          {}
-                                      camera_infra1_frame:
-                                        {}
-                                      camera_infra2_frame:
-                                        {}
-                                      right_ur5_sr300_surrogate:
-                                        {}
-                              right_ur5_tool0:
-                                {}
-                  right_ur5_tool0_controller:
-                    {}
-              front_bumper_link:
+                              left_ur5_gripper_finger2_inner_knuckle_link:
+                                left_ur5_gripper_finger2_finger_tip_link:
+                                  {}
+                              left_ur5_gripper_finger2_knuckle_link:
+                                left_ur5_gripper_finger2_finger_link:
+                                  {}
+                            left_ur5_temoto_ee:
+                              {}
+                          left_ur5_tool0:
+                            {}
+            right_ur5_base_link:
+              right_ur5_base:
                 {}
-              front_left_wheel_link:
-                {}
-              front_right_wheel_link:
-                {}
-              imu_link:
-                {}
-              inertial_link:
-                {}
-              rear_bumper_link:
-                {}
-              rear_left_wheel_link:
-                {}
-              rear_right_wheel_link:
-                {}
-              sensor_mast:
-                {}
-              temoto_command_frame:
-                {}
-              top_chassis_link:
-                {}
-              user_rail_link:
-                {}
-          scanmatcher_frame:
+              right_ur5_shoulder_link:
+                right_ur5_upper_arm_link:
+                  right_ur5_forearm_link:
+                    right_ur5_wrist_1_link:
+                      right_ur5_wrist_2_link:
+                        right_ur5_wrist_3_link:
+                          right_ur5_ee_link:
+                            right_ur5_ft_link:
+                              {}
+                            right_ur5_gripper_base_link:
+                              right_ur5_gripper_finger1_inner_knuckle_link:
+                                right_ur5_gripper_finger1_finger_tip_link:
+                                  {}
+                              right_ur5_gripper_finger1_knuckle_link:
+                                right_ur5_gripper_finger1_finger_link:
+                                  {}
+                              right_ur5_gripper_finger2_inner_knuckle_link:
+                                right_ur5_gripper_finger2_finger_tip_link:
+                                  {}
+                              right_ur5_gripper_finger2_knuckle_link:
+                                right_ur5_gripper_finger2_finger_link:
+                                  {}
+                            right_ur5_sr300_mount_link:
+                              camera_ee_link:
+                                right_ur5_sr300_surrogate:
+                                  {}
+                            right_ur5_temoto_ee:
+                              {}
+                          right_ur5_tool0:
+                            {}
+            screen_link:
+              {}
+          front_bumper_link:
+            {}
+          front_left_wheel_link:
+            {}
+          front_right_wheel_link:
+            {}
+          imu_link:
+            {}
+          inertial_link:
+            {}
+          rear_bumper_link:
+            {}
+          rear_left_wheel_link:
+            {}
+          rear_right_wheel_link:
+            {}
+          temoto_command_frame:
+            {}
+          top_chassis_link:
+            {}
+          user_rail_link:
             {}
       Update Interval: 0
       Value: true
@@ -963,7 +1181,7 @@ Visualization Manager:
         hand_pose_marker: true
       Queue Size: 100
       Value: true
-    - Alpha: 0.699999988
+    - Alpha: 0.7
       Class: rviz/Map
       Color Scheme: map
       Draw Behind: false
@@ -971,7 +1189,6 @@ Visualization Manager:
       Name: Map
       Topic: /nav_3d/live_map
       Unreliable: false
-      Use Timestamp: false
       Value: true
     - Alpha: 1
       Autocompute Intensity Bounds: true
@@ -996,7 +1213,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.01
       Style: Flat Squares
       Topic: /laser_stitcher/output_cloud
       Unreliable: false
@@ -1026,7 +1243,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.01
       Style: Flat Squares
       Topic: /hokuyo_scan
       Unreliable: false
@@ -1056,7 +1273,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.00999999978
+      Size (m): 0.01
       Style: Flat Squares
       Topic: /laser_stitcher/local_dense_cloud
       Unreliable: false
@@ -1066,7 +1283,6 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Default Light: true
     Fixed Frame: base_link
     Frame Rate: 30
   Name: root
@@ -1089,25 +1305,24 @@ Visualization Manager:
     Current:
       Class: rviz_animated_view_controller/Animated
       Control Mode: Orbit
-      Distance: 8.3990593
+      Distance: 1.41421
       Enable Stereo Rendering:
-        Stereo Eye Separation: 0.0599999987
+        Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Eye:
-        X: -4.31968355
-        Y: -5.5171814
-        Z: 4.68402004
+        X: -1.40496
+        Y: 0.224699
+        Z: 1.95701
       Focus:
-        X: 0.918120861
-        Y: -0.509820461
-        Z: 0.43714571
-      Invert Z Axis: false
+        X: -0.404962
+        Y: 0.224699
+        Z: 0.957009
       Maintain Vertical Axis: true
       Mouse Enabled: true
       Name: Current View
-      Near Clip Distance: 0.00999999978
+      Near Clip Distance: 0.01
       Placement Topic: /rviz/camera_placement
       Target Frame: base_link
       Transition Time: 0.5
@@ -1127,9 +1342,9 @@ Window Geometry:
   Hide Right Dock: false
   MotionPlanning:
     collapsed: false
-  MotionPlanning - Trajectory Slider:
+  MotionPlanning - Slider:
     collapsed: false
-  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006100fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000002800000154000000d700fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000182000001d70000018300fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000000000000000fb0000001800540065006100630068004d006f00740069006f006e0073010000035f000000850000008500fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000004a00ffffff000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000ad00fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d00650000000000000006900000030000fffffffb0000000800540069006d0065010000000000000450000000000000000000000391000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  QMainWindow State: 000000ff00000000fd0000000400000000000002b8000003bcfc020000000efb0000001200530065006c0065006300740069006f006e00000001e10000009b0000006400fffffffb0000001e0054006f006f006c002000500072006f007000650072007400690065007302000001ed000001df00000185000000a3fb000000120056006900650077007300200054006f006f02000001df000002110000018500000122fb000000200054006f006f006c002000500072006f0070006500720074006900650073003203000002880000011d000002210000017afb000000100044006900730070006c006100790073010000002800000154000000dd00fffffffb0000002000730065006c0065006300740069006f006e00200062007500660066006500720200000138000000aa0000023a00000294fb00000014005700690064006500530074006500720065006f02000000e6000000d2000003ee0000030bfb0000000c004b0069006e0065006300740200000186000001060000030c00000261fb0000000c00430061006d00650072006100000002f4000000ca0000001600fffffffb0000001e004d006f00740069006f006e00200050006c0061006e006e0069006e00670000000142000002440000000000000000fb0000001c004d006f00740069006f006e0050006c0061006e006e0069006e00670100000182000001d7000001cc00fffffffb0000002e004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d00200053006c0069006400650072000000039a0000004a0000004a00fffffffb0000001800540065006100630068004d006f00740069006f006e0073010000035f000000850000007600fffffffb00000044004d006f00740069006f006e0050006c0061006e006e0069006e00670020002d0020005400720061006a006500630074006f0072007900200053006c00690064006500720000000000ffffffff0000000000000000000000010000010f0000035efc0200000003fb0000001e0054006f006f006c002000500072006f00700065007200740069006500730100000041000000780000000000000000fb0000000a0056006900650077007300000000280000035e000000b000fffffffb0000001200530065006c0065006300740069006f006e010000025a000000b200000000000000000000000200000490000000a9fc0100000001fb0000000a00560069006500770073030000004e00000080000002e10000019700000003000006900000003efc0100000002fb0000000800540069006d0065000000000000000690000002f600fffffffb0000000800540069006d0065010000000000000450000000000000000000000391000003bc00000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
   Selection:
     collapsed: false
   TeachMotions:
@@ -1141,5 +1356,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1615
-  X: 65
-  Y: 24
+  X: 55
+  Y: 14
