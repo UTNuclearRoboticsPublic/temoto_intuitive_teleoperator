@@ -640,10 +640,10 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       in_jog_mode_ = false;
       setScale();
 
-      resetEEGraphicPose();
       ROS_INFO("Going into MANIPULATION mode  ...");
       AMP_HAND_MOTION_ = 1;
       navT_or_manipF_ = false;
+      resetEEGraphicPose();
       setScale();
     }
     else
@@ -767,7 +767,9 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
 
-  graphics_and_frames_.crunch();
+  // Sometimes, false may be returned if a pose is not initialized
+  while ( !graphics_and_frames_.crunch() )
+    ros::Duration(0.01).sleep();
 
   return;
 }  // end setGraphicsFramesStatus()

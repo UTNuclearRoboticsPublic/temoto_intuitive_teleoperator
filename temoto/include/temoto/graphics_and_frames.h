@@ -102,7 +102,8 @@ public:
   };
 
   // Updates RViz point-of-view and visualization markers as needed.
-  void crunch();
+  // Return true if successful
+  bool crunch();
 
   // Initializes camera placement to a preset pose in frame specified by
   // frame_id

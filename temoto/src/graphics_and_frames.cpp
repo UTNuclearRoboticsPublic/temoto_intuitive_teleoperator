@@ -84,7 +84,7 @@ void Visuals::initHandPoseMarker()
   return;
 }  // end Visuals::initHandPoseMarker()
 
-void Visuals::crunch()
+bool Visuals::crunch()
 {
   // ============================================================
   // ==  CHECK FOR REASONABLE EE POSE  ==========================
@@ -96,8 +96,58 @@ void Visuals::crunch()
   {
     ROS_WARN_THROTTLE(5, "[rviz_visual] Waiting for the initial end effector pose.");
     ROS_WARN_THROTTLE(5, "[rviz_visual] For distributed systems, are your clocks synched?");
-    return;
+    return false;
   }
+
+  // ============================================================
+  // ==  CAMERA POSE  ===========================================
+  // ============================================================
+  // Adjust the camera if mode has changed from manipulation to navigation
+  if (latest_status_.in_navigation_mode != prev_status_.in_navigation_mode)
+    adjust_camera_ = true;
+
+  // Adjust camera in NAVIGATION mode
+  if (latest_status_.in_navigation_mode && adjust_camera_)
+  {
+    // For NAVIGATION/NATURAL +X is considered to be 'UP'.
+    point_of_view_.up.vector.x = 1;
+    point_of_view_.up.vector.z = 0;
+
+    // Camera is positioned directly above the origin of nav frame (usually
+    // base_link)
+    point_of_view_.eye.point.x = 0;
+    point_of_view_.eye.point.y = 0;
+    point_of_view_.eye.point.z = 12. + 10. * latest_status_.scale_by;  // Never closer than 2 m, max distance at 12 m
+
+    // Focus camera at the origin
+    point_of_view_.focus.point.x = 0;
+    point_of_view_.focus.point.y = 0;
+
+    pub_pov_camera_.publish(point_of_view_);  // publish the modified CameraPlacement message
+    adjust_camera_ = false;                   // set adjust_camera 'false'
+  }
+  // Adjust camera in MANIPULATION mode
+  else if (!latest_status_.in_navigation_mode && adjust_camera_)
+  {
+    point_of_view_.up.vector.x = 0;
+    point_of_view_.up.vector.z = 1;
+
+    // Camera will be behind end effector, somewhat elevated
+    point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x -
+                                 EYE_DISPLACEMENT_FRONT_;  // Distance backwards from the end effector
+    point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;  // Align with end effector
+    point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z +
+                                 EYE_DISPLACEMENT_TOP_;  // Distance upwards from the end effector
+
+    // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end
+    // effector frame, i.e. the palm of robotiq gripper
+    point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+
+    pub_pov_camera_.publish(point_of_view_);  // publish a CameraPlacement msg
+    adjust_camera_ = false;                   // set adjust_camera 'false'
+
+  }  // else if (!latest_status.in_navigation_mode && adjust_camera)
+
 
   // ============================================================
   // ==  VISUALIZATION MARKERS  =================================
@@ -157,59 +207,9 @@ void Visuals::crunch()
     move_goal_msg.pose.position.z = command_frame_tf_.getOrigin().z();
     move_goal_msg.pose.orientation = tf2::toMsg(command_frame_tf_.getRotation());
     pub_update_rviz_goal_.publish(move_goal_msg);
-
   }  // end setting markers in MANIPULATION mode
-
-  // ============================================================
-  // ==  CAMERA POSE  ===========================================
-  // ============================================================
-  // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV)
-  // camera.
-  if (latest_status_.in_navigation_mode != prev_status_.in_navigation_mode)
-    adjust_camera_ = true;
-
-  // Adjust camera in NAVIGATION mode
-  if (latest_status_.in_navigation_mode && adjust_camera_)
-  {
-    // For NAVIGATION/NATURAL +X is considered to be 'UP'.
-    point_of_view_.up.vector.x = 1;
-    point_of_view_.up.vector.z = 0;
-
-    // Camera is positioned directly above the origin of nav frame (usually
-    // base_link)
-    point_of_view_.eye.point.x = 0;
-    point_of_view_.eye.point.y = 0;
-    point_of_view_.eye.point.z = 12. + 10. * latest_status_.scale_by;  // Never closer than 2 m, max distance at 12 m
-
-    // Focus camera at the origin
-    point_of_view_.focus.point.x = 0;
-    point_of_view_.focus.point.y = 0;
-
-    pub_pov_camera_.publish(point_of_view_);  // publish the modified CameraPlacement message
-    adjust_camera_ = false;                   // set adjust_camera 'false'
-  }
-  // Adjust camera in MANIPULATION mode
-  else if (!latest_status_.in_navigation_mode && adjust_camera_)
-  {
-    point_of_view_.up.vector.x = 0;
-    point_of_view_.up.vector.z = 1;
-
-    // Camera will be behind end effector, somewhat elevated
-    point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x -
-                                 EYE_DISPLACEMENT_FRONT_;  // Distance backwards from the end effector
-    point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;  // Align with end effector
-    point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z +
-                                 EYE_DISPLACEMENT_TOP_;  // Distance upwards from the end effector
-
-    // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end
-    // effector frame, i.e. the palm of robotiq gripper
-    point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
-
-    pub_pov_camera_.publish(point_of_view_);  // publish a CameraPlacement msg
-    adjust_camera_ = false;                   // set adjust_camera 'false'
-
-  }  // else if (!latest_status.in_navigation_mode && adjust_camera)
 
   prev_status_ = latest_status_;
 
+  return true;
 }  // end Visuals::crunch()
