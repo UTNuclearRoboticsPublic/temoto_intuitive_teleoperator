@@ -154,8 +154,22 @@ bool Visuals::crunch()
   // ============================================================
 
   // Setting markers & frames in NAVIGATION mode
+  // In Nav mode, set temoto_command_frame coincident with the base frame
   if (latest_status_.in_navigation_mode)
   {
+    // In Nav mode, set temoto_command_frame coincident with the base frame
+    tf2::Vector3 base_origin(0, 0, 0);
+    tf2::Quaternion base_rotation(0, 0, 0, 1);
+    command_frame_tf_.setRotation(base_rotation);
+    command_frame_tf_.setOrigin(base_origin);
+
+    geometry_msgs::TransformStamped command_frame_tf_msg;
+    command_frame_tf_msg.header.stamp = ros::Time::now();
+    command_frame_tf_msg.header.frame_id = base_frame_;
+    command_frame_tf_msg.child_frame_id = "temoto_command_frame";
+    command_frame_tf_msg.transform = toMsg(command_frame_tf_);
+    tf_br_.sendTransform(command_frame_tf_msg);
+
     // ==  HAND POSE BOX MARKER  ============================= //
     // Resize of the hand pose marker to robot base dimensions
     cmd_pose_marker_.type = visualization_msgs::Marker::CUBE;
@@ -168,6 +182,7 @@ bool Visuals::crunch()
     pub_rviz_marker_.publish(cmd_pose_marker_);
   }
   // Setting markers & frames in MANIPULATION mode
+  // In Manip mode, set temoto_command_frame coincident with the base frame
   else
   {
     // ==  HAND POSE MARKER  ================================= //
@@ -188,7 +203,8 @@ bool Visuals::crunch()
                                  cmd_pose_marker_.pose.position.z);
     tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y,
                                       cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
-    command_frame_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
+    command_frame_tf_.setRotation(spacenav_rotation);
+    command_frame_tf_.setOrigin(spacenav_origin);
 
     geometry_msgs::TransformStamped command_frame_tf_msg;
     command_frame_tf_msg.header.stamp = ros::Time::now();

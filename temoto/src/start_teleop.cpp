@@ -41,19 +41,20 @@
  */
 Teleoperator::Teleoperator()
   : preplanned_sequence_client_("temoto/preplanned_sequence",
-                                true)
-  ,  // true--> don't block the thread
-  navigateIF_("move_base")
-  , tf_listener_(tf_buffer_)
+                                true),
+  nav_interface_("move_base"),
+  tf_listener_(tf_buffer_)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
   temoto_leap_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_leap_pose_cmd_topic", n_);
 
   // By default navigation is turned OFF
-  bool navigate = get_ros_params::getBoolParam("temoto/navigate", n_);
+  enable_navigation_ = get_ros_params::getBoolParam("temoto/enable_navigation", n_);
   // By default manipulation is turned ON
-  manipulate_ = get_ros_params::getBoolParam("temoto/manipulate", n_);
+  enable_manipulation_ = get_ros_params::getBoolParam("temoto/enable_manipulation", n_);
+
+  base_frame_ = get_ros_params::getStringParam("temoto_frames/base_frame", n_);
 
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
@@ -108,32 +109,23 @@ Teleoperator::Teleoperator()
 
   // Setting up control_state, i.e., whether teleoperator is controlling
   // navigation, manipulation, or both.
-  if (manipulate_ && navigate)
-  {
+  if (enable_manipulation_ && enable_navigation_)
     navT_or_manipF_ = false;  // if navigation AND manipulation are enabled,
                               // start out in manipulation mode.
-    AMP_HAND_MOTION_ = 100;   // 100 for navigation
-  }
-  else if (navigate && !manipulate_)
-  {
+  else if (enable_navigation_ && !enable_manipulation_)
     navT_or_manipF_ = true;  // if only navigation is enabled, navT_or_manipF_ is TRUE
-    AMP_HAND_MOTION_ = 100;  // 100 for navigation
-  }
-  else if (manipulate_ && !navigate)
-  {
+  else if (enable_manipulation_ && !enable_navigation_)
     navT_or_manipF_ = false;  // if only manipulation is enabled, navT_or_manipF_ is FALSE
-    AMP_HAND_MOTION_ = 1;     // for manipulation
-  }
 
   // Initial pose
-  // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
+  // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
   ros::Duration(1).sleep();
   absolute_pose_cmd_ = arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
-  while (!performTransform(absolute_pose_cmd_.header.frame_id, "base_link", prev_frame_to_new))
-    ROS_WARN_STREAM("Waiting for initial transform from command frame to base_link");
+  while (!performTransform(absolute_pose_cmd_.header.frame_id, base_frame_, prev_frame_to_new))
+    ROS_WARN_STREAM("Waiting for initial transform from command frame to base_frame_");
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
   // Reset the graphic now that we're sure the tf is available.
@@ -163,7 +155,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
                "stop navigation.");
       // Stop
       geometry_msgs::PoseStamped empty_pose;
-      if (!navigateIF_.navRequest(low_level_cmds::ABORT, empty_pose))
+      if (!nav_interface_.navRequest(low_level_cmds::ABORT, empty_pose))
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot_srv");
@@ -191,19 +183,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
         return;
       }
 
-      double lm_roll, lm_pitch, lm_yaw;
-
-      tf::Quaternion quat_current_cmd_frame;
-      tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_current_cmd_frame);
-      tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
-
       double bl_roll, bl_pitch, bl_yaw;
       // the incoming geometry_msgs::Quaternion is transformed to a
       // tf::Quaterion
       tf::Quaternion quat_base_link;
       tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_base_link);
-
-      // the tf::Quaternion has a method to access roll, pitch, and yaw
       tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);
 
       quat_base_link.setRPY(0., 0., bl_yaw);
@@ -211,9 +195,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       tf::quaternionTFToMsg(quat_base_link, absolute_pose_cmd_.pose.orientation);
 
       // Move the robot
-      geometry_msgs::PoseStamped filler;
       ROS_WARN_STREAM("Requesting navigation.");
-      if (!navigateIF_.navRequest(action_type, absolute_pose_cmd_))
+      if (!nav_interface_.navRequest(action_type, absolute_pose_cmd_))
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot/navRequest()");
@@ -443,7 +426,7 @@ void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, doubl
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if (performTransform(incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new))
+    if (performTransform(incoming_position_cmd.header.frame_id, base_frame_, prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
@@ -454,6 +437,8 @@ void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, doubl
       absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
       absolute_pose_cmd_.pose.position.z = 0;
     }
+    else
+      ROS_WARN_STREAM("The transform to base frame is not available. Skipping.");
   }
 
   //////////////////////////////
@@ -631,6 +616,12 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
 
   if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
   {
+    if (!enable_manipulation_)
+    {
+      ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
+      return;
+    }
+
     // If not already in manipulation mode
     if (navT_or_manipF_ == true)
     {
@@ -641,7 +632,6 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       setScale();
 
       ROS_INFO("Going into MANIPULATION mode  ...");
-      AMP_HAND_MOTION_ = 1;
       navT_or_manipF_ = false;
       resetEEGraphicPose();
       setScale();
@@ -652,19 +642,25 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   }
   else if (voice_command.data == "navigation")  // Switch over to navigation mode
   {
+    if (!enable_navigation_)
+    {
+      ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+      return;
+    }
+
     // If not already in nav mode
     if (navT_or_manipF_ == false)
     {
       // Make sure we aren't in jog mode, for safety
       ROS_INFO("Switching out of jog mode");
-      in_jog_mode_ = false;
-      setScale();
-
       resetEEGraphicPose();
+      in_jog_mode_ = false;
       ROS_INFO("Going into NAVIGATION mode  ...");
-      AMP_HAND_MOTION_ = 100;
-
       navT_or_manipF_ = true;
+
+      bool adjust_camera = true;
+      setGraphicsFramesStatus(adjust_camera);
+      resetEEGraphicPose();
       setScale();
     }
     else
@@ -687,7 +683,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   else if (voice_command.data == "next end effector")
   {
     ROS_INFO("Controlling the next EE from yaml file ...");
-    // Flag that the integrated cmds need to be reset
+
     resetEEGraphicPose();
     // No joggign, initially, for safety
     in_jog_mode_ = false;
@@ -863,7 +859,7 @@ bool Teleoperator::performTransform(std::string source_frame, std::string target
 // Reset the end-effector graphic to current robot pose
 void Teleoperator::resetEEGraphicPose()
 {
-  if (navT_or_manipF_)  // Navigation --> Center on base_link
+  if (navT_or_manipF_)  // Navigation --> Center on base_frame
   {
     absolute_pose_cmd_.pose.position.x = 0.;
     absolute_pose_cmd_.pose.position.y = 0.;

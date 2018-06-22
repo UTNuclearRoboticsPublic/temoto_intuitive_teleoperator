@@ -118,10 +118,12 @@ private:
   void processIncrementalPoseCmd(double& x_pos, double& y_pos, double& z_pos, double& x_ori, double& y_ori,
                                  double& z_ori);
 
-  bool manipulate_ = true;                      // Is manipulation enabled?
+  bool enable_navigation_ = true;  // Is navigation enabled?
+  bool enable_manipulation_ = true;                      // Is manipulation enabled?
   std::string temoto_spacenav_pose_cmd_topic_;  // Topic of incoming pose cmds
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string temoto_leap_pose_cmd_topic_;
+  std::string base_frame_ = "base_link";    // Frame of robot base
   bool navT_or_manipF_ = false;  //< TRUE: interpret absolute_pose_cmd_ as 2D
   // navigation goal; FALSE: absolute_pose_cmd_ is
   // the motion planning target for robot EEF.
@@ -133,7 +135,7 @@ private:
   Interpreter interpreter;             // Interpret voice commands
   preplanned_sequence sequence_;       // Process the cmds that trigger short,
                                        // predefined actions, e.g. open gripper
-  NavigateRobotInterface navigateIF_;  // Send motion commands to the base
+  NavigateRobotInterface nav_interface_;  // Send motion commands to the base
 
   // All move_groups/ee's the user might want to control (specified in yaml)
   std::vector<std::string> ee_names_;
@@ -152,10 +154,6 @@ private:
 
   // Scaling factor maxs
   double pos_scale_max_, rot_scale_max_;
-
-  // Amplification of input hand motion. (Scaling factor scales the
-  // amplification.)
-  int8_t AMP_HAND_MOTION_;
 
   // For absolute pose commands
   geometry_msgs::PoseStamped absolute_pose_cmd_;

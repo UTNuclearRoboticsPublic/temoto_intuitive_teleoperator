@@ -19,9 +19,8 @@ temoto:
   temoto_xbox_pose_cmd_topic: "/joy"
   temoto_leap_pose_cmd_topic: "/leap_motion_output"
 
-  # navigate or manipulate
-  navigate: false
-  manipulate: true
+  enable_navigation: true
+  enable_manipulation: true
 
   input_voice_topic: "stt/spoken_text"
 
