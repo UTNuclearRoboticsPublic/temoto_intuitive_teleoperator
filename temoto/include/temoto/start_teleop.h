@@ -167,11 +167,6 @@ private:
   // The jogger takes TwistStamped msgs
   geometry_msgs::TwistStamped jog_twist_cmd_;
 
-  bool reset_ee_graphic_pose_ = false;  //< TRUE ==> reset the integration of
-                                        // incremental (e.g. SpaceNav cmds).
-  // Typically set to true when switching
-  // between nav/manip modes.
-
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_base_cmds_;
 
