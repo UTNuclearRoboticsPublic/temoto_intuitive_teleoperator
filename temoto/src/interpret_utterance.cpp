@@ -1,21 +1,22 @@
 // Copyright (c) 2015-2016, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
 //       documentation and/or other materials provided with the distribution.
-// 
+//
 //     * Neither the name of the copyright holder nor the names of its
 //       contributors may be used to endorse or promote products derived from
 //       this software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 // DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
@@ -27,63 +28,69 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file interpret_utterance.cpp
- *  Subscribes to the verbal command topic and tries to extract valid voice commands
- *  from it. If valid voice command is extracted, an approproate command code is published on
+ *  Subscribes to the verbal command topic and tries to extract valid voice
+ * commands
+ *  from it. If valid voice command is extracted, an approproate command code is
+ * published on
  *  "temoto/voice_commands".
- * 
+ *
  *  @author karl.kruusamae(at)utexas.edu
  */
 
 #include "temoto/interpret_utterance.h"
 
 /** Callback function for the verbal cmd topic.
- *  It searches the voice command string for any of the strings specified in valid_voice_commands.
+ *  It searches the voice command string for any of the strings specified in
+ * valid_voice_commands.
  *  @param last_phrase pocketsphinx_recognizer output string.
  */
 void Interpreter::utteranceToRecognizedCommand(std_msgs::String utterance)
 {
   // No valid commands by default
   bool valid_command = false;
-  
+
   std_msgs::String latest_command;
-  
+
   // Print the output of speech recognizer
-  //ROS_ERROR_STREAM("[interpret_utterance] I think you just said: " << utterance.data);
- 
+  // ROS_ERROR_STREAM("[interpret_utterance] I think you just said: " <<
+  // utterance.data);
+
   // Compare the input utterance string to every string in command_list_.
-  for(int it=0; it<command_list_.size(); ++it)
+  for (int it = 0; it < command_list_.size(); ++it)
   {
-    if ( utterance.data == command_list_.at(it)) {		// if valid voice command was found in utterance
-      latest_command.data = command_list_.at(it);		// take the command
+    if (utterance.data == command_list_.at(it))
+    {                                              // if valid voice command was found in utterance
+      latest_command.data = command_list_.at(it);  // take the command
       valid_command = true;
-    } // end if
-  } // end for
-  
+    }  // end if
+  }    // end for
+
   // if a valid command was found in utterance string
   if (valid_command)
   {
     // give operator auditory confirmation
     sound_client_.say("affirmative");
     // publish the voice command
-    pub_voice_commands_.publish( latest_command );
+    pub_voice_commands_.publish(latest_command);
   }
   else
   {
     // tell operator that no valid command was recgonized in utterance string
     sound_client_.say("i beg your pardon");
   }
-  
+
   return;
 }
 
-/** Displays on the screen all the strings that are considered valid voice commands. */
+/** Displays on the screen all the strings that are considered valid voice
+ * commands. */
 void Interpreter::displayRecognizedVoiceCommands()
 {
   ROS_INFO("All the accepted utterances are:");
-  for(int it=0; it<command_list_.size(); ++it)
+  for (int it = 0; it < command_list_.size(); ++it)
   {
     std::cout << " == " << command_list_.at(it) << "\n";
   }
-  
+
   return;
 }

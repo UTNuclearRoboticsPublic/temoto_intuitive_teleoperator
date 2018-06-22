@@ -1,21 +1,22 @@
 // Copyright (c) 2017, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
 //       documentation and/or other materials provided with the distribution.
-// 
+//
 //     * Neither the name of the copyright holder nor the names of its
 //       contributors may be used to endorse or promote products derived from
 //       this software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 // DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
@@ -27,20 +28,22 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file preplanned_sequences.cpp
- * 
- *  @brief ROS server that executes preplanned sequences while the rest of Temoto pauses.
+ *
+ *  @brief ROS server that executes preplanned sequences while the rest of
+ * Temoto pauses.
  *  @brief While executing, it also listens for an "Abort" command.
- * 
+ *
  *  @author andyz(at)utexas.edu
  */
 
 #include "temoto/preplanned_sequences.h"
 
-// Action server CB: launch the preplanned sequence, as specified by the incoming command.
+// Action server CB: launch the preplanned sequence, as specified by the
+// incoming command.
 // Action server allows interruption.
 void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstPtr& goal)
 {
-  ROS_INFO_STREAM("[preplanned_sequences] Starting \"" << goal->sequence_name << "\"" );
+  ROS_INFO_STREAM("[preplanned_sequences] Starting \"" << goal->sequence_name << "\"");
   result_.success = false;
 
   if (goal->sequence_name == "close gripper")
@@ -53,11 +56,10 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
   sequence_server_.setSucceeded(result_);
 }
 
-
 // Topic CB: Listen for an ABORT, and set a flag when it's heard.
 // This provides a method of halting preplanned sequences.
 void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
 {
-  if ( msg-> data.c_str() == low_level_cmds::ABORT)
+  if (msg->data.c_str() == low_level_cmds::ABORT)
     ROS_INFO_STREAM("[preplanned_sequences] ABORTING");
 }

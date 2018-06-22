@@ -1,21 +1,22 @@
 // Copyright (c) 2015-2016, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
 //       documentation and/or other materials provided with the distribution.
-// 
+//
 //     * Neither the name of the copyright holder nor the names of its
 //       contributors may be used to endorse or promote products derived from
 //       this software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 // DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
@@ -27,21 +28,26 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file graphics_and_frames.cpp
- * 
- *  @brief Node that handles RViz graphics and tf frames for the controllers. It's useful to do
- *  both in the same place because both graphics and tf frames depend on knowing the hand pose.
- * 
+ *
+ *  @brief Node that handles RViz graphics and tf frames for the controllers.
+ * It's useful to do
+ *  both in the same place because both graphics and tf frames depend on knowing
+ * the hand pose.
+ *
  *  @author karl.kruusamae(at)utexas.edu
  */
 
 #include "temoto/graphics_and_frames.h"
 
-/** Creates the initial CameraPlacment message that is used for positioning point-of-view (POV) camera in RViz.
+/** Creates the initial CameraPlacment message that is used for positioning
+ * point-of-view (POV) camera in RViz.
  */
 void Visuals::initCameraFrames()
 {
   // Set target frame and animation time
-  point_of_view_.target_frame = base_frame_;  // Use base_frame_ because it does not move with the end effector ==> will remain upright
+  point_of_view_.target_frame = base_frame_;  // Use base_frame_ because it does
+                                              // not move with the end effector
+                                              // ==> will remain upright
   point_of_view_.time_from_start = ros::Duration(0.5);
 
   // Position of the camera relative to target_frame
@@ -74,26 +80,26 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.color.g = 0.5;
   cmd_pose_marker_.color.b = 0.0;
   cmd_pose_marker_.color.a = 1;
-  
+
   return;
-} // end Visuals::initHandPoseMarker()
+}  // end Visuals::initHandPoseMarker()
 
 void Visuals::crunch()
 {
-  // ============================================================ 
+  // ============================================================
   // ==  CHECK FOR REASONABLE EE POSE  ==========================
   // ============================================================
 
-  // An uninitialized w-component of quaternion is a good bet that the pose was uninitialized
-  if ( latest_status_.end_effector_pose.pose.orientation.w==0. )
+  // An uninitialized w-component of quaternion is a good bet that the pose was
+  // uninitialized
+  if (latest_status_.end_effector_pose.pose.orientation.w == 0.)
   {
     ROS_WARN_THROTTLE(5, "[rviz_visual] Waiting for the initial end effector pose.");
     ROS_WARN_THROTTLE(5, "[rviz_visual] For distributed systems, are your clocks synched?");
     return;
   }
 
-
-  // ============================================================ 
+  // ============================================================
   // ==  VISUALIZATION MARKERS  =================================
   // ============================================================
 
@@ -109,7 +115,7 @@ void Visuals::crunch()
 
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
-    pub_rviz_marker_.publish( cmd_pose_marker_ );
+    pub_rviz_marker_.publish(cmd_pose_marker_);
   }
   // Setting markers & frames in MANIPULATION mode
   else
@@ -126,10 +132,12 @@ void Visuals::crunch()
     cmd_pose_marker_.header = latest_status_.commanded_pose.header;
     cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
-    pub_rviz_marker_.publish( cmd_pose_marker_ );
+    pub_rviz_marker_.publish(cmd_pose_marker_);
 
-    tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y, cmd_pose_marker_.pose.position.z);
-    tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y, cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
+    tf2::Vector3 spacenav_origin(cmd_pose_marker_.pose.position.x, cmd_pose_marker_.pose.position.y,
+                                 cmd_pose_marker_.pose.position.z);
+    tf2::Quaternion spacenav_rotation(cmd_pose_marker_.pose.orientation.x, cmd_pose_marker_.pose.orientation.y,
+                                      cmd_pose_marker_.pose.orientation.z, cmd_pose_marker_.pose.orientation.w);
     command_frame_tf_ = tf2::Transform(spacenav_rotation, spacenav_origin);
 
     geometry_msgs::TransformStamped command_frame_tf_msg;
@@ -139,8 +147,7 @@ void Visuals::crunch()
     command_frame_tf_msg.transform = toMsg(command_frame_tf_);
     tf_br_.sendTransform(command_frame_tf_msg);
 
-
-  	// update the goal position in moveit plugin to display real-time IK
+    // update the goal position in moveit plugin to display real-time IK
     // Need to enable external comms in MoveIt's RViz plugin for this to work
     geometry_msgs::PoseStamped move_goal_msg;
     move_goal_msg.header.frame_id = latest_status_.moveit_planning_frame;
@@ -151,14 +158,14 @@ void Visuals::crunch()
     move_goal_msg.pose.orientation = tf2::toMsg(command_frame_tf_.getRotation());
     pub_update_rviz_goal_.publish(move_goal_msg);
 
-  } // end setting markers in MANIPULATION mode
+  }  // end setting markers in MANIPULATION mode
 
-
-  // ============================================================ 
+  // ============================================================
   // ==  CAMERA POSE  ===========================================
   // ============================================================
-  // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV) camera.
-  if ( latest_status_.in_navigation_mode != prev_status_.in_navigation_mode )
+  // Setting 'adjust_camera_' triggers repositioning of the point-of-view (POV)
+  // camera.
+  if (latest_status_.in_navigation_mode != prev_status_.in_navigation_mode)
     adjust_camera_ = true;
 
   // Adjust camera in NAVIGATION mode
@@ -168,37 +175,41 @@ void Visuals::crunch()
     point_of_view_.up.vector.x = 1;
     point_of_view_.up.vector.z = 0;
 
-    // Camera is positioned directly above the origin of nav frame (usually base_link)
+    // Camera is positioned directly above the origin of nav frame (usually
+    // base_link)
     point_of_view_.eye.point.x = 0;
     point_of_view_.eye.point.y = 0;
-    point_of_view_.eye.point.z = 12. + 10.*latest_status_.scale_by;	// Never closer than 2 m, max distance at 12 m
+    point_of_view_.eye.point.z = 12. + 10. * latest_status_.scale_by;  // Never closer than 2 m, max distance at 12 m
 
     // Focus camera at the origin
     point_of_view_.focus.point.x = 0;
     point_of_view_.focus.point.y = 0;
 
-    pub_pov_camera_.publish( point_of_view_ );				// publish the modified CameraPlacement message
-    adjust_camera_ = false;						// set adjust_camera 'false'
+    pub_pov_camera_.publish(point_of_view_);  // publish the modified CameraPlacement message
+    adjust_camera_ = false;                   // set adjust_camera 'false'
   }
   // Adjust camera in MANIPULATION mode
   else if (!latest_status_.in_navigation_mode && adjust_camera_)
   {
-		point_of_view_.up.vector.x = 0;
-		point_of_view_.up.vector.z = 1;
+    point_of_view_.up.vector.x = 0;
+    point_of_view_.up.vector.z = 1;
 
-		// Camera will be behind end effector, somewhat elevated
-		point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x - EYE_DISPLACEMENT_FRONT_;// Distance backwards from the end effector
-		point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;				// Align with end effector
-		point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z + EYE_DISPLACEMENT_TOP_;// Distance upwards from the end effector
+    // Camera will be behind end effector, somewhat elevated
+    point_of_view_.eye.point.x = latest_status_.end_effector_pose.pose.position.x -
+                                 EYE_DISPLACEMENT_FRONT_;  // Distance backwards from the end effector
+    point_of_view_.eye.point.y = latest_status_.end_effector_pose.pose.position.y;  // Align with end effector
+    point_of_view_.eye.point.z = latest_status_.end_effector_pose.pose.position.z +
+                                 EYE_DISPLACEMENT_TOP_;  // Distance upwards from the end effector
 
-		// Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end effector frame, i.e. the palm of robotiq gripper
-		point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
+    // Look at the distance of VIRTUAL_VIEW_SCREEN from the origin of end
+    // effector frame, i.e. the palm of robotiq gripper
+    point_of_view_.focus.point = latest_status_.end_effector_pose.pose.position;
 
-	  pub_pov_camera_.publish( point_of_view_ );			// publish a CameraPlacement msg
-	  adjust_camera_ = false;					// set adjust_camera 'false'
-      
-  } // else if (!latest_status.in_navigation_mode && adjust_camera)
+    pub_pov_camera_.publish(point_of_view_);  // publish a CameraPlacement msg
+    adjust_camera_ = false;                   // set adjust_camera 'false'
+
+  }  // else if (!latest_status.in_navigation_mode && adjust_camera)
 
   prev_status_ = latest_status_;
 
-} // end Visuals::crunch()
+}  // end Visuals::crunch()

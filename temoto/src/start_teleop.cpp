@@ -1,21 +1,22 @@
 // Copyright (c) 2015-2016, The University of Texas at Austin
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above copyright
 //       notice, this list of conditions and the following disclaimer in the
 //       documentation and/or other materials provided with the distribution.
-// 
+//
 //     * Neither the name of the copyright holder nor the names of its
 //       contributors may be used to endorse or promote products derived from
 //       this software without specific prior written permission.
-// 
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
 // DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY
@@ -27,9 +28,10 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /** @file start_teleop.cpp
- * 
- *  @brief Central node for TEMOTO teleoperator. Subscribes to relevant messages, calls move and navigation interfaces, and publishes system status.
- * 
+ *
+ *  @brief Central node for TEMOTO teleoperator. Subscribes to relevant
+ * messages, calls move and navigation interfaces, and publishes system status.
+ *
  *  @author karl.kruusamae(at)utexas.edu
  */
 
@@ -37,10 +39,12 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator() :
- preplanned_sequence_client_("temoto/preplanned_sequence", true),  // true--> don't block the thread
- navigateIF_("move_base"),
- tf_listener_(tf_buffer_)
+Teleoperator::Teleoperator()
+  : preplanned_sequence_client_("temoto/preplanned_sequence",
+                                true)
+  ,  // true--> don't block the thread
+  navigateIF_("move_base")
+  , tf_listener_(tf_buffer_)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
@@ -57,37 +61,43 @@ Teleoperator::Teleoperator() :
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
   int num_ee = 1;
-  if ( !n_.getParam("/temoto_frames/num_ee", num_ee) )
-    ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. Aborting.");
+  if (!n_.getParam("/temoto_frames/num_ee", num_ee))
+    ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. "
+              "Aborting.");
 
   // Get the names associated with multiple end effectors. Shove in vectors.
-  for (int i=0; i<num_ee; i++)
+  for (int i = 0; i < num_ee; i++)
   {
-    ee_names_.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/end_effector", n_) );
+    ee_names_.push_back(
+        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/end_effector", n_));
 
     // Objects for arm motion interface
-    std::string move_group_name = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/movegroup", n_);
-    arm_interface_ptrs_.push_back ( new MoveRobotInterface( move_group_name ) );
+    std::string move_group_name =
+        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/movegroup", n_);
+    arm_interface_ptrs_.push_back(new MoveRobotInterface(move_group_name));
 
-    std::string jog_topic = get_ros_params::getStringParam("/temoto_frames/ee/ee"+std::to_string(i)+"/jog_topic", n_);
+    std::string jog_topic =
+        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/jog_topic", n_);
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
     // Create a 'new' copy of this jog publisher, to persist until deleted.
-    ros::Publisher* jog_pub_ptr = new ros::Publisher( jog_pub );
-    jog_publishers_.push_back( jog_pub_ptr );
+    ros::Publisher* jog_pub_ptr = new ros::Publisher(jog_pub);
+    jog_publishers_.push_back(jog_pub_ptr);
   }
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
-  jog_twist_cmd_.header.frame_id = ee_names_.at( current_movegroup_ee_index_ );
+  jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
 
   // Subscribers
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
-  sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1,  &Teleoperator::spaceNavCallback, this);
-  sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1,  &Teleoperator::xboxCallback, this);
+  sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1, &Teleoperator::spaceNavCallback, this);
+  sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
   sub_leap_pose_cmd_ = n_.subscribe(temoto_leap_pose_cmd_topic_, 1, &Teleoperator::leapCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
-  sub_executing_preplanned_ = n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
-  sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1, &Teleoperator::processPowermate, this);
+  sub_executing_preplanned_ =
+      n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
+  sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1,
+                                                                        &Teleoperator::processPowermate, this);
 
   // Set initial scale on incoming commands
   setScale();
@@ -96,64 +106,70 @@ Teleoperator::Teleoperator() :
   incremental_position_cmd_.header.frame_id = "temoto_command_frame";
   incremental_orientation_cmd_.header.frame_id = "temoto_command_frame";
 
-
-  // Setting up control_state, i.e., whether teleoperator is controlling navigation, manipulation, or both.
+  // Setting up control_state, i.e., whether teleoperator is controlling
+  // navigation, manipulation, or both.
   if (manipulate_ && navigate)
   {
-    navT_or_manipF_ = false;		// if navigation AND manipulation are enabled, start out in manipulation mode.
-    AMP_HAND_MOTION_ = 100;		// 100 for navigation
+    navT_or_manipF_ = false;  // if navigation AND manipulation are enabled,
+                              // start out in manipulation mode.
+    AMP_HAND_MOTION_ = 100;   // 100 for navigation
   }
   else if (navigate && !manipulate_)
   {
-    navT_or_manipF_ = true;		// if only navigation is enabled, navT_or_manipF_ is TRUE
-    AMP_HAND_MOTION_ = 100;		// 100 for navigation
+    navT_or_manipF_ = true;  // if only navigation is enabled, navT_or_manipF_ is TRUE
+    AMP_HAND_MOTION_ = 100;  // 100 for navigation
   }
   else if (manipulate_ && !navigate)
   {
-    navT_or_manipF_ = false;		// if only manipulation is enabled, navT_or_manipF_ is FALSE
-    AMP_HAND_MOTION_ = 1;		// for manipulation
+    navT_or_manipF_ = false;  // if only manipulation is enabled, navT_or_manipF_ is FALSE
+    AMP_HAND_MOTION_ = 1;     // for manipulation
   }
 
   // Initial pose
   // Make sure absolute_pose_cmd_ is in "base_link" so nav will work properly
   ros::Duration(1).sleep();
-  absolute_pose_cmd_ = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ = arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
-  while ( !performTransform(absolute_pose_cmd_.header.frame_id, "base_link", prev_frame_to_new) )
+  while (!performTransform(absolute_pose_cmd_.header.frame_id, "base_link", prev_frame_to_new))
     ROS_WARN_STREAM("Waiting for initial transform from command frame to base_link");
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
   // Reset the graphic now that we're sure the tf is available.
-  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
+  graphics_and_frames_.latest_status_.moveit_planning_frame =
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
   reset_ee_graphic_pose_ = true;
   setGraphicsFramesStatus(true);
 }
 
-/** Function that actually makes the service call to appropriate robot motion interface.
+/** Function that actually makes the service call to appropriate robot motion
+ * interface.
  *  Currently, there are MoveRobotInterface and NavigateRobotInterface.
- *  @param action_type determines what is requested from MoveGroup, i.e. PLAN, EXECUTE PLAN, or GO (aka plan and execute). 
+ *  @param action_type determines what is requested from MoveGroup, i.e. PLAN,
+ * EXECUTE PLAN, or GO (aka plan and execute).
  */
 void Teleoperator::callRobotMotionInterface(std::string action_type)
 {
   // =================================================
   // === Calling NavigateRobotInterface ==============
   // =================================================
-  if (navT_or_manipF_) // if in NAVIGATION mode
+  if (navT_or_manipF_)  // if in NAVIGATION mode
   {
     // If operator requested ABORT
     if (action_type == low_level_cmds::ABORT)
     {
-      ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to stop navigation.");
+      ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to "
+               "stop navigation.");
       // Stop
       geometry_msgs::PoseStamped empty_pose;
-      if ( !navigateIF_.navRequest( low_level_cmds::ABORT, empty_pose ) )
+      if (!navigateIF_.navRequest(low_level_cmds::ABORT, empty_pose))
       {
-        ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot_srv");
+        ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
+                  "temoto/navigate_robot_srv");
       }
       return;
-    } // end: if (action_type == "abort")
+    }  // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
     else if (action_type == low_level_cmds::GO)
     {
@@ -180,35 +196,36 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       tf::Quaternion quat_current_cmd_frame;
       tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_current_cmd_frame);
       tf::Matrix3x3(quat_current_cmd_frame).getRPY(lm_roll, lm_pitch, lm_yaw);
-    
 
       double bl_roll, bl_pitch, bl_yaw;
-      // the incoming geometry_msgs::Quaternion is transformed to a tf::Quaterion
+      // the incoming geometry_msgs::Quaternion is transformed to a
+      // tf::Quaterion
       tf::Quaternion quat_base_link;
       tf::quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, quat_base_link);
 
       // the tf::Quaternion has a method to access roll, pitch, and yaw
       tf::Matrix3x3(quat_base_link).getRPY(bl_roll, bl_pitch, bl_yaw);
-      
+
       quat_base_link.setRPY(0., 0., bl_yaw);
       quat_base_link.normalize();
       tf::quaternionTFToMsg(quat_base_link, absolute_pose_cmd_.pose.orientation);
-      
+
       // Move the robot
       geometry_msgs::PoseStamped filler;
       ROS_WARN_STREAM("Requesting navigation.");
-      if ( !navigateIF_.navRequest( action_type, absolute_pose_cmd_ ) )
+      if (!navigateIF_.navRequest(action_type, absolute_pose_cmd_))
       {
-	      ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call temoto/navigate_robot/navRequest()");
+        ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
+                  "temoto/navigate_robot/navRequest()");
       }
       return;
-    } // else if (action_type == "go")
-  } // if (navT_or_manipF_)
+    }  // else if (action_type == "go")
+  }    // if (navT_or_manipF_)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if ( !navT_or_manipF_ )    // If Teleoperator is in MANIPULATION mode
-  { 
+  else if (!navT_or_manipF_)  // If Teleoperator is in MANIPULATION mode
+  {
     // Jogging
     if (in_jog_mode_)
     {
@@ -217,11 +234,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     }
     // Point-to-point motion
     else
-    {        
+    {
       // Send the motion request
-      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> req_action_type_ = action_type;
-      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> target_pose_stamped_ = absolute_pose_cmd_;
-      arm_interface_ptrs_.at( current_movegroup_ee_index_ )-> requestMove();
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->target_pose_stamped_ = absolute_pose_cmd_;
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->requestMove();
 
       return;
     }
@@ -231,22 +248,24 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   else
   {
-    ROS_INFO("[start_teleop/callRobotMotionInterface] Request unavailable for current list of robot interfaces.");
+    ROS_INFO("[start_teleop/callRobotMotionInterface] Request unavailable for "
+             "current list of robot interfaces.");
   }
 
   // Reset the hand marker to be at the EE
   reset_ee_graphic_pose_ = true;
 
   return;
-} // end callRobotMotionInterface
+}  // end callRobotMotionInterface
 
 /** Callback function for relative position commands.
  *  Add the new command to the current RViz marker pose.
- *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and button info
+ *  @param pose_cmd sensor_msgs::Joy a joystick command containing pose and
+ * button info
  */
 void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
 {
-  //Mapping spacenav controls
+  // Mapping spacenav controls
   double x_pos = pose_cmd.axes[0];
   double y_pos = pose_cmd.axes[1];
   double z_pos = pose_cmd.axes[2];
@@ -257,42 +276,43 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
 
   return;
-} // end spaceNavCallback
+}  // end spaceNavCallback
 
 void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
 {
-  //Mapping xbox controls
+  // Mapping xbox controls
   double x_pos = pose_cmd.axes[1];
-  double y_pos = pose_cmd.axes[0]; //Left Stick
-  double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4]; //Back Buttons (Left up, Right down)
+  double y_pos = pose_cmd.axes[0];                           // Left Stick
+  double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4];  // Back Buttons (Left up, Right down)
   double x_ori = -pose_cmd.axes[3];
-  double y_ori = pose_cmd.axes[4]; //Right Stick
-  //z_ori ---> Back Triggers
-  //Back Triggers return analog input btw 1 and -1
-  double r_trig = pose_cmd.axes[5]; double l_trig = pose_cmd.axes[2];
-  r_trig = (r_trig - abs(r_trig))/(-2*r_trig + 0.0000001);
-  l_trig = (l_trig - abs(l_trig))/(-2*l_trig + 0.0000001);
+  double y_ori = pose_cmd.axes[4];  // Right Stick
+  // z_ori ---> Back Triggers
+  // Back Triggers return analog input btw 1 and -1
+  double r_trig = pose_cmd.axes[5];
+  double l_trig = pose_cmd.axes[2];
+  r_trig = (r_trig - abs(r_trig)) / (-2 * r_trig + 0.0000001);
+  l_trig = (l_trig - abs(l_trig)) / (-2 * l_trig + 0.0000001);
   double z_ori = r_trig - l_trig;
-  //Buttons
+  // Buttons
   int a_button = pose_cmd.buttons[0];
   int b_button = pose_cmd.buttons[1];
 
   processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
 
   return;
-} // end xboxCallback
+}  // end xboxCallback
 
 void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
 {
-  //Define and Set contol hand as left hand
-  //Check if left hand is present
-  //Get number of fingers
+  // Define and Set contol hand as left hand
+  // Check if left hand is present
+  // Get number of fingers
   geometry_msgs::Pose hand;
   hand = leap_data.left_hand.palm_pose.pose;
   bool hand_present = leap_data.left_hand.is_present;
   int fingers = leap_data.extended_fingers;
 
-  //Get current position and orientation of the end effector
+  // Get current position and orientation of the end effector
   geometry_msgs::Pose EE_pose;
   EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
   EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
@@ -304,26 +324,26 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
      z -> -x */
 
   geometry_msgs::Pose scaled_pose;
-  scaled_pose.position.x = pos_scale_*-750*hand.position.z + EE_pose.position.x;
-  scaled_pose.position.y = pos_scale_*-1000*hand.position.x + EE_pose.position.y;
-  scaled_pose.position.z = pos_scale_*750*(hand.position.y - 0.15) + EE_pose.position.z;
+  scaled_pose.position.x = pos_scale_ * -750 * hand.position.z + EE_pose.position.x;
+  scaled_pose.position.y = pos_scale_ * -1000 * hand.position.x + EE_pose.position.y;
+  scaled_pose.position.z = pos_scale_ * 750 * (hand.position.y - 0.15) + EE_pose.position.z;
 
-   /* Scale the orientation
-    leap_data  -------> rviz
-     x -> -y
-     y -> z
-     z -> -x 
+  /* Scale the orientation
+   leap_data  -------> rviz
+    x -> -y
+    y -> z
+    z -> -x
 
-    Because rotation of had is limited I included option z axis 360 rotation
+   Because rotation of had is limited I included option z axis 360 rotation
 
-    1 finger --> z spin cw
-    2 finger --> z spin ccw
-     */
+   1 finger --> z spin cw
+   2 finger --> z spin ccw
+    */
 
-  scaled_pose.orientation.x = -1.5*hand.orientation.z + EE_pose.orientation.x;
-  scaled_pose.orientation.y = -1.5*hand.orientation.x + EE_pose.orientation.y;
-  scaled_pose.orientation.w = 1.5*hand.orientation.w + EE_pose.orientation.w;
-  
+  scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
+  scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
+  scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
+
   if (fingers == 2)
   {
     scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
@@ -334,11 +354,12 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
   }
   else
   {
-    scaled_pose.orientation.z = 1.5*hand.orientation.y + EE_pose.orientation.z;
+    scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
   }
-  tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z, scaled_pose.orientation.w);
+  tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
+                       scaled_pose.orientation.w);
 
-  //if hand is present set absolute pose equal to hand position and orientation
+  // if hand is present set absolute pose equal to hand position and orientation
   if (hand_present)
   {
     quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
@@ -347,28 +368,24 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
 
   return;
 
-} // end leapCallback
+}  // end leapCallback
 
-// Do most of the calculations for an incremental-type pose command (like SpaceNav or XBox)
-void Teleoperator::processIncrementalPoseCmd(
-  double &x_pos,
-  double &y_pos,
-  double &z_pos,
-  double &x_ori,
-  double &y_ori,
-  double &z_ori
-)
+// Do most of the calculations for an incremental-type pose command (like
+// SpaceNav or XBox)
+void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, double& z_pos, double& x_ori, double& y_ori,
+                                             double& z_ori)
 {
-  // If rotational components >> translational, ignore translation (and vice versa)
-  double trans_mag = pow( x_pos*x_pos + y_pos*y_pos + z_pos*z_pos, 2 );
-  double rot_mag = pow( x_ori*x_ori + y_ori*y_ori + z_ori*z_ori, 2);
-  if ( trans_mag > 2.*rot_mag )
+  // If rotational components >> translational, ignore translation (and vice
+  // versa)
+  double trans_mag = pow(x_pos * x_pos + y_pos * y_pos + z_pos * z_pos, 2);
+  double rot_mag = pow(x_ori * x_ori + y_ori * y_ori + z_ori * z_ori, 2);
+  if (trans_mag > 2. * rot_mag)
   {
     x_ori = 0.;
     y_ori = 0.;
     z_ori = 0.;
   }
-  else if ( rot_mag > 2.*trans_mag )
+  else if (rot_mag > 2. * trans_mag)
   {
     x_pos = 0.;
     y_pos = 0.;
@@ -376,7 +393,8 @@ void Teleoperator::processIncrementalPoseCmd(
   }
 
   // Should we reset the command integrations?
-  // Can be used to reset the hand marker, or when switching betw. manip & nav modes
+  // Can be used to reset the hand marker, or when switching betw. manip & nav
+  // modes
   if (reset_ee_graphic_pose_)
     resetEEGraphicPose();
 
@@ -387,30 +405,32 @@ void Teleoperator::processIncrementalPoseCmd(
   if (in_jog_mode_)
   {
     jog_twist_cmd_.header.stamp = ros::Time::now();
-    jog_twist_cmd_.twist.linear.x = pos_scale_*x_pos;
-    jog_twist_cmd_.twist.linear.y = pos_scale_*y_pos;
-    jog_twist_cmd_.twist.linear.z = pos_scale_*z_pos;
-    jog_twist_cmd_.twist.angular.x = rot_scale_*x_ori;
-    jog_twist_cmd_.twist.angular.y = rot_scale_*y_ori;
-    jog_twist_cmd_.twist.angular.z = rot_scale_*z_ori;
+    jog_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
+    jog_twist_cmd_.twist.linear.y = pos_scale_ * y_pos;
+    jog_twist_cmd_.twist.linear.z = pos_scale_ * z_pos;
+    jog_twist_cmd_.twist.angular.x = rot_scale_ * x_ori;
+    jog_twist_cmd_.twist.angular.y = rot_scale_ * y_ori;
+    jog_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
   }
 
   ////////////////////////////
   // POINT-TO-POINT NAVIGATION
   ////////////////////////////
-  if ( navT_or_manipF_ && !in_jog_mode_ )
+  if (navT_or_manipF_ && !in_jog_mode_)
   {
     // ORIENTATION
     // new incremental yaw command
     // For nav mode, we want to stay in the plane ==> ignore roll & pitch
-    incremental_orientation_cmd_.vector.z = rot_scale_*z_ori;  // about z axis
+    incremental_orientation_cmd_.vector.z = rot_scale_ * z_ori;  // about z axis
 
     tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+    q_incremental =
+        tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y,
+                                    incremental_orientation_cmd_.vector.z);
 
     // Add the incremental command to the previously commanded orientation
-    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;                                         // Calculate the new orientation
     q_previous_cmd.normalize();
     quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
 
@@ -418,99 +438,114 @@ void Teleoperator::processIncrementalPoseCmd(
     // Ignore Z (out of plane)
 
     // Integrate the incremental cmd. It persists even if the robot moves
-    incremental_position_cmd_.vector.x += pos_scale_*x_pos;  // X is fwd/back in base_link  
-    incremental_position_cmd_.vector.y += pos_scale_*y_pos;  // Y is left/right
+    incremental_position_cmd_.vector.x += pos_scale_ * x_pos;  // X is fwd/back in base_link
+    incremental_position_cmd_.vector.y += pos_scale_ * y_pos;  // Y is left/right
 
     // Incoming position cmds are in the temoto_command_frame
     // So convert them to base_link for nav
-    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get transformed
+    // We need an intermediate variable here so that incremental_position_cmd_
+    // doesn't get transformed
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if ( performTransform( incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new ) )
+    if (performTransform(incoming_position_cmd.header.frame_id, "base_link", prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
       // Ignore Z
-      // Unlike manipulation mode, the center of the robot base is defined to be the origin (0,0,0). So we don't need to add anything else here.
+      // Unlike manipulation mode, the center of the robot base is defined to be
+      // the origin (0,0,0). So we don't need to add anything else here.
       absolute_pose_cmd_.pose.position.x = incoming_position_cmd.vector.x;
       absolute_pose_cmd_.pose.position.y = incoming_position_cmd.vector.y;
       absolute_pose_cmd_.pose.position.z = 0;
     }
   }
 
-
   //////////////////////////////
   // POINT-TO-POINT MANIPULATION
   //////////////////////////////
-  if ( !navT_or_manipF_ && !in_jog_mode_ )
+  if (!navT_or_manipF_ && !in_jog_mode_)
   {
     // Integrate for point-to-point motion
-    // Member variables (Vector3Stamped) that hold incoming cmds have already been stamped in the temoto_command_frame
+    // Member variables (Vector3Stamped) that hold incoming cmds have already
+    // been stamped in the temoto_command_frame
 
     // ORIENTATION
     // new incremental rpy command
-    incremental_orientation_cmd_.vector.x = rot_scale_*x_ori;  // about x axis
-    incremental_orientation_cmd_.vector.y = rot_scale_*y_ori;  // about y axis
-    incremental_orientation_cmd_.vector.z = rot_scale_*z_ori;  // about z axis
+    incremental_orientation_cmd_.vector.x = rot_scale_ * x_ori;  // about x axis
+    incremental_orientation_cmd_.vector.y = rot_scale_ * y_ori;  // about y axis
+    incremental_orientation_cmd_.vector.z = rot_scale_ * z_ori;  // about z axis
 
     tf::Quaternion q_previous_cmd, q_incremental;
-    q_incremental = tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y, incremental_orientation_cmd_.vector.z);
+    q_incremental =
+        tf::createQuaternionFromRPY(incremental_orientation_cmd_.vector.x, incremental_orientation_cmd_.vector.y,
+                                    incremental_orientation_cmd_.vector.z);
 
     // Add the incremental command to the previously commanded orientation
-    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation , q_previous_cmd);  // Get the current orientation
-    q_previous_cmd *= q_incremental;  // Calculate the new orientation
+    quaternionMsgToTF(absolute_pose_cmd_.pose.orientation, q_previous_cmd);  // Get the current orientation
+    q_previous_cmd *= q_incremental;                                         // Calculate the new orientation
     q_previous_cmd.normalize();
     quaternionTFToMsg(q_previous_cmd, absolute_pose_cmd_.pose.orientation);  // Stuff it back into the pose cmd
 
     // POSITION
     // Again, in "temoto_command_frame" frame
-    incremental_position_cmd_.vector.x = pos_scale_*x_pos;  // X is fwd/back in temoto_command_frame
-    incremental_position_cmd_.vector.y = pos_scale_*y_pos;   // Y is left/right
-    incremental_position_cmd_.vector.z = pos_scale_*z_pos;  // Z is up/down
+    incremental_position_cmd_.vector.x = pos_scale_ * x_pos;  // X is fwd/back in temoto_command_frame
+    incremental_position_cmd_.vector.y = pos_scale_ * y_pos;  // Y is left/right
+    incremental_position_cmd_.vector.z = pos_scale_ * z_pos;  // Z is up/down
 
     // Incoming position cmds are in the temoto_command_frame
     // So convert them the frame of absolute_pose_cmd_
-    // We need an intermediate variable here so that incremental_position_cmd_ doesn't get overwritten.
+    // We need an intermediate variable here so that incremental_position_cmd_
+    // doesn't get overwritten.
     geometry_msgs::Vector3Stamped incoming_position_cmd = incremental_position_cmd_;
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if (performTransform( incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new ))
+    if (performTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
       absolute_pose_cmd_.pose.position.x += incoming_position_cmd.vector.x;
       absolute_pose_cmd_.pose.position.y += incoming_position_cmd.vector.y;
       absolute_pose_cmd_.pose.position.z += incoming_position_cmd.vector.z;
-    } 
+    }
   }
 }
 
 /** Callback function for Griffin Powermate events subscriber.
- *  It either reacts to push button being pressed or it updates the scaling factor.
+ *  It either reacts to push button being pressed or it updates the scaling
+ * factor.
  *  @param powermate temoto::Dial message published by griffin_powermate node.
  */
 void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 {
-  if (powermate.push_state_changed)		// if push event (i.e. press or depress) has occured_occured
+  if (powermate.push_state_changed)  // if push event (i.e. press or depress) has
+                                     // occured_occured
   {
-    if (powermate.is_pressed)			// if the push button has been pressed
+    if (powermate.is_pressed)  // if the push button has been pressed
     {
-      callRobotMotionInterface(low_level_cmds::EXECUTE);		// makes the service request to move the robot, according to prior plan
+      callRobotMotionInterface(low_level_cmds::EXECUTE);  // makes the service
+                                                          // request to move the
+                                                          // robot, according to
+                                                          // prior plan
     }
     return;
   }
-  else						// if push event did not occur, it had to be turning
+  else  // if push event did not occur, it had to be turning
   {
-    // Calculate step size depending on the current pos_scale_ value. Negating direction means that clock-wise is zoom-in/scale-down and ccw is zoom-out/scale-up
-    // The smaller the pos_scale_, the smaller the step. log10 gives the order of magnitude
-    double step = (-powermate.direction)*pow( 10,  floor( log10( pos_scale_ ) ) - 1. );
-    if (step < -0.09) step = -0.01;		// special case for when scale is 1; to ensure that step is never larger than 0.01
-    pos_scale_ = pos_scale_ + step;		// increase/decrease scale
+    // Calculate step size depending on the current pos_scale_ value. Negating
+    // direction means that clock-wise is zoom-in/scale-down and ccw is
+    // zoom-out/scale-up
+    // The smaller the pos_scale_, the smaller the step. log10 gives the order
+    // of magnitude
+    double step = (-powermate.direction) * pow(10, floor(log10(pos_scale_)) - 1.);
+    if (step < -0.09)
+      step = -0.01;                  // special case for when scale is 1; to ensure that step is
+                                     // never larger than 0.01
+    pos_scale_ = pos_scale_ + step;  // increase/decrease scale
 
-    step = (-powermate.direction)*pow( 10,  floor( log10( rot_scale_ ) ) - 1. );
+    step = (-powermate.direction) * pow(10, floor(log10(rot_scale_)) - 1.);
     rot_scale_ = rot_scale_ + step;
 
     // cap the scales
@@ -520,8 +555,8 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
       rot_scale_ = rot_scale_max_;
 
     return;
-  } // else
-} // end processPowermate()
+  }  // else
+}  // end processPowermate()
 
 /** Callback function for /nav_collision_warning/spd_fraction
  *  Scales teleoperated velocity cmds when an obstacle is close.
@@ -532,19 +567,19 @@ void Teleoperator::nav_collision_cb(const std_msgs::Float64::ConstPtr& msg)
   nav_speed_fraction_ = msg->data;
 }
 
-
 /** Callback function for /temoto/preplanned_sequence/result
- *  Sets the "executing_preplanned_sequence_" flag. If true, other Temoto commands are blocked.
+ *  Sets the "executing_preplanned_sequence_" flag. If true, other Temoto
+ * commands are blocked.
  * @param sequence_result true indicates a preplanned sequence has completed
 */
 void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result)
 {
-  // Successfully completed the preplanned sequence ==> false for blocking other temoto commands
+  // Successfully completed the preplanned sequence ==> false for blocking other
+  // temoto commands
   executing_preplanned_sequence_ = !sequence_result.result.success;
-  if ( !executing_preplanned_sequence_ )
+  if (!executing_preplanned_sequence_)
     ROS_INFO_STREAM("The preplanned sequence is complete.");
 }
-
 
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
@@ -589,25 +624,24 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     pub_abort_.publish(s);
   }
 
-
   ////////////////////////////////////
   //  Handle all commands except ABORT
   ////////////////////////////////////
 
   // Normal temoto motions are OK if a preplanned sequence isn't running
-  if (executing_preplanned_sequence_==true)
+  if (executing_preplanned_sequence_ == true)
   {
     ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
     return;
   }
 
-
-  if ( voice_command.data == "manipulation" )  // Switch over to manipulation (MoveIt!) mode
+  if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
   {
     // If not already in manipulation mode
-    if ( navT_or_manipF_==true )
+    if (navT_or_manipF_ == true)
     {
-      // Make sure we aren't in jog mode. Don't want to start jogging an arm suddenly
+      // Make sure we aren't in jog mode. Don't want to start jogging an arm
+      // suddenly
       ROS_INFO("Switching out of jog mode");
       in_jog_mode_ = false;
       setScale();
@@ -622,10 +656,10 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       ROS_INFO("Already in manipulation mode.");
     return;
   }
-  else if ( voice_command.data == "navigation" )  // Switch over to navigation mode
+  else if (voice_command.data == "navigation")  // Switch over to navigation mode
   {
     // If not already in nav mode
-    if ( navT_or_manipF_==false )
+    if (navT_or_manipF_ == false)
     {
       // Make sure we aren't in jog mode, for safety
       ROS_INFO("Switching out of jog mode");
@@ -644,14 +678,13 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
     return;
   }
 
-
-  if(voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
+  if (voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
   {
     ROS_INFO("Closing the gripper ...");
     Teleoperator::triggerSequence(voice_command.data);
     return;
   }
-  else if(voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
+  else if (voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
   {
     ROS_INFO("Opening the gripper ...");
     Teleoperator::triggerSequence(voice_command.data);
@@ -669,7 +702,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
   }
 
   // Avoid planning, executing, etc. while in jog mode
-  if ( in_jog_mode_ )
+  if (in_jog_mode_)
     return;
 
   // There's nothing blocking any arbitrary command
@@ -681,7 +714,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       in_jog_mode_ = true;
       reset_ee_graphic_pose_ = true;
       setScale();
-      
+
       return;
     }
     else if (voice_command.data == "robot please plan")
@@ -704,7 +737,7 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       callRobotMotionInterface(low_level_cmds::GO);
       return;
     }
-  
+
     else
     {
       ROS_INFO("Unknown voice command.");
@@ -720,7 +753,8 @@ void Teleoperator::triggerSequence(std::string& voice_command)
   goal.sequence_name = voice_command;
   preplanned_sequence_client_.sendGoal(goal);
 
-  // Flag that a preplanned sequence is running, so pause most other commands (except Abort)
+  // Flag that a preplanned sequence is running, so pause most other commands
+  // (except Abort)
   executing_preplanned_sequence_ = true;
 }
 
@@ -733,7 +767,8 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
-  graphics_and_frames_.latest_status_.end_effector_pose = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+  graphics_and_frames_.latest_status_.end_effector_pose =
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
   graphics_and_frames_.latest_status_.current_movegroup_ee_index = current_movegroup_ee_index_;
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
@@ -741,11 +776,11 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.crunch();
 
   return;
-} // end setGraphicsFramesStatus()
+}  // end setGraphicsFramesStatus()
 
 void Teleoperator::setScale()
 {
-  if (navT_or_manipF_) // navigation
+  if (navT_or_manipF_)  // navigation
   {
     if (in_jog_mode_)  // nav, jog mode
     {
@@ -758,7 +793,7 @@ void Teleoperator::setScale()
       rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/pt_to_pt/nav_rot_scale", n_);
     }
   }
-  else // manipulation
+  else  // manipulation
   {
     if (in_jog_mode_)  // manipulate, jog mode
     {
@@ -773,24 +808,25 @@ void Teleoperator::setScale()
   }
 
   // Set the max scaling factors as multiples of the defaults
-  pos_scale_max_ = 5*pos_scale_;
-  rot_scale_max_ = 5*rot_scale_;
+  pos_scale_max_ = 5 * pos_scale_;
+  rot_scale_max_ = 5 * rot_scale_;
 }
 
 // Switch to the next available EE
 void Teleoperator::switchEE()
 {
-  if (current_movegroup_ee_index_ < ee_names_.size()-1 )
+  if (current_movegroup_ee_index_ < ee_names_.size() - 1)
     current_movegroup_ee_index_++;
   else
     current_movegroup_ee_index_ = 0;
 
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
-  graphics_and_frames_.latest_status_.moveit_planning_frame = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getPlanningFrame();
+  graphics_and_frames_.latest_status_.moveit_planning_frame =
+      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
 
   // Set camera at new EE
   bool adjust_camera = true;
-  setGraphicsFramesStatus( adjust_camera );
+  setGraphicsFramesStatus(adjust_camera);
 
   // Reset the hand marker to be at the EE
   reset_ee_graphic_pose_ = true;
@@ -800,27 +836,28 @@ void Teleoperator::switchEE()
 }
 
 // Calculate a transform between 2 frames
-bool Teleoperator::performTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped &transform)
+bool Teleoperator::performTransform(std::string source_frame, std::string target_frame,
+                                    geometry_msgs::TransformStamped& transform)
 {
   bool success = false;
 
   // If the strings were valid
-  if ( source_frame.length()>0 && target_frame.length()>0 )
+  if (source_frame.length() > 0 && target_frame.length() > 0)
   {
     // Check for and remove leading '/'
-    if ( source_frame.at(0)=='/' )
-      source_frame.erase(0,1);
-    if ( target_frame.at(0)=='/' )
-      target_frame.erase(0,1);
+    if (source_frame.at(0) == '/')
+      source_frame.erase(0, 1);
+    if (target_frame.at(0) == '/')
+      target_frame.erase(0, 1);
 
     try
     {
-      transform = tf_buffer_.lookupTransform( target_frame, source_frame, ros::Time(0), ros::Duration(0.1));
+      transform = tf_buffer_.lookupTransform(target_frame, source_frame, ros::Time(0), ros::Duration(0.1));
       success = true;
     }
-    catch (tf2::TransformException &ex)
+    catch (tf2::TransformException& ex)
     {
-      ROS_WARN("%s",ex.what());
+      ROS_WARN("%s", ex.what());
       ros::Duration(1.0).sleep();
     }
   }
@@ -831,7 +868,7 @@ bool Teleoperator::performTransform(std::string source_frame, std::string target
 // Reset the end-effector graphic to current robot pose
 void Teleoperator::resetEEGraphicPose()
 {
-  if ( navT_or_manipF_ )  // Navigation --> Center on base_link
+  if (navT_or_manipF_)  // Navigation --> Center on base_link
   {
     absolute_pose_cmd_.pose.position.x = 0.;
     absolute_pose_cmd_.pose.position.y = 0.;
@@ -851,15 +888,14 @@ void Teleoperator::resetEEGraphicPose()
     incremental_orientation_cmd_.vector.z = 0.;
   }
   else  // Manipulation --> Center on EE
-    absolute_pose_cmd_ = arm_interface_ptrs_.at( current_movegroup_ee_index_ )->movegroup_.getCurrentPose();
+    absolute_pose_cmd_ = arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Reset the flag
   reset_ee_graphic_pose_ = false;
 }
 
-
 // MAIN
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
   ros::init(argc, argv, "start_teleop");
 
@@ -873,12 +909,11 @@ int main(int argc, char **argv)
 
   Teleoperator temoto_teleop;
 
-  while ( ros::ok() )
+  while (ros::ok())
   {
     // Jog?
     // Can't jog while doing something else
-    if ( temoto_teleop.in_jog_mode_ && 
-	!temoto_teleop.executing_preplanned_sequence_ )
+    if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
       temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
     // Update poses, scale, and nav-or-manip mode for the frames calculation
@@ -886,8 +921,7 @@ int main(int argc, char **argv)
     temoto_teleop.graphics_and_frames_.crunch();
 
     node_rate.sleep();
-  } // end main loop
+  }  // end main loop
 
-  
   return 0;
-} // end main
+}  // end main
