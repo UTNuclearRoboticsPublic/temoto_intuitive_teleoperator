@@ -67,7 +67,7 @@ Teleoperator::Teleoperator()
               "Aborting.");
 
   // Get the names associated with multiple end effectors. Shove in vectors.
-  for (int i = 0; i < num_ee; i++)
+  for (int i = 0; i < num_ee; ++i)
   {
     ee_names_.push_back(
         get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/end_effector", n_));
@@ -90,7 +90,7 @@ Teleoperator::Teleoperator()
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
 
   // Subscribers
-  sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::nav_collision_cb, this);
+  sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::navCollisionCallback, this);
   sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1, &Teleoperator::spaceNavCallback, this);
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
   sub_leap_pose_cmd_ = n_.subscribe(temoto_leap_pose_cmd_topic_, 1, &Teleoperator::leapCallback, this);
@@ -99,6 +99,7 @@ Teleoperator::Teleoperator()
       n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1,
                                                                         &Teleoperator::processPowermate, this);
+  sub_temoto_sleep_ = n_.subscribe<std_msgs::Bool>("temoto/temoto_sleep", 1, &Teleoperator::sleepCallback, this);
 
   // Set initial scale on incoming commands
   setScale();
@@ -248,105 +249,116 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
  */
 void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
 {
-  // Mapping spacenav controls
-  double x_pos = pose_cmd.axes[0];
-  double y_pos = pose_cmd.axes[1];
-  double z_pos = pose_cmd.axes[2];
-  double x_ori = pose_cmd.axes[3];
-  double y_ori = pose_cmd.axes[4];
-  double z_ori = pose_cmd.axes[5];
+  // If user put Temoto in sleep mode, do nothing.
+  if (!temoto_sleep_)
+  {
+    // Mapping spacenav controls
+    double x_pos = pose_cmd.axes[0];
+    double y_pos = pose_cmd.axes[1];
+    double z_pos = pose_cmd.axes[2];
+    double x_ori = pose_cmd.axes[3];
+    double y_ori = pose_cmd.axes[4];
+    double z_ori = pose_cmd.axes[5];
 
-  processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
+    processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
+  }
 
   return;
 }  // end spaceNavCallback
 
 void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
 {
-  // Mapping xbox controls
-  double x_pos = pose_cmd.axes[1];
-  double y_pos = pose_cmd.axes[0];                           // Left Stick
-  double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4];  // Back Buttons (Left up, Right down)
-  double x_ori = -pose_cmd.axes[3];
-  double y_ori = pose_cmd.axes[4];  // Right Stick
-  // z_ori ---> Back Triggers
-  // Back Triggers return analog input btw 1 and -1
-  double r_trig = pose_cmd.axes[5];
-  double l_trig = pose_cmd.axes[2];
-  r_trig = (r_trig - abs(r_trig)) / (-2 * r_trig + 0.0000001);
-  l_trig = (l_trig - abs(l_trig)) / (-2 * l_trig + 0.0000001);
-  double z_ori = r_trig - l_trig;
-  // Buttons
-  int a_button = pose_cmd.buttons[0];
-  int b_button = pose_cmd.buttons[1];
+  // If user put Temoto in sleep mode, do nothing.
+  if (!temoto_sleep_)
+  {
+    // Mapping xbox controls
+    double x_pos = pose_cmd.axes[1];
+    double y_pos = pose_cmd.axes[0];                           // Left Stick
+    double z_pos = pose_cmd.buttons[5] - pose_cmd.buttons[4];  // Back Buttons (Left up, Right down)
+    double x_ori = -pose_cmd.axes[3];
+    double y_ori = pose_cmd.axes[4];  // Right Stick
+    // z_ori ---> Back Triggers
+    // Back Triggers return analog input btw 1 and -1
+    double r_trig = pose_cmd.axes[5];
+    double l_trig = pose_cmd.axes[2];
+    r_trig = (r_trig - abs(r_trig)) / (-2 * r_trig + 0.0000001);
+    l_trig = (l_trig - abs(l_trig)) / (-2 * l_trig + 0.0000001);
+    double z_ori = r_trig - l_trig;
+    // Buttons
+    int a_button = pose_cmd.buttons[0];
+    int b_button = pose_cmd.buttons[1];
 
-  processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
+    processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
+  }
 
   return;
 }  // end xboxCallback
 
 void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
 {
-  // Define and Set contol hand as left hand
-  // Check if left hand is present
-  // Get number of fingers
-  geometry_msgs::Pose hand;
-  hand = leap_data.left_hand.palm_pose.pose;
-  bool hand_present = leap_data.left_hand.is_present;
-  int fingers = leap_data.extended_fingers;
-
-  // Get current position and orientation of the end effector
-  geometry_msgs::Pose EE_pose;
-  EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
-  EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
-
-  /* Scale the xyz coordinates
-    leap_data  -------> rviz
-     x -> -y
-     y -> z
-     z -> -x */
-
-  geometry_msgs::Pose scaled_pose;
-  scaled_pose.position.x = pos_scale_ * -750 * hand.position.z + EE_pose.position.x;
-  scaled_pose.position.y = pos_scale_ * -1000 * hand.position.x + EE_pose.position.y;
-  scaled_pose.position.z = pos_scale_ * 750 * (hand.position.y - 0.15) + EE_pose.position.z;
-
-  /* Scale the orientation
-   leap_data  -------> rviz
-    x -> -y
-    y -> z
-    z -> -x
-
-   Because rotation of hand is limited I included an option  for z axis rotation
-
-   1 finger --> z spin cw
-   2 finger --> z spin ccw
-    */
-
-  scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
-  scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
-  scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
-
-  if (fingers == 2)
+  // If user put Temoto in sleep mode, do nothing.
+  if (!temoto_sleep_)
   {
-    scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
-  }
-  else if (fingers == 1)
-  {
-    scaled_pose.orientation.z = -1 + absolute_pose_cmd_.pose.orientation.z;
-  }
-  else
-  {
-    scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
-  }
-  tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
-                       scaled_pose.orientation.w);
+    // Define and set contol hand as left hand
+    // Check if left hand is present
+    // Get number of fingers
+    geometry_msgs::Pose hand;
+    hand = leap_data.left_hand.palm_pose.pose;
+    bool hand_present = leap_data.left_hand.is_present;
+    int fingers = leap_data.extended_fingers;
 
-  // if hand is present set absolute pose equal to hand position and orientation
-  if (hand_present)
-  {
-    quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
-    absolute_pose_cmd_.pose.position = scaled_pose.position;
+    // Get current position and orientation of the end effector
+    geometry_msgs::Pose EE_pose;
+    EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
+    EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
+
+    // Scale the xyz coordinates
+    // leap_data  -------> rviz
+    // x -> -y
+    // y -> z
+    // z -> -x */
+
+    geometry_msgs::Pose scaled_pose;
+    scaled_pose.position.x = pos_scale_ * -750 * hand.position.z + EE_pose.position.x;
+    scaled_pose.position.y = pos_scale_ * -1000 * hand.position.x + EE_pose.position.y;
+    scaled_pose.position.z = pos_scale_ * 750 * (hand.position.y - 0.15) + EE_pose.position.z;
+
+    // Scale the orientation
+    // leap_data  -------> rviz
+    //  x -> -y
+    //  y -> z
+    //  z -> -x
+
+    // Because rotation of hand is limited I included an option  for z axis rotation
+
+    // 1 finger --> z spin cw
+    // 2 finger --> z spin ccw
+
+    scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
+    scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
+    scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
+
+    if (fingers == 2)
+    {
+      scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
+    }
+    else if (fingers == 1)
+    {
+      scaled_pose.orientation.z = -1 + absolute_pose_cmd_.pose.orientation.z;
+    }
+    else
+    {
+      scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
+    }
+    tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
+                         scaled_pose.orientation.w);
+
+    // if hand is present set absolute pose equal to hand position and orientation
+    if (hand_present)
+    {
+      quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
+      absolute_pose_cmd_.pose.position = scaled_pose.position;
+    }
   }
 
   return;
@@ -541,9 +553,18 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
  *  Scales teleoperated velocity cmds when an obstacle is close.
  *  @param msg from the nav_collision_warning node
  */
-void Teleoperator::nav_collision_cb(const std_msgs::Float64::ConstPtr& msg)
+void Teleoperator::navCollisionCallback(const std_msgs::Float64::ConstPtr& msg)
 {
   nav_speed_fraction_ = msg->data;
+}
+
+/** Callback function for /temoto/sleep
+ *  If user publishes true, temoto will spin without sending commands
+ *  @param msg from the nav_collision_warning node
+ */
+void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+  temoto_sleep_ = msg->data;
 }
 
 /** Callback function for /temoto/preplanned_sequence/result
@@ -566,173 +587,177 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
  */
 void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
 {
-  //////////////////////////////////////////////////
-  //  Stop jogging (jogging preempts other commands)
-  //////////////////////////////////////////////////
-
-  if (voice_command.data == "point to point mode")
+  // If user put Temoto in sleep mode, do nothing.
+  if (!temoto_sleep_)
   {
-    ROS_INFO("Switching to point-to-point mode");
-    in_jog_mode_ = false;
-    resetEEGraphicPose();
-    setScale();
+    //////////////////////////////////////////////////
+    //  Stop jogging (jogging preempts other commands)
+    //////////////////////////////////////////////////
 
-    return;
-  }
-
-  /////////////////////////
-  //  Handle ABORT commands
-  /////////////////////////
-  if (voice_command.data == "stop stop")
-  {
-    ROS_INFO("Stopping ...");
-    // Stop motions within temoto
-    callRobotMotionInterface(low_level_cmds::ABORT);
-
-    // Publish to tell non-Temoto actions to abort
-    std_msgs::String s;
-    s.data = low_level_cmds::ABORT;
-    pub_abort_.publish(s);
-
-    return;
-  }
-  else  // No need to abort
-  {
-    std_msgs::String s;
-    s.data = low_level_cmds::NO_ABORT;
-    pub_abort_.publish(s);
-  }
-
-  ////////////////////////////////////
-  //  Handle all commands except ABORT
-  ////////////////////////////////////
-
-  // Normal temoto motions are OK if a preplanned sequence isn't running
-  if (executing_preplanned_sequence_ == true)
-  {
-    ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
-    return;
-  }
-
-  if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
-  {
-    if (!enable_manipulation_)
+    if (voice_command.data == "point to point mode")
     {
-      ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
-      return;
-    }
-
-    // If not already in manipulation mode
-    if (navT_or_manipF_ == true)
-    {
-      // Make sure we aren't in jog mode. Don't want to start jogging an arm
-      // suddenly
-      ROS_INFO("Switching out of jog mode");
+      ROS_INFO("Switching to point-to-point mode");
       in_jog_mode_ = false;
-      setScale();
-
-      ROS_INFO("Going into MANIPULATION mode  ...");
-      navT_or_manipF_ = false;
       resetEEGraphicPose();
       setScale();
-    }
-    else
-      ROS_INFO("Already in manipulation mode.");
-    return;
-  }
-  else if (voice_command.data == "navigation")  // Switch over to navigation mode
-  {
-    if (!enable_navigation_)
-    {
-      ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+
       return;
     }
 
-    // If not already in nav mode
-    if (navT_or_manipF_ == false)
+    /////////////////////////
+    //  Handle ABORT commands
+    /////////////////////////
+    if (voice_command.data == "stop stop")
     {
-      // Make sure we aren't in jog mode, for safety
-      ROS_INFO("Switching out of jog mode");
+      ROS_INFO("Stopping ...");
+      // Stop motions within temoto
+      callRobotMotionInterface(low_level_cmds::ABORT);
+
+      // Publish to tell non-Temoto actions to abort
+      std_msgs::String s;
+      s.data = low_level_cmds::ABORT;
+      pub_abort_.publish(s);
+
+      return;
+    }
+    else  // No need to abort
+    {
+      std_msgs::String s;
+      s.data = low_level_cmds::NO_ABORT;
+      pub_abort_.publish(s);
+    }
+
+    ////////////////////////////////////
+    //  Handle all commands except ABORT
+    ////////////////////////////////////
+
+    // Normal temoto motions are OK if a preplanned sequence isn't running
+    if (executing_preplanned_sequence_ == true)
+    {
+      ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
+      return;
+    }
+
+    if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
+    {
+      if (!enable_manipulation_)
+      {
+        ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
+        return;
+      }
+
+      // If not already in manipulation mode
+      if (navT_or_manipF_ == true)
+      {
+        // Make sure we aren't in jog mode. Don't want to start jogging an arm
+        // suddenly
+        ROS_INFO("Switching out of jog mode");
+        in_jog_mode_ = false;
+        setScale();
+
+        ROS_INFO("Going into MANIPULATION mode  ...");
+        navT_or_manipF_ = false;
+        resetEEGraphicPose();
+        setScale();
+      }
+      else
+        ROS_INFO("Already in manipulation mode.");
+      return;
+    }
+    else if (voice_command.data == "navigation")  // Switch over to navigation mode
+    {
+      if (!enable_navigation_)
+      {
+        ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+        return;
+      }
+
+      // If not already in nav mode
+      if (navT_or_manipF_ == false)
+      {
+        // Make sure we aren't in jog mode, for safety
+        ROS_INFO("Switching out of jog mode");
+        resetEEGraphicPose();
+        in_jog_mode_ = false;
+        ROS_INFO("Going into NAVIGATION mode  ...");
+        navT_or_manipF_ = true;
+
+        bool adjust_camera = true;
+        setGraphicsFramesStatus(adjust_camera);
+        resetEEGraphicPose();
+        setScale();
+      }
+      else
+        ROS_INFO("Already in navigation mode.");
+      return;
+    }
+
+    if (voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
+    {
+      ROS_INFO("Closing the gripper ...");
+      Teleoperator::triggerSequence(voice_command.data);
+      return;
+    }
+    else if (voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
+    {
+      ROS_INFO("Opening the gripper ...");
+      Teleoperator::triggerSequence(voice_command.data);
+      return;
+    }
+    else if (voice_command.data == "next end effector")
+    {
+      ROS_INFO("Controlling the next EE from yaml file ...");
+
       resetEEGraphicPose();
+      // No joggign, initially, for safety
       in_jog_mode_ = false;
-      ROS_INFO("Going into NAVIGATION mode  ...");
-      navT_or_manipF_ = true;
-
-      bool adjust_camera = true;
-      setGraphicsFramesStatus(adjust_camera);
-      resetEEGraphicPose();
-      setScale();
-    }
-    else
-      ROS_INFO("Already in navigation mode.");
-    return;
-  }
-
-  if (voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
-  {
-    ROS_INFO("Closing the gripper ...");
-    Teleoperator::triggerSequence(voice_command.data);
-    return;
-  }
-  else if (voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
-  {
-    ROS_INFO("Opening the gripper ...");
-    Teleoperator::triggerSequence(voice_command.data);
-    return;
-  }
-  else if (voice_command.data == "next end effector")
-  {
-    ROS_INFO("Controlling the next EE from yaml file ...");
-
-    resetEEGraphicPose();
-    // No joggign, initially, for safety
-    in_jog_mode_ = false;
-    switchEE();
-    return;
-  }
-
-  // Avoid planning, executing, etc. while in jog mode
-  if (in_jog_mode_)
-    return;
-
-  // There's nothing blocking any arbitrary command
-  else
-  {
-    if (voice_command.data == "jog mode")
-    {
-      ROS_INFO("Switching to jog mode");
-      in_jog_mode_ = true;
-      resetEEGraphicPose();
-      setScale();
-
-      return;
-    }
-    else if (voice_command.data == "robot please plan")
-    {
-      ROS_INFO("Planning ...");
-      callRobotMotionInterface(low_level_cmds::PLAN);
-      return;
-    }
-    else if (voice_command.data == "robot please execute")
-    {
-      ROS_INFO("Executing last plan ...");
-      callRobotMotionInterface(low_level_cmds::EXECUTE);
-      resetEEGraphicPose();
-      return;
-    }
-    else if (voice_command.data == "base move")
-    {
-      ROS_INFO("Planning and moving ...");
-      resetEEGraphicPose();
-      callRobotMotionInterface(low_level_cmds::GO);
+      switchEE();
       return;
     }
 
+    // Avoid planning, executing, etc. while in jog mode
+    if (in_jog_mode_)
+      return;
+
+    // There's nothing blocking any arbitrary command
     else
     {
-      ROS_INFO("Unknown voice command.");
-    }
-  }  // End of handling non-Abort commands
+      if (voice_command.data == "jog mode")
+      {
+        ROS_INFO("Switching to jog mode");
+        in_jog_mode_ = true;
+        resetEEGraphicPose();
+        setScale();
+
+        return;
+      }
+      else if (voice_command.data == "robot please plan")
+      {
+        ROS_INFO("Planning ...");
+        callRobotMotionInterface(low_level_cmds::PLAN);
+        return;
+      }
+      else if (voice_command.data == "robot please execute")
+      {
+        ROS_INFO("Executing last plan ...");
+        callRobotMotionInterface(low_level_cmds::EXECUTE);
+        resetEEGraphicPose();
+        return;
+      }
+      else if (voice_command.data == "base move")
+      {
+        ROS_INFO("Planning and moving ...");
+        resetEEGraphicPose();
+        callRobotMotionInterface(low_level_cmds::GO);
+        return;
+      }
+
+      else
+      {
+        ROS_INFO("Unknown voice command.");
+      }
+    }  // End of handling non-Abort commands
+  }  // End of !temoto_sleep_
 
   return;
 }
@@ -808,7 +833,7 @@ void Teleoperator::setScale()
 void Teleoperator::switchEE()
 {
   if (current_movegroup_ee_index_ < ee_names_.size() - 1)
-    current_movegroup_ee_index_++;
+    ++current_movegroup_ee_index_;
   else
     current_movegroup_ee_index_ = 0;
 
@@ -897,16 +922,19 @@ int main(int argc, char** argv)
 
   Teleoperator temoto_teleop;
 
-  while (ros::ok())
+  while (ros::ok() )
   {
-    // Jog?
-    // Can't jog while doing something else
-    if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
-      temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
+    // Don't do anything if the user put Temoto in sleep mode
+    if ( !temoto_teleop.temoto_sleep_ )
+    {
+      // Jog? Can't jog while doing something else.
+      if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
+        temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
 
-    // Update poses, scale, and nav-or-manip mode for the frames calculation
-    temoto_teleop.setGraphicsFramesStatus(false);
-    temoto_teleop.graphics_and_frames_.crunch();
+      // Update poses, scale, and nav-or-manip mode for the frames calculation
+      temoto_teleop.setGraphicsFramesStatus(false);
+      temoto_teleop.graphics_and_frames_.crunch();
+    }
 
     node_rate.sleep();
   }  // end main loop

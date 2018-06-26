@@ -88,6 +88,8 @@ public:
 
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
+  bool temoto_sleep_ = false;  // If set to true, temoto will spin without sending commands.
+
 private:
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
                                                                        // general case, e.g.
@@ -99,7 +101,9 @@ private:
 
   void triggerSequence(std::string& voice_command);
 
-  void nav_collision_cb(const std_msgs::Float64::ConstPtr& msg);
+  void navCollisionCallback(const std_msgs::Float64::ConstPtr& msg);
+
+  void sleepCallback(const std_msgs::Bool::ConstPtr& msg);
 
   bool performTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped& transform);
 
@@ -170,7 +174,7 @@ private:
 
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_leap_pose_cmd_, sub_voice_commands_,
-      sub_executing_preplanned_, sub_scaling_factor_;
+      sub_executing_preplanned_, sub_scaling_factor_, sub_temoto_sleep_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;

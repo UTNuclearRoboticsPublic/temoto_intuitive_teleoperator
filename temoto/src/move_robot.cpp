@@ -91,7 +91,7 @@ void MoveRobotInterface::requestMove()
     std::vector<double> joints = movegroup_.getCurrentJointValues();
 
     // Add the deltas (another std::vector<double>)
-    for (int i = 0; i < joint_deltas_.size(); i++)
+    for (int i = 0; i < joint_deltas_.size(); ++i)
       joints.at(i) += joint_deltas_.at(i);
 
     // Move to the new target joints
