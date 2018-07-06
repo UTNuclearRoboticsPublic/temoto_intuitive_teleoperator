@@ -289,8 +289,8 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
 {
   // If rotational components >> translational, ignore translation (and vice
   // versa)
-  double trans_mag = pow(x_pos * x_pos + y_pos * y_pos + z_pos * z_pos, 2);
-  double rot_mag = pow(x_ori * x_ori + y_ori * y_ori + z_ori * z_ori, 2);
+  double trans_mag = pow(x_pos * x_pos + y_pos * y_pos + z_pos * z_pos, 0.5);
+  double rot_mag = pow(x_ori * x_ori + y_ori * y_ori + z_ori * z_ori, 0.5);
   if (trans_mag > 2. * rot_mag)
   {
     x_ori = 0.;
