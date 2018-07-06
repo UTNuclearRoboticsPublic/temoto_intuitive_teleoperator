@@ -47,7 +47,6 @@ Teleoperator::Teleoperator()
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
-  temoto_leap_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_leap_pose_cmd_topic", n_);
 
   // By default navigation is turned OFF
   enable_navigation_ = get_ros_params::getBoolParam("temoto/enable_navigation", n_);
@@ -93,7 +92,6 @@ Teleoperator::Teleoperator()
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::navCollisionCallback, this);
   sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1, &Teleoperator::spaceNavCallback, this);
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
-  sub_leap_pose_cmd_ = n_.subscribe(temoto_leap_pose_cmd_topic_, 1, &Teleoperator::leapCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
   sub_executing_preplanned_ =
       n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
@@ -125,7 +123,7 @@ Teleoperator::Teleoperator()
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
-  while (!performTransform(absolute_pose_cmd_.header.frame_id, base_frame_, prev_frame_to_new))
+  while (!calculateTransform(absolute_pose_cmd_.header.frame_id, base_frame_, prev_frame_to_new))
     ROS_WARN_STREAM("Waiting for initial transform from command frame to base_frame_");
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
@@ -251,17 +249,7 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
 {
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
-  {
-    // Mapping spacenav controls
-    double x_pos = pose_cmd.axes[0];
-    double y_pos = pose_cmd.axes[1];
-    double z_pos = pose_cmd.axes[2];
-    double x_ori = pose_cmd.axes[3];
-    double y_ori = pose_cmd.axes[4];
-    double z_ori = pose_cmd.axes[5];
-
-    processIncrementalPoseCmd(x_pos, y_pos, z_pos, x_ori, y_ori, z_ori);
-  }
+    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
 
   return;
 }  // end spaceNavCallback
@@ -294,81 +282,10 @@ void Teleoperator::xboxCallback(sensor_msgs::Joy pose_cmd)
   return;
 }  // end xboxCallback
 
-void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
-{
-  // If user put Temoto in sleep mode, do nothing.
-  if (!temoto_sleep_)
-  {
-    // Define and set contol hand as left hand
-    // Check if left hand is present
-    // Get number of fingers
-    geometry_msgs::Pose hand;
-    hand = leap_data.left_hand.palm_pose.pose;
-    bool hand_present = leap_data.left_hand.is_present;
-    int fingers = leap_data.extended_fingers;
-
-    // Get current position and orientation of the end effector
-    geometry_msgs::Pose EE_pose;
-    EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
-    EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
-
-    // Scale the xyz coordinates
-    // leap_data  -------> rviz
-    // x -> -y
-    // y -> z
-    // z -> -x */
-
-    geometry_msgs::Pose scaled_pose;
-    scaled_pose.position.x = pos_scale_ * -750 * hand.position.z + EE_pose.position.x;
-    scaled_pose.position.y = pos_scale_ * -1000 * hand.position.x + EE_pose.position.y;
-    scaled_pose.position.z = pos_scale_ * 750 * (hand.position.y - 0.15) + EE_pose.position.z;
-
-    // Scale the orientation
-    // leap_data  -------> rviz
-    //  x -> -y
-    //  y -> z
-    //  z -> -x
-
-    // Because rotation of hand is limited I included an option  for z axis rotation
-
-    // 1 finger --> z spin cw
-    // 2 finger --> z spin ccw
-
-    scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
-    scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
-    scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
-
-    if (fingers == 2)
-    {
-      scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
-    }
-    else if (fingers == 1)
-    {
-      scaled_pose.orientation.z = -1 + absolute_pose_cmd_.pose.orientation.z;
-    }
-    else
-    {
-      scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
-    }
-    tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
-                         scaled_pose.orientation.w);
-
-    // if hand is present set absolute pose equal to hand position and orientation
-    if (hand_present)
-    {
-      quaternionTFToMsg(q_cmd, absolute_pose_cmd_.pose.orientation);
-      absolute_pose_cmd_.pose.position = scaled_pose.position;
-    }
-  }
-
-  return;
-
-}  // end leapCallback
-
 // Do most of the calculations for an incremental-type pose command (like
 // SpaceNav or XBox)
-void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, double& z_pos, double& x_ori, double& y_ori,
-                                             double& z_ori)
+void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double z_pos, double x_ori, double y_ori,
+                                             double z_ori)
 {
   // If rotational components >> translational, ignore translation (and vice
   // versa)
@@ -438,7 +355,7 @@ void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, doubl
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if (performTransform(incoming_position_cmd.header.frame_id, base_frame_, prev_frame_to_new))
+    if (calculateTransform(incoming_position_cmd.header.frame_id, base_frame_, prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
@@ -493,7 +410,7 @@ void Teleoperator::processIncrementalPoseCmd(double& x_pos, double& y_pos, doubl
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if (performTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new))
+    if (calculateTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
@@ -852,7 +769,7 @@ void Teleoperator::switchEE()
 }
 
 // Calculate a transform between 2 frames
-bool Teleoperator::performTransform(std::string source_frame, std::string target_frame,
+bool Teleoperator::calculateTransform(std::string source_frame, std::string target_frame,
                                     geometry_msgs::TransformStamped& transform)
 {
   bool success = false;

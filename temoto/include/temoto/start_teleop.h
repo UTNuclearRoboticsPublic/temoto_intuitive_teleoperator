@@ -58,8 +58,6 @@
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
 
-#include "leap_motion_controller/Set.h"
-
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
 
@@ -105,7 +103,7 @@ private:
 
   void sleepCallback(const std_msgs::Bool::ConstPtr& msg);
 
-  bool performTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped& transform);
+  bool calculateTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped& transform);
 
   void resetEEGraphicPose();
 
@@ -117,16 +115,13 @@ private:
 
   void xboxCallback(sensor_msgs::Joy pose_cmd);
 
-  void leapCallback(leap_motion_controller::Set leap_data);
-
-  void processIncrementalPoseCmd(double& x_pos, double& y_pos, double& z_pos, double& x_ori, double& y_ori,
-                                 double& z_ori);
+  void processIncrementalPoseCmd(double x_pos, double y_pos, double z_pos, double x_ori, double y_ori,
+                                 double z_ori);
 
   bool enable_navigation_ = true;  // Is navigation enabled?
   bool enable_manipulation_ = true;                      // Is manipulation enabled?
   std::string temoto_spacenav_pose_cmd_topic_;  // Topic of incoming pose cmds
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
-  std::string temoto_leap_pose_cmd_topic_;
   std::string base_frame_ = "base_link";    // Frame of robot base
   bool navT_or_manipF_ = false;  //< TRUE: interpret absolute_pose_cmd_ as 2D
   // navigation goal; FALSE: absolute_pose_cmd_ is
@@ -173,7 +168,7 @@ private:
   ros::Publisher pub_abort_, pub_jog_base_cmds_;
 
   // ROS subscribers
-  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_leap_pose_cmd_, sub_voice_commands_,
+  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_,
       sub_executing_preplanned_, sub_scaling_factor_, sub_temoto_sleep_;
 
   // Scale speed cmds when near obstacles

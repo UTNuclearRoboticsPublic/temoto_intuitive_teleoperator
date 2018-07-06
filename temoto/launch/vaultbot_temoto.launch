@@ -19,10 +19,8 @@
   <!--                 -->
   <!--                 -->
 
-  
-  <!-- Pose Controller(s) -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/>
-  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
+
+  <node name="spacenav_node" pkg="spacenav_node" type="spacenav_node" />
 
 
   <!-- Bring up Griffin Powermate -->
