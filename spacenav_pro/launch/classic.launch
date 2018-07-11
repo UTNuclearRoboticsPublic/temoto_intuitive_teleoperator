@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="spacenav_pro" type="spacenav_pro" name="$(anon spacenav_pro)" output="screen">
+    <param name="zero_when_static" value="true"/>
+    <param name="static_count_threshold" value="30"/>
+  </node>
+</launch>

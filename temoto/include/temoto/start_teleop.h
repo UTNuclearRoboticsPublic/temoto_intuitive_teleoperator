@@ -38,6 +38,7 @@
 // ROS includes
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "map"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
 #include "std_msgs/Bool.h"
@@ -45,7 +46,7 @@
 #include "std_msgs/String.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
-#include <actionlib/client/simple_action_client.h>
+#include "actionlib/client/simple_action_client.h"
 
 // temoto includes
 #include "griffin_powermate/PowermateEvent.h"
@@ -95,7 +96,7 @@ private:
 
   void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
 
-  void processVoiceCommand(std_msgs::String voice_command);
+  void processStringCommand(std_msgs::String voice_command);
 
   void triggerSequence(std::string& voice_command);
 
@@ -181,5 +182,19 @@ private:
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
+
+  // Enum for SpaceNavigator controllers
+  std::map<int, std::string> spacenav_buttons_ = {
+    {0, "robot please plan"},  // Menu button
+    {1, "robot please execute"}, // Fit button
+    {12, "jog mode"}, // 1 button
+    {13, "point to point mode"}, // 2 button
+    {14, "navigation"}, // 3 button
+    {15, "manipulation"}, // 4 button
+    {26, "next end effector"}, // Rotation button
+    {22, "base move"}, // Esc button
+    {5, "open gripper"}, // F button
+    {4, "close gripper"} // R button
+  };
 };
 #endif

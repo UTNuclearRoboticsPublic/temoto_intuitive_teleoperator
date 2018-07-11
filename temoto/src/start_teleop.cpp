@@ -92,7 +92,7 @@ Teleoperator::Teleoperator()
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::navCollisionCallback, this);
   sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1, &Teleoperator::spaceNavCallback, this);
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
-  sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processVoiceCommand, this);
+  sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processStringCommand, this);
   sub_executing_preplanned_ =
       n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1,
@@ -249,7 +249,23 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
 {
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
+  {
     processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
+
+
+    // If a button was pressed
+    // These are defined in a std::map in start_teleop.h
+    for (int i=0; i<pose_cmd.buttons.size(); ++i)
+    {
+      if ( pose_cmd.buttons[i] )
+      {
+        std_msgs::String text_command;
+        // Find the string that maps to this button index
+        text_command.data = spacenav_buttons_.find(i)->second;
+        processStringCommand( text_command );
+      }
+    }
+  }
 
   return;
 }  // end spaceNavCallback
@@ -502,7 +518,7 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
  */
-void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
+void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
