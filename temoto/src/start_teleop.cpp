@@ -263,6 +263,8 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
         // Find the string that maps to this button index
         text_command.data = spacenav_buttons_.find(i)->second;
         processStringCommand( text_command );
+        // Debounce
+        ros::Duration(0.05).sleep();
         break;
       }
     }
