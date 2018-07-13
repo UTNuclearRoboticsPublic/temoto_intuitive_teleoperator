@@ -260,11 +260,17 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
       if ( pose_cmd.buttons[i] )
       {
         std_msgs::String text_command;
-        // Find the string that maps to this button index
-        text_command.data = spacenav_buttons_.find(i)->second;
-        processStringCommand( text_command );
+
+        // If that command exists in the std::map
+        if ( spacenav_buttons_.find(i) != spacenav_buttons_.end() )
+        {
+          // Find the string that maps to this button index
+          text_command.data = spacenav_buttons_.find(i)->second;
+          processStringCommand( text_command );
+        }
+
         // Debounce
-        ros::Duration(0.05).sleep();
+        ros::Duration(0.1).sleep();
         break;
       }
     }
