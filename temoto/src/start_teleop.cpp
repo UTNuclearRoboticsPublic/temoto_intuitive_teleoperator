@@ -872,10 +872,12 @@ int main(int argc, char** argv)
       // Jog? Can't jog while doing something else.
       if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
         temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
-
-      // Update poses, scale, and nav-or-manip mode for the frames calculation
-      temoto_teleop.setGraphicsFramesStatus(false);
-      temoto_teleop.graphics_and_frames_.crunch();
+      else
+      {
+        // Update poses, scale, and nav-or-manip mode for the frames calculation
+        temoto_teleop.setGraphicsFramesStatus(false);
+        temoto_teleop.graphics_and_frames_.crunch();
+      }
     }
 
     node_rate.sleep();
