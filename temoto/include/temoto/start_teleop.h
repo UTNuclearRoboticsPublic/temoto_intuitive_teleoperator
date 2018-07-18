@@ -89,6 +89,11 @@ public:
 
   bool temoto_sleep_ = false;  // If set to true, temoto will spin without sending commands.
 
+  // navigation: interpret absolute_pose_cmd_ as 2D navigation goal;
+  // manipulation: absolute_pose_cmd_ is the motion planning target for robot EEF.
+  enum navigation_or_manipulation { NAVIGATION, MANIPULATION };
+  navigation_or_manipulation current_nav_or_manip_mode_ = MANIPULATION;
+
 private:
   void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
                                                                        // general case, e.g.
@@ -124,9 +129,7 @@ private:
   std::string temoto_spacenav_pose_cmd_topic_;  // Topic of incoming pose cmds
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string base_frame_ = "base_link";    // Frame of robot base
-  bool navT_or_manipF_ = false;  //< TRUE: interpret absolute_pose_cmd_ as 2D
-  // navigation goal; FALSE: absolute_pose_cmd_ is
-  // the motion planning target for robot EEF.
+
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
 
   ros::NodeHandle n_;
@@ -183,7 +186,7 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
-  // Enum for SpaceNavigator controllers
+  // Button map for SpaceNavigator controllers
   std::map<int, std::string> spacenav_buttons_ = {
     {0, "robot please plan"},  // Menu button
     {1, "robot please execute"}, // Fit button

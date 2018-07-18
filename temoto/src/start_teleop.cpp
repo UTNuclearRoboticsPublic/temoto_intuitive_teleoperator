@@ -109,12 +109,12 @@ Teleoperator::Teleoperator()
   // Setting up control_state, i.e., whether teleoperator is controlling
   // navigation, manipulation, or both.
   if (enable_manipulation_ && enable_navigation_)
-    navT_or_manipF_ = false;  // if navigation AND manipulation are enabled,
+    current_nav_or_manip_mode_ = MANIPULATION;  // if navigation AND manipulation are enabled,
                               // start out in manipulation mode.
   else if (enable_navigation_ && !enable_manipulation_)
-    navT_or_manipF_ = true;  // if only navigation is enabled, navT_or_manipF_ is TRUE
+    current_nav_or_manip_mode_ = NAVIGATION;
   else if (enable_manipulation_ && !enable_navigation_)
-    navT_or_manipF_ = false;  // if only manipulation is enabled, navT_or_manipF_ is FALSE
+    current_nav_or_manip_mode_ = MANIPULATION;
 
   // Initial pose
   // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
@@ -145,7 +145,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   // === Calling NavigateRobotInterface ==============
   // =================================================
-  if (navT_or_manipF_)  // if in NAVIGATION mode
+  if (current_nav_or_manip_mode_==NAVIGATION)
   {
     // If operator requested ABORT
     if (action_type == low_level_cmds::ABORT)
@@ -202,11 +202,11 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       }
       return;
     }  // else if (action_type == "go")
-  }    // if (navT_or_manipF_)
+  }    // if (current_nav_or_manip_mode_==NAVIGATION)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if (!navT_or_manipF_)  // If Teleoperator is in MANIPULATION mode
+  else if (current_nav_or_manip_mode_==MANIPULATION)
   {
     // Jogging
     if (in_jog_mode_)
@@ -347,7 +347,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ////////////////////////////
   // POINT-TO-POINT NAVIGATION
   ////////////////////////////
-  if (navT_or_manipF_ && !in_jog_mode_)
+  if ( (current_nav_or_manip_mode_==NAVIGATION) && !in_jog_mode_)
   {
     // ORIENTATION
     // new incremental yaw command
@@ -398,7 +398,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   //////////////////////////////
   // POINT-TO-POINT MANIPULATION
   //////////////////////////////
-  if (!navT_or_manipF_ && !in_jog_mode_)
+  if ( (current_nav_or_manip_mode_==MANIPULATION) && !in_jog_mode_)
   {
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already
@@ -589,7 +589,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
 
       // If not already in manipulation mode
-      if (navT_or_manipF_ == true)
+      if (current_nav_or_manip_mode_ == NAVIGATION)
       {
         // Make sure we aren't in jog mode. Don't want to start jogging an arm
         // suddenly
@@ -598,7 +598,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
         setScale();
 
         ROS_INFO("Going into MANIPULATION mode  ...");
-        navT_or_manipF_ = false;
+        current_nav_or_manip_mode_ = MANIPULATION;
         resetEEGraphicPose();
         setScale();
       }
@@ -615,14 +615,14 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
 
       // If not already in nav mode
-      if (navT_or_manipF_ == false)
+      if (current_nav_or_manip_mode_ == MANIPULATION)
       {
         // Make sure we aren't in jog mode, for safety
         ROS_INFO("Switching out of jog mode");
         resetEEGraphicPose();
         in_jog_mode_ = false;
         ROS_INFO("Going into NAVIGATION mode  ...");
-        navT_or_manipF_ = true;
+        current_nav_or_manip_mode_ = NAVIGATION;
 
         bool adjust_camera = true;
         setGraphicsFramesStatus(adjust_camera);
@@ -650,10 +650,10 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Controlling the next EE from yaml file ...");
 
-      resetEEGraphicPose();
-      // No joggign, initially, for safety
+      // No jogging, initially, for safety
       in_jog_mode_ = false;
       switchEE();
+
       return;
     }
 
@@ -721,7 +721,7 @@ void Teleoperator::triggerSequence(std::string& voice_command)
  */
 void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 {
-  graphics_and_frames_.latest_status_.in_navigation_mode = navT_or_manipF_;
+  graphics_and_frames_.latest_status_.in_navigation_mode = (current_nav_or_manip_mode_==NAVIGATION);
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose =
@@ -734,12 +734,13 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   while ( !graphics_and_frames_.crunch() )
     ros::Duration(0.01).sleep();
 
+
   return;
 }  // end setGraphicsFramesStatus()
 
 void Teleoperator::setScale()
 {
-  if (navT_or_manipF_)  // navigation
+  if (current_nav_or_manip_mode_==NAVIGATION)
   {
     if (in_jog_mode_)  // nav, jog mode
     {
@@ -826,7 +827,7 @@ bool Teleoperator::calculateTransform(std::string source_frame, std::string targ
 // Reset the end-effector graphic to current robot pose
 void Teleoperator::resetEEGraphicPose()
 {
-  if (navT_or_manipF_)  // Navigation --> Center on base_frame
+  if (current_nav_or_manip_mode_==NAVIGATION)  // Navigation --> Center on base_frame
   {
     absolute_pose_cmd_.pose.position.x = 0.;
     absolute_pose_cmd_.pose.position.y = 0.;
