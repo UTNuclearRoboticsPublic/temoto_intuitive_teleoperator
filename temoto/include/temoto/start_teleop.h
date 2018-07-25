@@ -70,11 +70,11 @@ public:
 
   ~Teleoperator()
   {
-    for (int i = 0; i < ee_names_.size(); ++i)
+    for (int i = 0; i < end_effector_parameters_.ee_names.size(); ++i)
     {
-      delete arm_interface_ptrs_.at(i);
-      delete jog_publishers_.at(i);
-      delete joint_jog_publishers_.at(i);
+      delete end_effector_parameters_.arm_interface_ptrs.at(i);
+      delete end_effector_parameters_.jog_publishers.at(i);
+      delete end_effector_parameters_.jog_publishers.at(i);
     }
   }
 
@@ -142,20 +142,6 @@ private:
                                        // predefined actions, e.g. open gripper
   NavigateRobotInterface nav_interface_;  // Send motion commands to the base
 
-  // All move_groups/ee's the user might want to control (specified in yaml)
-  std::vector<std::string> ee_names_;
-
-  // Jogging publishers for each end-effector. Ptr needed because the MoveGroup
-  // name is determined at run time
-  std::vector<ros::Publisher*> jog_publishers_, joint_jog_publishers_;
-
-  // Wrist jogging requires the name of each wrist joint
-  std::vector<std::string> wrist_joint_names_;
-
-  // Send motion commands to each end-effector. Ptr needed because the MoveGroup name is
-  // determined at run time
-  std::vector<MoveRobotInterface*> arm_interface_ptrs_;
-
   // Scaling factor
   double pos_scale_;
   double rot_scale_;
@@ -207,5 +193,25 @@ private:
     {5, "open gripper"}, // F button
     {4, "close gripper"} // R button
   };
+
+  // Vectors of data for each end-effector. These params are read from the config file.
+  struct endEffectorParameters
+  {
+    // All move_groups/ee's the user might want to control (specified in yaml)
+    std::vector<std::string> ee_names;
+
+    // Jogging publishers for each end-effector. Ptr needed because the MoveGroup
+    // name is determined at run time
+    std::vector<ros::Publisher*> jog_publishers, joint_jog_publishers;
+
+    // Wrist jogging requires the name of each wrist joint
+    std::vector<std::string> wrist_joint_names;
+
+    // Send motion commands to each end-effector. Ptr needed because the MoveGroup name is
+    // determined at run time
+    std::vector<MoveRobotInterface*> arm_interface_ptrs;
+  };
+  endEffectorParameters end_effector_parameters_;
+
 };
 #endif

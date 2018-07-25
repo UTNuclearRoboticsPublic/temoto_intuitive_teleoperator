@@ -68,13 +68,13 @@ Teleoperator::Teleoperator()
   // Get the names associated with multiple end effectors. Shove in vectors.
   for (int i = 0; i < num_ee; ++i)
   {
-    ee_names_.push_back(
+    end_effector_parameters_.ee_names.push_back(
         get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/end_effector", n_));
 
     // Objects for arm motion interface
     std::string move_group_name =
         get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/movegroup", n_);
-    arm_interface_ptrs_.push_back(new MoveRobotInterface(move_group_name));
+    end_effector_parameters_.arm_interface_ptrs.push_back(new MoveRobotInterface(move_group_name));
 
     // Cartesian jogging commands
     std::string jog_topic =
@@ -82,7 +82,7 @@ Teleoperator::Teleoperator()
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
     // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* jog_pub_ptr = new ros::Publisher(jog_pub);
-    jog_publishers_.push_back(jog_pub_ptr);
+    end_effector_parameters_.jog_publishers.push_back(jog_pub_ptr);
 
     // Joint jogging commands
     std::string joint_jog_topic =
@@ -90,18 +90,18 @@ Teleoperator::Teleoperator()
     ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
     // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
-    joint_jog_publishers_.push_back(joint_jog_pub_ptr);
+    end_effector_parameters_.jog_publishers.push_back(joint_jog_pub_ptr);
 
     // Names of wrist joints
-    wrist_joint_names_.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
+    end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
   }
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
 
   // Set up jogging msgs for the current EE
-  jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
-  joint_jog_cmd_.joint_names.push_back(wrist_joint_names_.at(current_movegroup_ee_index_));
+  jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
+  joint_jog_cmd_.joint_names.push_back(end_effector_parameters_.wrist_joint_names.at(current_movegroup_ee_index_));
   joint_jog_cmd_.deltas.push_back(0);
 
   // Subscribers
@@ -135,7 +135,7 @@ Teleoperator::Teleoperator()
   // Initial pose
   // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
   ros::Duration(1).sleep();
-  absolute_pose_cmd_ = arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
@@ -145,7 +145,7 @@ Teleoperator::Teleoperator()
 
   // Reset the graphic now that we're sure the tf is available.
   graphics_and_frames_.latest_status_.moveit_planning_frame =
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
   resetEEGraphicPose();
   setGraphicsFramesStatus(true);
 }
@@ -227,17 +227,17 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (in_jog_mode_)
     {
-      jog_publishers_.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
-      joint_jog_publishers_.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+      end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
+      end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
       return;
     }
     // Point-to-point motion
     else
     {
       // Send the motion request
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->target_pose_stamped_ = absolute_pose_cmd_;
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->requestMove();
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->target_pose_stamped_ = absolute_pose_cmd_;
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove();
 
       return;
     }
@@ -744,7 +744,7 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose =
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
   graphics_and_frames_.latest_status_.current_movegroup_ee_index = current_movegroup_ee_index_;
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
@@ -794,18 +794,18 @@ void Teleoperator::setScale()
 // Switch to the next available EE
 void Teleoperator::switchEE()
 {
-  if (current_movegroup_ee_index_ < ee_names_.size() - 1)
+  if (current_movegroup_ee_index_ < end_effector_parameters_.ee_names.size() - 1)
     ++current_movegroup_ee_index_;
   else
     current_movegroup_ee_index_ = 0;
 
   // Set up jog msgs for the current EE
-  jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
-  joint_jog_cmd_.joint_names[0] = wrist_joint_names_.at(current_movegroup_ee_index_);
+  jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
+  joint_jog_cmd_.joint_names[0] = end_effector_parameters_.wrist_joint_names.at(current_movegroup_ee_index_);
 
 
   graphics_and_frames_.latest_status_.moveit_planning_frame =
-      arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
 
   // Set camera at new EE
   bool adjust_camera = true;
@@ -870,7 +870,7 @@ void Teleoperator::resetEEGraphicPose()
     incremental_orientation_cmd_.vector.z = 0.;
   }
   else  // Manipulation --> Center on EE
-    absolute_pose_cmd_ = arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+    absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 }
 
 // MAIN
