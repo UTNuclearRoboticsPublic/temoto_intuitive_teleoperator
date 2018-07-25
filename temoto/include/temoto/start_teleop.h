@@ -38,6 +38,7 @@
 // ROS includes
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
+#include "jog_msgs/JogJoint.h"
 #include "map"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
@@ -73,6 +74,7 @@ public:
     {
       delete arm_interface_ptrs_.at(i);
       delete jog_publishers_.at(i);
+      delete joint_jog_publishers_.at(i);
     }
   }
 
@@ -145,9 +147,12 @@ private:
 
   // Jogging publishers for each end-effector. Ptr needed because the MoveGroup
   // name is determined at run time
-  std::vector<ros::Publisher*> jog_publishers_;
+  std::vector<ros::Publisher*> jog_publishers_, joint_jog_publishers_;
 
-  // Send motion commands to the arm. Ptr needed because the MoveGroup name is
+  // Wrist jogging requires the name of each wrist joint
+  std::vector<std::string> wrist_joint_names_;
+
+  // Send motion commands to each end-effector. Ptr needed because the MoveGroup name is
   // determined at run time
   std::vector<MoveRobotInterface*> arm_interface_ptrs_;
 
@@ -165,8 +170,11 @@ private:
   geometry_msgs::Vector3Stamped incremental_position_cmd_;
   geometry_msgs::Vector3Stamped incremental_orientation_cmd_;
 
-  // The jogger takes TwistStamped msgs
+  // TwistStamped msgs for Cartesian jogging
   geometry_msgs::TwistStamped jog_twist_cmd_;
+
+  // For joint jogging
+  jog_msgs::JogJoint joint_jog_cmd_;
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_base_cmds_;

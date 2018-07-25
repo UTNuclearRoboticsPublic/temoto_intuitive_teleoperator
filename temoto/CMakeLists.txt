@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
   genmsg
   geometry_msgs
   griffin_powermate
+  jog_msgs
   keyboard_reader
   message_generation
   move_base_msgs
@@ -87,6 +88,7 @@ generate_messages(
   DEPENDENCIES
   actionlib_msgs
   geometry_msgs
+  jog_msgs
   std_msgs
 )
 

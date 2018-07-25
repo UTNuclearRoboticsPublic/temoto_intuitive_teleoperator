@@ -32,7 +32,7 @@
  *  @brief Central node for TEMOTO teleoperator. Subscribes to relevant
  * messages, calls move and navigation interfaces, and publishes system status.
  *
- *  @author karl.kruusamae(at)utexas.edu
+ *  @author karl.kruusamae(at)utexas.edu, andy(at)utexas.edu
  */
 
 #include "temoto/start_teleop.h"
@@ -76,17 +76,33 @@ Teleoperator::Teleoperator()
         get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/movegroup", n_);
     arm_interface_ptrs_.push_back(new MoveRobotInterface(move_group_name));
 
+    // Cartesian jogging commands
     std::string jog_topic =
         get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/jog_topic", n_);
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
-    // Create a 'new' copy of this jog publisher, to persist until deleted.
+    // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* jog_pub_ptr = new ros::Publisher(jog_pub);
     jog_publishers_.push_back(jog_pub_ptr);
+
+    // Joint jogging commands
+    std::string joint_jog_topic =
+        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
+    ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
+    // Create a 'new' copy of this publisher, to persist until deleted.
+    ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
+    joint_jog_publishers_.push_back(joint_jog_pub_ptr);
+
+    // Names of wrist joints
+    wrist_joint_names_.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
   }
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
+
+  // Set up jogging msgs for the current EE
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
+  joint_jog_cmd_.joint_names.push_back(wrist_joint_names_.at(current_movegroup_ee_index_));
+  joint_jog_cmd_.deltas.push_back(0);
 
   // Subscribers
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::navCollisionCallback, this);
@@ -212,6 +228,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     if (in_jog_mode_)
     {
       jog_publishers_.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
+      joint_jog_publishers_.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
       return;
     }
     // Point-to-point motion
@@ -250,10 +267,10 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
   {
-    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
+    // Wrist joint jogging with these two buttons
+    joint_jog_cmd_.deltas[0] = ( pose_cmd.buttons[2] - pose_cmd.buttons[8] );
 
-
-    // If a button was pressed
+    // Search for buttons that are mapped to verbal commands.
     // These are defined in a std::map in start_teleop.h
     for (int i=0; i<pose_cmd.buttons.size(); ++i)
     {
@@ -274,6 +291,8 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
         break;
       }
     }
+
+    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
   }
 
   return;
@@ -780,7 +799,11 @@ void Teleoperator::switchEE()
   else
     current_movegroup_ee_index_ = 0;
 
+  // Set up jog msgs for the current EE
   jog_twist_cmd_.header.frame_id = ee_names_.at(current_movegroup_ee_index_);
+  joint_jog_cmd_.joint_names[0] = wrist_joint_names_.at(current_movegroup_ee_index_);
+
+
   graphics_and_frames_.latest_status_.moveit_planning_frame =
       arm_interface_ptrs_.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
 

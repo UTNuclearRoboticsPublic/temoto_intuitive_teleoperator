@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>temoto</name>
   <version>0.0.0</version>
   <description>TEMOTO package allows intuitive human-robot interaction and scalable motion of SIA5D in high precision tasks.</description>
@@ -31,8 +31,8 @@
   <!-- The *_depend tags are used to specify dependencies -->
   <!-- Dependencies can be catkin packages or system dependencies -->
   <!-- Examples: -->
-  <!-- Use build_depend for packages you need at compile time: -->
-  <!--   <build_depend>message_generation</build_depend> -->
+  <!-- Use depend for packages you need at compile time: -->
+  <!--   <depend>message_generation</depend> -->
   <!-- Use buildtool_depend for build tool packages: -->
   <!--   <buildtool_depend>catkin</buildtool_depend> -->
   <!-- Use run_depend for packages you need at runtime: -->
@@ -41,50 +41,30 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   
-  <build_depend>actionlib</build_depend>
-  <build_depend>actionlib_msgs</build_depend>
-  <build_depend>geometry_msgs</build_depend>
-  <build_depend>griffin_powermate</build_depend>
-  <build_depend>grasp_interface</build_depend>
-  <build_depend>message_generation</build_depend>
-  <build_depend>move_base_to_manip</build_depend>
-  <build_depend>moveit_core</build_depend>
-  <build_depend>moveit_ros_planning_interface</build_depend>
-  <build_depend>robotiq_c_model_control</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>rospy</build_depend>
-  <build_depend>sound_play</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>std_srvs</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>tf2</build_depend>
-  <build_depend>tf2_ros</build_depend>
-  <build_depend>tf2_geometry_msgs</build_depend>
-  <build_depend>view_controller_msgs</build_depend>
-  <build_depend>visualization_msgs</build_depend>
-
-  <run_depend>actionlib</run_depend>
-  <run_depend>actionlib_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>grasp_interface</run_depend>
-  <run_depend>griffin_powermate</run_depend>
-  <run_depend>message_generation</run_depend>
-  <run_depend>message_runtime</run_depend>
-  <run_depend>move_base_to_manip</run_depend>
-  <run_depend>moveit_core</run_depend>
-  <run_depend>moveit_ros_planning_interface</run_depend>
-  <run_depend>robotiq_c_model_control</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>rospy</run_depend>  
-  <run_depend>rviz_animated_view_controller</run_depend>
-  <run_depend>sound_play</run_depend>
-  <run_depend>std_msgs</run_depend>
-  <run_depend>std_srvs</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>tf2_ros</run_depend>
-  <run_depend>tf2_geometry_msgs</run_depend>
-  <run_depend>visualization_msgs</run_depend>
-  <run_depend>view_controller_msgs</run_depend>
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>grasp_interface</depend>
+  <depend>griffin_powermate</depend>
+  <depend>jog_msgs</depend>
+  <depend>message_generation</depend>
+  <depend>message_runtime</depend>
+  <depend>move_base_to_manip</depend>
+  <depend>moveit_core</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>robotiq_c_model_control</depend>
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>rviz_animated_view_controller</depend>
+  <depend>sound_play</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <depend>tf</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>view_controller_msgs</depend>
+  <depend>visualization_msgs</depend>
   
   <!-- The export tag contains other, unspecified, tags -->
   <export>

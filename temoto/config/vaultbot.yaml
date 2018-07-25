@@ -8,11 +8,15 @@ temoto_frames:
       movegroup: "right_ur5_temoto"
       manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl"
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
+      joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
+      wrist_joint_name: "right_ur5_wrist_3_joint"
     ee1:
       end_effector: "left_ur5_ee_link"
       movegroup: "left_ur5"
       manip_stl: "package://temoto_support/meshes/manip_cube.stl"
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
+      joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
+      wrist_joint_name: "left_ur5_wrist_3_joint"
 
 temoto:
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
