@@ -16,7 +16,6 @@ find_package(catkin REQUIRED
   keyboard_reader
   message_generation
   move_base_msgs
-  move_base_to_manip
   moveit_core
   moveit_ros_planning_interface
   robotiq_c_model_control
@@ -139,7 +138,6 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  ${move_base_to_manip_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
