@@ -157,7 +157,7 @@ private:
   geometry_msgs::Vector3Stamped incremental_orientation_cmd_;
 
   // TwistStamped msgs for Cartesian jogging
-  geometry_msgs::TwistStamped jog_twist_cmd_;
+  geometry_msgs::TwistStamped jog_twist_cmd_, nav_twist_cmd_;
 
   // For joint jogging
   jog_msgs::JogJoint joint_jog_cmd_;

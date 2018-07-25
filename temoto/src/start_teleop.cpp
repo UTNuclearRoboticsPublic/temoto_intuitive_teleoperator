@@ -90,7 +90,7 @@ Teleoperator::Teleoperator()
     ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
     // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
-    end_effector_parameters_.jog_publishers.push_back(joint_jog_pub_ptr);
+    end_effector_parameters_.joint_jog_publishers.push_back(joint_jog_pub_ptr);
 
     // Names of wrist joints
     end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
@@ -98,6 +98,9 @@ Teleoperator::Teleoperator()
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
+
+  // Set up jogging msgs for the base
+  nav_twist_cmd_.header.frame_id = base_frame_;
 
   // Set up jogging msgs for the current EE
   jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
@@ -183,18 +186,18 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // Jogging
       if (in_jog_mode_)
       {
-        jog_twist_cmd_.twist.angular.z = jog_twist_cmd_.twist.linear.y;
+        nav_twist_cmd_.twist.angular.z = nav_twist_cmd_.twist.linear.y;
 
         // Scale velocity if close to obstacle
-        jog_twist_cmd_.twist.linear.x *= nav_speed_fraction_;
-        jog_twist_cmd_.twist.linear.y *= nav_speed_fraction_;
-        jog_twist_cmd_.twist.linear.z *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.linear.x *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.linear.y *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.linear.z *= nav_speed_fraction_;
 
-        jog_twist_cmd_.twist.angular.x *= nav_speed_fraction_;
-        jog_twist_cmd_.twist.angular.y *= nav_speed_fraction_;
-        jog_twist_cmd_.twist.angular.z *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.angular.x *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.angular.y *= nav_speed_fraction_;
+        nav_twist_cmd_.twist.angular.z *= nav_speed_fraction_;
 
-        pub_jog_base_cmds_.publish(jog_twist_cmd_.twist);
+        pub_jog_base_cmds_.publish(nav_twist_cmd_.twist);
         return;
       }
 
@@ -228,7 +231,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     if (in_jog_mode_)
     {
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
-      end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+      end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
       return;
     }
     // Point-to-point motion
@@ -350,17 +353,30 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
 
   ///////////////////////////////////////////////////////////
   // JOGGING
-  // Can use the same type of command for arm and base teleop
   ///////////////////////////////////////////////////////////
   if (in_jog_mode_)
   {
-    jog_twist_cmd_.header.stamp = ros::Time::now();
-    jog_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
-    jog_twist_cmd_.twist.linear.y = pos_scale_ * y_pos;
-    jog_twist_cmd_.twist.linear.z = pos_scale_ * z_pos;
-    jog_twist_cmd_.twist.angular.x = rot_scale_ * x_ori;
-    jog_twist_cmd_.twist.angular.y = rot_scale_ * y_ori;
-    jog_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
+    if ( current_nav_or_manip_mode_==NAVIGATION )
+    {
+      nav_twist_cmd_.header.stamp = ros::Time::now();
+      nav_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
+      nav_twist_cmd_.twist.linear.y = pos_scale_ * y_pos;
+      nav_twist_cmd_.twist.linear.z = pos_scale_ * z_pos;
+      nav_twist_cmd_.twist.angular.x = rot_scale_ * x_ori;
+      nav_twist_cmd_.twist.angular.y = rot_scale_ * y_ori;
+      nav_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
+    }
+
+    if ( current_nav_or_manip_mode_==MANIPULATION )
+    {
+      jog_twist_cmd_.header.stamp = ros::Time::now();
+      jog_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
+      jog_twist_cmd_.twist.linear.y = pos_scale_ * y_pos;
+      jog_twist_cmd_.twist.linear.z = pos_scale_ * z_pos;
+      jog_twist_cmd_.twist.angular.x = rot_scale_ * x_ori;
+      jog_twist_cmd_.twist.angular.y = rot_scale_ * y_ori;
+      jog_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
+    }
   }
 
   ////////////////////////////
