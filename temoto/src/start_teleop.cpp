@@ -65,7 +65,7 @@ Teleoperator::Teleoperator()
     ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. "
               "Aborting.");
 
-  // Get the names associated with multiple end effectors. Shove in vectors.
+  // Get the parameters associated with (possibly) multiple end effectors. Shove in vectors.
   for (int i = 0; i < num_ee; ++i)
   {
     end_effector_parameters_.ee_names.push_back(
@@ -92,8 +92,11 @@ Teleoperator::Teleoperator()
     ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
     end_effector_parameters_.joint_jog_publishers.push_back(joint_jog_pub_ptr);
 
-    // Names of wrist joints
+    // Names of wrist joints, for jogging
     end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
+
+    // Enable compliance for each end-effector?
+    end_effector_parameters_.enable_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto_frames/ee/ee" + std::to_string(i) + "/enable_compliant_jog", n_) );
   }
 
   // Specify the current ee & move_group
@@ -230,6 +233,13 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (in_jog_mode_)
     {
+      // Add compliance?
+      // Currently only for Cartesian jogging (not joint jogging)
+      if ( end_effector_parameters_.enable_compliant_jog.at(current_movegroup_ee_index_) )
+      {
+        compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_ );
+      }
+
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
       end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
       return;

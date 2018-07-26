@@ -56,6 +56,7 @@
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/low_level_cmds.h"
+#include "temoto/make_compliant_adjustment.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
@@ -125,6 +126,8 @@ private:
 
   void processIncrementalPoseCmd(double x_pos, double y_pos, double z_pos, double x_ori, double y_ori,
                                  double z_ori);
+
+  CompliantAdjustment compliance_object_;  // Handle compliance, if enabled
 
   bool enable_navigation_ = true;  // Is navigation enabled?
   bool enable_manipulation_ = true;                      // Is manipulation enabled?
@@ -210,6 +213,9 @@ private:
     // Send motion commands to each end-effector. Ptr needed because the MoveGroup name is
     // determined at run time
     std::vector<MoveRobotInterface*> arm_interface_ptrs;
+
+    // Enable compliant jogging for each end-effector?
+    std::vector<bool> enable_compliant_jog;
   };
   endEffectorParameters end_effector_parameters_;
 

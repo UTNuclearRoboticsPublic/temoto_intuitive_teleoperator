@@ -12,6 +12,7 @@ find_package(catkin REQUIRED
   genmsg
   geometry_msgs
   griffin_powermate
+  jog_arm
   jog_msgs
   keyboard_reader
   message_generation
@@ -27,7 +28,6 @@ find_package(catkin REQUIRED
   tf2_ros
   tf2_geometry_msgs
   view_controller_msgs
-
 )
 
 ## System dependencies are found with CMake's conventions
@@ -150,13 +150,12 @@ target_link_libraries(close_gripper ${catkin_LIBRARIES})
 add_library(open_gripper src/preplanned_sequences/open_gripper.cpp)
 target_link_libraries(open_gripper ${catkin_LIBRARIES})
 
-
 ## Declare a C++ executable
 
 ##########################################
 # This is where most of the action happens
 ##########################################
-add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp src/graphics_and_frames.cpp src/move_robot.cpp src/get_ros_params.cpp)
+add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp src/graphics_and_frames.cpp src/move_robot.cpp src/get_ros_params.cpp src/make_compliant_adjustment.cpp)
 add_dependencies(start_teleop temoto_generate_messages_cpp )
 # Add one-off commands to trigger short, pre-planned sequences here
 target_link_libraries(start_teleop ${catkin_LIBRARIES} close_gripper open_gripper )

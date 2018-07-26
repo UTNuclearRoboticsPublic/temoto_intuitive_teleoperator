@@ -14,6 +14,7 @@
   <depend>geometry_msgs</depend>
   <depend>grasp_interface</depend>
   <depend>griffin_powermate</depend>
+  <depend>jog_arm</depend>
   <depend>jog_msgs</depend>
   <depend>message_generation</depend>
   <depend>message_runtime</depend>

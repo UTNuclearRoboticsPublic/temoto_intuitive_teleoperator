@@ -10,6 +10,9 @@ temoto_frames:
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: "right_ur5_wrist_3_joint"
+      enable_compliant_jog: true
+      force_torque_frame: "right_ur5_base"
+      force_torque_topic: "right_ur5_wrench"
     ee1:
       end_effector: "left_ur5_ee_link"
       movegroup: "left_ur5"
@@ -17,6 +20,9 @@ temoto_frames:
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: "left_ur5_wrist_3_joint"
+      enable_compliant_jog: true
+      force_torque_frame: "left_ur5_base"
+      force_torque_topic: "left_ur5_wrench"
 
 temoto:
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"

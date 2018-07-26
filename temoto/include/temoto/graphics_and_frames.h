@@ -29,7 +29,7 @@
 
 /** @file rviz_visual.h
  *
- *  @brief Node that handles visual markers and point-of-view camera in RViz for
+ *  @brief Handles visual markers and point-of-view camera in RViz for
  *         temoto teleoperation.
  *
  *  @author karl.kruusamae(at)utexas.edu
