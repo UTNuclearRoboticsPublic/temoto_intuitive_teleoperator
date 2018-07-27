@@ -19,7 +19,7 @@ double get_ros_params::getIntParam(std::string name, ros::NodeHandle& n)
 {
   int value;
   if (!n.getParam(name, value))
-    ROS_ERROR_STREAM("[getDoubleParam] YAML config file does not contain parameter " << name);
+    ROS_ERROR_STREAM("[getIntParam] YAML config file does not contain parameter " << name);
   return value;
 }
 

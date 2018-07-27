@@ -51,6 +51,6 @@
 
 
   <!-- Launch the EE levels/Angles to be displayed in RQT_MANIP of rqt_gui -->
-  <include file="$(find rqt_manip)/launch/ee_levels.launch" />
+  <!-- include file="$(find rqt_manip)/launch/ee_levels.launch" / -->
 
 </launch>

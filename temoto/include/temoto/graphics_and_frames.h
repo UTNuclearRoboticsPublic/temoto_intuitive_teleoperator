@@ -74,19 +74,19 @@ public:
     // Get the STL's for the manip/nav hand markers from launch file, if any
     // First, how many ee's are there?
     int num_ee = 1;
-    if (!nh_.getParam("/temoto_frames/num_ee", num_ee))
+    if (!nh_.getParam("/temoto/num_ee", num_ee))
       ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. "
                 "Aborting.");
 
     for (int i = 0; i < num_ee; i++)
     {
       std::string stl_name =
-          get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/manip_stl", nh_);
+          get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/manip_stl", nh_);
       manip_stl_names_.push_back(stl_name);
     }
 
     // Get all the relevant frame names from parameter server
-    nh_.param<std::string>("/temoto_frames/base_frame", base_frame_, "base_link");
+    nh_.param<std::string>("/temoto/base_frame", base_frame_, "base_link");
 
     // Initialize point-of-view camera placement and all the required markers
     initCameraFrames();

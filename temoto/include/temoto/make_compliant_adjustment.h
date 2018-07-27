@@ -105,9 +105,10 @@ class CompliantAdjustment
 public:
   CompliantAdjustment()
   {
+/*
   	// For each end-effector where compliance is enabled:
     // Read the compliance parameters.
-    num_arms_ = get_ros_params::getIntParam("teach_motions/num_arms", n_);
+    num_arms_ = get_ros_params::getIntParam("temoto/num_ee", n_);
 
     for (int ee_index=0; ee_index<num_arms_; ++ee_index)
     {
@@ -140,6 +141,7 @@ public:
     }
 
     // Get a bias reading from each sensor
+*/
   };
 
   bool cartesianCompliantAdjustment(geometry_msgs::TwistStamped &jog_command);

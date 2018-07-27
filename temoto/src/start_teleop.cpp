@@ -53,7 +53,7 @@ Teleoperator::Teleoperator()
   // By default manipulation is turned ON
   enable_manipulation_ = get_ros_params::getBoolParam("temoto/enable_manipulation", n_);
 
-  base_frame_ = get_ros_params::getStringParam("temoto_frames/base_frame", n_);
+  base_frame_ = get_ros_params::getStringParam("temoto/base_frame", n_);
 
   pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
@@ -61,7 +61,7 @@ Teleoperator::Teleoperator()
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
   int num_ee = 1;
-  if (!n_.getParam("/temoto_frames/num_ee", num_ee))
+  if (!n_.getParam("/temoto/num_ee", num_ee))
     ROS_ERROR("[start_teleop/Teleoperator] num_ee was not specified in yaml. "
               "Aborting.");
 
@@ -69,16 +69,16 @@ Teleoperator::Teleoperator()
   for (int i = 0; i < num_ee; ++i)
   {
     end_effector_parameters_.ee_names.push_back(
-        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/end_effector", n_));
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/end_effector", n_));
 
     // Objects for arm motion interface
     std::string move_group_name =
-        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/movegroup", n_);
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/movegroup", n_);
     end_effector_parameters_.arm_interface_ptrs.push_back(new MoveRobotInterface(move_group_name));
 
     // Cartesian jogging commands
     std::string jog_topic =
-        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/jog_topic", n_);
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/jog_topic", n_);
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
     // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* jog_pub_ptr = new ros::Publisher(jog_pub);
@@ -86,17 +86,17 @@ Teleoperator::Teleoperator()
 
     // Joint jogging commands
     std::string joint_jog_topic =
-        get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
     ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
     // Create a 'new' copy of this publisher, to persist until deleted.
     ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
     end_effector_parameters_.joint_jog_publishers.push_back(joint_jog_pub_ptr);
 
     // Names of wrist joints, for jogging
-    end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto_frames/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
+    end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
 
     // Enable compliance for each end-effector?
-    end_effector_parameters_.enable_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto_frames/ee/ee" + std::to_string(i) + "/enable_compliant_jog", n_) );
+    end_effector_parameters_.enable_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/enable_compliant_jog", n_) );
   }
 
   // Specify the current ee & move_group
