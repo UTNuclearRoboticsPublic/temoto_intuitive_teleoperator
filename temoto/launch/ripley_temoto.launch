@@ -53,7 +53,7 @@
   <!-- Launch the EE levels/Angles to be displayed in RQT_MANIP of rqt_gui -->
   <!-- include file="$(find rqt_manip)/launch/ee_levels.launch" / -->
 
-  <node name="arm_warning_right" pkg="vaultbot_warnings" type="arm_warnings" output="screen" respawn="true">
+  <node name="arm_warning_right" pkg="arm_warnings" type="arm_warnings" output="screen" respawn="true">
     <param name="move_group_name" type="str" value="right_ur5" />
     <param name="marker_id" type="int" value="574" />
 
