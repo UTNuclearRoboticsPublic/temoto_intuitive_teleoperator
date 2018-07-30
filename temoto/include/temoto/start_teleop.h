@@ -75,7 +75,7 @@ public:
     {
       delete end_effector_parameters_.arm_interface_ptrs.at(i);
       delete end_effector_parameters_.jog_publishers.at(i);
-      delete end_effector_parameters_.jog_publishers.at(i);
+      delete end_effector_parameters_.joint_jog_publishers.at(i);
     }
   }
 

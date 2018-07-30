@@ -47,21 +47,20 @@
 class SingleArmComplianceData
 {
 public:
-  SingleArmComplianceData(int ee_index) :
-    compliance_object_(stiffness_,
-    deadband_, end_condition_wrench_,
-    filter_param_,
-    bias_,
-    highest_allowable_force_,
-    highest_allowable_torque_ )
+  SingleArmComplianceData(int ee_index, geometry_msgs::WrenchStamped &bias) :
+    compliance_object_(
+      stiffness_,
+      deadband_,
+      end_condition_wrench_,
+      filter_param_,
+      bias,
+      highest_allowable_force_,
+      highest_allowable_torque_ )
   {
-  	force_torque_frame_ = get_ros_params::getStringParam("temoto/ee" + std::to_string(ee_index) + "/force_torque_frame", n_);
+  	force_torque_frame_ = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_frame", n_);
   };
 
   ros::NodeHandle n_;
-
-  // An object to do compliance calculations
-  compliant_control::CompliantControl compliance_object_;
 
   // Subscribe to force/torque topic
   ros::Subscriber force_torque_sub_;
@@ -94,9 +93,10 @@ public:
   // Outgoing velocity msg
   std::vector<double> velocity_out_{0, 0, 0, 0, 0, 0};
 
-  geometry_msgs::WrenchStamped bias_;
+  double highest_allowable_force_ = 100, highest_allowable_torque_ = 50;
 
-  double highest_allowable_force_, highest_allowable_torque_;
+  // An object to do compliance calculations
+  compliant_control::CompliantControl compliance_object_;
 };
 
 
@@ -105,16 +105,26 @@ class CompliantAdjustment
 public:
   CompliantAdjustment()
   {
-/*
   	// For each end-effector where compliance is enabled:
     // Read the compliance parameters.
     num_arms_ = get_ros_params::getIntParam("temoto/num_ee", n_);
 
+    // Get a bias reading from each sensor
+    geometry_msgs::WrenchStamped bias;
+    bias.wrench.force.x = 0;
+    bias.wrench.force.y = 0;
+    bias.wrench.force.z = 0;
+    bias.wrench.torque.x = 0;
+    bias.wrench.torque.y = 0;
+    bias.wrench.torque.z = 0;
+
+
     for (int ee_index=0; ee_index<num_arms_; ++ee_index)
     {
-      compliance_data_vectors_.push_back( SingleArmComplianceData(ee_index) );
-    	std::string force_torque_topic = get_ros_params::getStringParam("temoto/ee" + std::to_string(ee_index) + "/force_torque_topic", n_);
+      compliance_data_vectors_.push_back( SingleArmComplianceData(ee_index, bias) );
 
+    	std::string force_torque_topic = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_topic", n_);
+/*
 	    // Listen to wrench data from a force/torque sensor.
 	    // Unfortunately this is hard-coded to 2 callback functions because programmatically generating multiple callbacks ain't easy.
 	    if (ee_index == 0)
@@ -138,10 +148,8 @@ public:
 
 	      force_torque_subs_.push_back(sub1);
 	    }
-    }
-
-    // Get a bias reading from each sensor
 */
+    }
   };
 
   bool cartesianCompliantAdjustment(geometry_msgs::TwistStamped &jog_command);
