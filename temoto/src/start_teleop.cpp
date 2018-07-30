@@ -95,8 +95,11 @@ Teleoperator::Teleoperator()
     // Names of wrist joints, for jogging
     end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
 
-    // Enable compliance for each end-effector?
+    // Enable compliance for this end-effector?
     end_effector_parameters_.enable_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/enable_compliant_jog", n_) );
+
+    if (end_effector_parameters_.enable_compliant_jog.at(i))
+      compliance_object_.addCompliantEndEffector(i);
   }
 
   // Specify the current ee & move_group
@@ -236,9 +239,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       // Add compliance?
       // Currently only for Cartesian jogging (not joint jogging)
       if ( end_effector_parameters_.enable_compliant_jog.at(current_movegroup_ee_index_) )
-      {
-        compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_ );
-      }
+        compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_, current_movegroup_ee_index_ );
 
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
       end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);

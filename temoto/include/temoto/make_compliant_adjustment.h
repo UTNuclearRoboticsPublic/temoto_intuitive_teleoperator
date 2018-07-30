@@ -48,7 +48,7 @@ class SingleArmComplianceData
 {
 public:
   SingleArmComplianceData(int ee_index, geometry_msgs::WrenchStamped &bias) :
-    compliance_object_(
+    compliant_control_instance_(
       stiffness_,
       deadband_,
       end_condition_wrench_,
@@ -62,14 +62,11 @@ public:
 
   ros::NodeHandle n_;
 
-  // Subscribe to force/torque topic
-  ros::Subscriber force_torque_sub_;
-
   // Publish velocity cmd(s) to the jog_arm node(s)
   ros::Publisher velocity_pub_;
 
-  // Compliance for each arm
-  std::vector<compliant_control::ExitCondition> compliance_status_;
+  // Status, e.g. safety threshold exceeded
+  compliant_control::ExitCondition compliance_status_;
 
   // TF frame of force/torque data
   std::string force_torque_frame_ = "";
@@ -96,63 +93,57 @@ public:
   double highest_allowable_force_ = 100, highest_allowable_torque_ = 50;
 
   // An object to do compliance calculations
-  compliant_control::CompliantControl compliance_object_;
+  compliant_control::CompliantControl compliant_control_instance_;
 };
 
 
 class CompliantAdjustment
 {
 public:
-  CompliantAdjustment()
+  bool addCompliantEndEffector(int ee_index)
   {
-  	// For each end-effector where compliance is enabled:
-    // Read the compliance parameters.
-    num_arms_ = get_ros_params::getIntParam("temoto/num_ee", n_);
+    std::string force_torque_topic = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_topic", n_);
 
-    // Get a bias reading from each sensor
-    geometry_msgs::WrenchStamped bias;
-    bias.wrench.force.x = 0;
-    bias.wrench.force.y = 0;
-    bias.wrench.force.z = 0;
-    bias.wrench.torque.x = 0;
-    bias.wrench.torque.y = 0;
-    bias.wrench.torque.z = 0;
+    // Allocate space for the compliance data
+    geometry_msgs::WrenchStamped empty_bias;
+    compliance_data_vectors_.push_back( SingleArmComplianceData(ee_index, empty_bias) );
 
-
-    for (int ee_index=0; ee_index<num_arms_; ++ee_index)
+    // Listen to wrench data from a force/torque sensor.
+    // Unfortunately this is hard-coded to 2 callback functions because programmatically generating multiple callbacks ain't easy.
+    if (ee_index == 0)
     {
-      compliance_data_vectors_.push_back( SingleArmComplianceData(ee_index, bias) );
+      ros::Subscriber sub0 = n_.subscribe(
+        force_torque_topic,
+        1,
+        &CompliantAdjustment::ftCB0,
+        this);
 
-    	std::string force_torque_topic = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_topic", n_);
-/*
-	    // Listen to wrench data from a force/torque sensor.
-	    // Unfortunately this is hard-coded to 2 callback functions because programmatically generating multiple callbacks ain't easy.
-	    if (ee_index == 0)
-	    {
-	      ros::Subscriber sub0 = n_.subscribe(
-	        force_torque_topic,
-	        1,
-	        &CompliantAdjustment::ftCB0,
-	        this);
-
-	      force_torque_subs_.push_back(sub0);
-	    }
-
-	    if (ee_index == 1)
-	    {
-	      ros::Subscriber sub1 = n_.subscribe(
-	        force_torque_topic,
-	        1,
-	        &CompliantAdjustment::ftCB1,
-	        this);
-
-	      force_torque_subs_.push_back(sub1);
-	    }
-*/
+      force_torque_subs_.push_back(sub0);
     }
-  };
 
-  bool cartesianCompliantAdjustment(geometry_msgs::TwistStamped &jog_command);
+    if (ee_index == 1)
+    {
+      ros::Subscriber sub1 = n_.subscribe(
+        force_torque_topic,
+        1,
+        &CompliantAdjustment::ftCB1,
+        this);
+
+      force_torque_subs_.push_back(sub1);
+    }
+
+    // Get initial bias reading from the force/torque sensor
+    while ( ros::ok() && compliance_data_vectors_[ee_index].force_torque_data_.header.frame_id == "" )
+    {
+      ros::Duration(0.1).sleep();
+      ROS_INFO_STREAM_THROTTLE(2, "[make_compliant_adjustment] Waiting for first force/torque data for arm " << ee_index);
+    }
+    // Re-create the compliance object with updated bias. Could do this more efficiently.
+    compliance_data_vectors_.at(ee_index) = ( SingleArmComplianceData(ee_index, compliance_data_vectors_[ee_index].force_torque_data_) );
+    ROS_INFO_STREAM("[make_compliant_adjustment] Received first force/torque data for arm " << ee_index);
+  }
+
+  bool cartesianCompliantAdjustment(geometry_msgs::TwistStamped &jog_command, int arm_index_);
 
 private:
   ros::NodeHandle n_;
@@ -169,6 +160,10 @@ private:
   // CBs for force/torque data
   void ftCB0(const geometry_msgs::WrenchStamped::ConstPtr& msg);
   void ftCB1(const geometry_msgs::WrenchStamped::ConstPtr& msg);
+
+  // Datatype conversions
+  geometry_msgs::Twist convertVectorToTwist(const std::vector<double> &v);
+  std::vector<double> convertTwistToVector(const geometry_msgs::Twist &twist);
 };
 
 #endif
