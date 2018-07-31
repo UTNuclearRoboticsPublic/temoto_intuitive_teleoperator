@@ -108,38 +108,3 @@ bool CompliantAdjustment::transformTwist(geometry_msgs::TwistStamped& twist, std
 
   return true;
 }
-
-// Transform a wrench into given frame
-bool CompliantAdjustment::transformWrench(geometry_msgs::WrenchStamped& wrench, std::string desired_frame)
-{
-  if ( wrench.header.frame_id == desired_frame )
-    return true;
-
-  geometry_msgs::TransformStamped current_frame_to_target;
-  try {
-    current_frame_to_target =
-        tf_buffer_.lookupTransform(wrench.header.frame_id, desired_frame, ros::Time(0), ros::Duration(1.0));
-
-  } catch (tf2::TransformException ex) {
-    ROS_ERROR("[make_compliant_adjustment] Failed to transform wrench to EE frame.");
-    return false;
-  }
-
-  // There is no method to transform a Wrench, so break it into vectors and transform one at a time
-  geometry_msgs::Vector3Stamped force_vector;
-  force_vector.vector = wrench.wrench.force;
-  force_vector.header.frame_id = wrench.header.frame_id;
-  tf2::doTransform(force_vector, force_vector, current_frame_to_target);
-
-  geometry_msgs::Vector3Stamped torque_vector;
-  torque_vector.vector = wrench.wrench.torque;
-  torque_vector.header.frame_id = wrench.header.frame_id;
-  tf2::doTransform(torque_vector, torque_vector, current_frame_to_target);
-
-  // Put these components back into a WrenchStamped
-  wrench.header.frame_id = desired_frame;
-  wrench.wrench.force = force_vector.vector;
-  wrench.wrench.torque = torque_vector.vector;
-
-  return true;
-}

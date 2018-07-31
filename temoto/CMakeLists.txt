@@ -26,7 +26,6 @@ find_package(catkin REQUIRED
   tf
   tf2
   tf2_ros
-  tf2_geometry_msgs
   view_controller_msgs
 )
 

@@ -179,7 +179,6 @@ private:
   std::vector<double> convertTwistToVector(const geometry_msgs::Twist &twist);
 
   bool transformTwist(geometry_msgs::TwistStamped& twist, std::string desired_frame);
-  bool transformWrench(geometry_msgs::WrenchStamped& wrench, std::string desired_frame);
 };
 
 #endif
