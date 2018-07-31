@@ -38,9 +38,11 @@
 #define MAKE_COMPLIANT_ADJUSTMENT_H
 
 #include "geometry_msgs/TwistStamped.h"
+#include "geometry_msgs/Vector3Stamped.h"
 #include "jog_arm/compliant_control.h"
 #include "ros/ros.h"
 #include "temoto/get_ros_params.h"
+#include <tf2_ros/transform_listener.h>
 
 
 // This class holds all compliance data for one arm
@@ -55,9 +57,10 @@ public:
       filter_param_,
       bias,
       highest_allowable_force_,
-      highest_allowable_torque_ )
+      highest_allowable_torque_)
   {
   	force_torque_frame_ = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_frame", n_);
+    jog_frame_ = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/end_effector", n_);
   };
 
   ros::NodeHandle n_;
@@ -71,8 +74,11 @@ public:
   // TF frame of force/torque data
   std::string force_torque_frame_ = "";
 
+  // Frame of jogging
+  std::string jog_frame_ = "";
+
   // Key equation: compliance_velocity[i] = wrench[i]/stiffness[i]
-  std::vector<double> stiffness_{25000, 25000, 25000, 2000, 2000, 2000};
+  std::vector<double> stiffness_{500, 500, 500, 1000, 1000, 1000};
 
   // Related to the cutoff frequency of the low-pass filter.
   double filter_param_ = 10.;
@@ -100,6 +106,10 @@ public:
 class CompliantAdjustment
 {
 public:
+  CompliantAdjustment() : tf2_listener_(tf_buffer_)
+  {
+  }
+
   bool addCompliantEndEffector(int ee_index)
   {
     std::string force_torque_topic = get_ros_params::getStringParam("temoto/ee/ee" + std::to_string(ee_index) + "/force_torque_topic", n_);
@@ -157,6 +167,9 @@ private:
   // Unfortunately this is hard-coded to 2 callback functions because programmatically generating multiple callbacks ain't easy.
   std::vector<ros::Subscriber> force_torque_subs_;
 
+  tf2_ros::Buffer tf_buffer_;
+  tf2_ros::TransformListener tf2_listener_;
+
   // CBs for force/torque data
   void ftCB0(const geometry_msgs::WrenchStamped::ConstPtr& msg);
   void ftCB1(const geometry_msgs::WrenchStamped::ConstPtr& msg);
@@ -164,6 +177,9 @@ private:
   // Datatype conversions
   geometry_msgs::Twist convertVectorToTwist(const std::vector<double> &v);
   std::vector<double> convertTwistToVector(const geometry_msgs::Twist &twist);
+
+  bool transformTwist(geometry_msgs::TwistStamped& twist, std::string desired_frame);
+  bool transformWrench(geometry_msgs::WrenchStamped& wrench, std::string desired_frame);
 };
 
 #endif
