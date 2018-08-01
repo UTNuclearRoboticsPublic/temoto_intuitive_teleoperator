@@ -10,7 +10,7 @@ temoto:
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: ""
-      enable_compliant_jog: false
+      allow_compliant_jog: false
       force_torque_frame: ""
       force_torque_topic: ""
     ee1:
@@ -20,12 +20,13 @@ temoto:
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: ""
-      enable_compliant_jog: false
+      allow_compliant_jog: false
       force_torque_frame: ""
       force_torque_topic: ""
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: "/joy"
+  temoto_leap_pose_cmd_topic: ""
 
   # navigate or manipulate
   enable_navigation: true
