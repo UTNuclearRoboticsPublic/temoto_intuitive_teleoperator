@@ -194,11 +194,16 @@ private:
     {26, "next end effector"}, // Rotation button
     {22, "base move"}, // Esc button
     {5, "open gripper"}, // F button
-    {4, "close gripper"} // R button
+    {4, "close gripper"}, // R button
+    {24, "enable compliance"}, // Shift button
+    {25, "disable compliance"} // Ctrl button
   };
 
   enum joint_or_cartesian_jog { JOINT, CARTESIAN };
   joint_or_cartesian_jog current_joint_or_cartesian_jog_ = CARTESIAN;
+
+  // Did the user enable compliance?
+  bool enable_compliance_ = false;
 
   // Vectors of data for each end-effector. These params are read from the config file.
   struct endEffectorParameters
@@ -218,7 +223,7 @@ private:
     std::vector<MoveRobotInterface*> arm_interface_ptrs;
 
     // Enable compliant jogging for each end-effector?
-    std::vector<bool> enable_compliant_jog;
+    std::vector<bool> allow_compliant_jog;
   };
   endEffectorParameters end_effector_parameters_;
 
