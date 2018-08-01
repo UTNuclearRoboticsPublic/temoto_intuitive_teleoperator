@@ -236,13 +236,19 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (in_jog_mode_)
     {
-      // Add compliance?
-      // Currently only for Cartesian jogging (not joint jogging)
-      if ( end_effector_parameters_.enable_compliant_jog.at(current_movegroup_ee_index_) )
-        compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_, current_movegroup_ee_index_ );
+      // If in Cartesian mode, can do compliance
+      if ( current_joint_or_cartesian_jog_==CARTESIAN )
+      {
+        if ( end_effector_parameters_.enable_compliant_jog.at(current_movegroup_ee_index_) )
+          compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_, current_movegroup_ee_index_ );
 
-      end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
-      end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+        end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
+      }
+      else if ( current_joint_or_cartesian_jog_==JOINT )
+      {
+        end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+      }
+  
       return;
     }
     // Point-to-point motion
@@ -282,31 +288,42 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   if (!temoto_sleep_)
   {
     // Wrist joint jogging with these two buttons
-    joint_jog_cmd_.deltas[0] = ( pose_cmd.buttons[2] - pose_cmd.buttons[8] );
-
-    // Search for buttons that are mapped to verbal commands.
-    // These are defined in a std::map in start_teleop.h
-    for (int i=0; i<pose_cmd.buttons.size(); ++i)
+    if ( pose_cmd.buttons[2] || pose_cmd.buttons[8] )
     {
-      if ( pose_cmd.buttons[i] )
-      {
-        std_msgs::String text_command;
+      joint_jog_cmd_.deltas[0] = ( pose_cmd.buttons[2] - pose_cmd.buttons[8] );
+      joint_jog_cmd_.header.stamp = ros::Time::now();
 
-        // If that command exists in the std::map
-        if ( spacenav_buttons_.find(i) != spacenav_buttons_.end() )
-        {
-          // Find the string that maps to this button index
-          text_command.data = spacenav_buttons_.find(i)->second;
-          processStringCommand( text_command );
-        }
-
-        // Debounce
-        ros::Duration(0.1).sleep();
-        break;
-      }
+      current_joint_or_cartesian_jog_ = JOINT;
     }
+    // Cartesian jogging
+    else
+    {
+      current_joint_or_cartesian_jog_ = CARTESIAN;
 
-    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
+      // Search for buttons that are mapped to verbal commands.
+      // These are defined in a std::map in start_teleop.h
+      for (int i=0; i<pose_cmd.buttons.size(); ++i)
+      {
+        if ( pose_cmd.buttons[i] )
+        {
+          std_msgs::String text_command;
+
+          // If that command exists in the std::map
+          if ( spacenav_buttons_.find(i) != spacenav_buttons_.end() )
+          {
+            // Find the string that maps to this button index
+            text_command.data = spacenav_buttons_.find(i)->second;
+            processStringCommand( text_command );
+          }
+
+          // Debounce
+          ros::Duration(0.1).sleep();
+          break;
+        }
+      }
+
+      processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
+    } // end of Cartesian jogging
   }
 
   return;

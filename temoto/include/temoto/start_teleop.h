@@ -197,6 +197,9 @@ private:
     {4, "close gripper"} // R button
   };
 
+  enum joint_or_cartesian_jog { JOINT, CARTESIAN };
+  joint_or_cartesian_jog current_joint_or_cartesian_jog_ = CARTESIAN;
+
   // Vectors of data for each end-effector. These params are read from the config file.
   struct endEffectorParameters
   {

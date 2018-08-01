@@ -10,17 +10,9 @@ bool CompliantAdjustment::cartesianCompliantAdjustment(geometry_msgs::TwistStamp
 
   std::vector<double> velocity = convertTwistToVector( jog_command.twist );
 
-  //ROS_INFO_STREAM_THROTTLE(0.1, velocity[0] << "  " << velocity[1] << "  " << velocity[2] << "  " << velocity[3] << "  " << velocity[4] << "  " << velocity[5]);
-
   // Add the compliance velocity to nominal velocity, and check for force/torque limits
   compliance_data_vectors_[arm_index].compliance_status_ =
     compliance_data_vectors_[arm_index].compliant_control_instance_.getVelocity(velocity, compliance_data_vectors_[arm_index].force_torque_data_, velocity);
-
-  //ROS_INFO_STREAM_THROTTLE(5, velocity[0] << "  " << velocity[1] << "  " << velocity[2] << "  " << velocity[3] << "  " << velocity[4] << "  " << velocity[5]);
-
-  //ROS_ERROR_STREAM( "ft_[0]: " << compliance_data_vectors_[arm_index].force_torque_data_.wrench.force.x );
-  //ROS_ERROR_STREAM( "ft_[1]: " << compliance_data_vectors_[arm_index].force_torque_data_.wrench.force.y );
-  //ROS_ERROR_STREAM( "ft_[2]: " << compliance_data_vectors_[arm_index].force_torque_data_.wrench.force.z );
 
   // Put back into TwistStamped form (which the arm jogger expects)
   jog_command.twist = convertVectorToTwist( velocity );
