@@ -78,7 +78,7 @@ public:
   std::string jog_frame_ = "";
 
   // Key equation: compliance_velocity[i] = wrench[i]/stiffness[i]
-  std::vector<double> stiffness_{1000, 1000, 1000, 1000, 1000, 1000};
+  std::vector<double> stiffness_{500, 500, 500, 500, 500, 500};
 
   // Related to the cutoff frequency of the low-pass filter.
   double filter_param_ = 10.;
