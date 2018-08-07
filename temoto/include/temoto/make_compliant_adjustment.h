@@ -78,7 +78,7 @@ public:
   std::string jog_frame_ = "";
 
   // Key equation: compliance_velocity[i] = wrench[i]/stiffness[i]
-  std::vector<double> stiffness_{500, 500, 500, 1000, 1000, 1000};
+  std::vector<double> stiffness_{1000, 1000, 1000, 1000, 1000, 1000};
 
   // Related to the cutoff frequency of the low-pass filter.
   double filter_param_ = 10.;
@@ -86,17 +86,18 @@ public:
   // Deadband for force/torque measurements
   std::vector<double> deadband_{10, 10, 10, 10, 10, 10};
 
-  // Stop when any force exceeds X N, or torque exceeds X Nm
+  // Stop when force exceeds X N or torque exceeds X Nm in any dimension.
   // The robot controller's built-in safety limits are ~90 N, ? Nm
-  std::vector<double> end_condition_wrench_{70, 70, 70, 60, 60, 60};
+  std::vector<double> end_condition_wrench_{80, 80, 80, 60, 60, 60};
+
+  // Highest allowable force/torque across all dimensions.
+  double highest_allowable_force_ = 88, highest_allowable_torque_ = 50;
 
   // Current force/torque data
   geometry_msgs::WrenchStamped force_torque_data_;
 
   // Outgoing velocity msg
   std::vector<double> velocity_out_{0, 0, 0, 0, 0, 0};
-
-  double highest_allowable_force_ = 100, highest_allowable_torque_ = 50;
 
   // An object to do compliance calculations
   compliant_control::CompliantControl compliant_control_instance_;

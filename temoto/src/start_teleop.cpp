@@ -97,7 +97,6 @@ Teleoperator::Teleoperator()
 
     // Enable compliance for this end-effector?
     end_effector_parameters_.allow_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/allow_compliant_jog", n_) );
-    ROS_ERROR_STREAM("Allowing compliance for EE " << i);
 
     if (end_effector_parameters_.allow_compliant_jog.at(i))
       compliance_object_.addCompliantEndEffector(i);
@@ -247,9 +246,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
         end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
       }
       else if ( current_joint_or_cartesian_jog_==JOINT )
-      {
         end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
-      }
   
       return;
     }

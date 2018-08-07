@@ -63,4 +63,7 @@
     <param name="maximum_joint_rad" type="double" value="3.141" />
   </node>
 
+  <!-- MAINTAIN_POSE -->
+  <include file="$(find maintain_pose)/launch/maintain_pose.launch" />
+
 </launch>
