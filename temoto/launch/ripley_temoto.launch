@@ -40,7 +40,7 @@
 
 
   <!-- Arm jogging -->
-  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" output="screen" />
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" />
 
 
   <!-- Launch the EE levels/Angles to be displayed in RQT_MANIP of rqt_gui -->

@@ -16,7 +16,7 @@ temoto:
     ee1:
       end_effector: "left_ur5_temoto_ee"
       movegroup: "left_ur5_temoto"
-      manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
+      manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl"
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: ""
@@ -28,7 +28,6 @@ temoto:
   temoto_xbox_pose_cmd_topic: "/joy"
   temoto_leap_pose_cmd_topic: ""
 
-  # navigate or manipulate
   enable_navigation: true
   enable_manipulation: true
 

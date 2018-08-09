@@ -286,8 +286,8 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
   {
-    // Wrist joint jogging with these two buttons
-    if ( pose_cmd.buttons[2] || pose_cmd.buttons[8] )
+    // Wrist joint jogging with these two buttons (SpaceNav Pro)
+    if ( (pose_cmd.buttons.size() >= 9) && (pose_cmd.buttons[2] || pose_cmd.buttons[8]) )
     {
       joint_jog_cmd_.deltas[0] = ( pose_cmd.buttons[2] - pose_cmd.buttons[8] );
       joint_jog_cmd_.header.stamp = ros::Time::now();
