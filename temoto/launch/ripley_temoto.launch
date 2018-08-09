@@ -18,6 +18,9 @@
 
 
   <!-- Pose controller -->
+  <node name="xbox_joy" pkg="joy" type="joy_node" >
+    <param name="autorepeat_rate" type="double" value="100" />
+  </node>
   <include file="$(find spacenav_node)/launch/classic.launch"/>
 
 
