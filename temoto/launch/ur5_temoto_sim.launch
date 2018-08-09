@@ -1,44 +1,33 @@
 <launch>
 
-  <!--                 -->
-  <!--  CONFIGURATION  -->
-  <!--                 -->
-
-
   <!-- Load temoto parameters -->
   <rosparam command="load" file="$(find temoto)/config/ur5_sim.yaml" />
-
-  <!-- Bring up speech-to-text and text-to-speech -->
-  <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
-  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
-
-  <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/>
-  <!-- <include file="$(find google_speech_to_text)/launch/en-US.launch" /> -->
-
-
-  <!--                 -->
-  <!--                 -->
-  <!--                 -->
-  
-  
-
-  <!-- Pose Controllers, Launch spacenav, xbox, and hand tracker -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/>
-  <node name="joy_node" pkg="joy" type="joy_node">
-    <param name="autorepeat_rate" value="30" />
-  </node>
-  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
-
-  <!-- Bring up Griffin Powermate -->
-  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
 
 
   <!-- Most of the action happens here -->
   <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="gnome-terminal --command" />
 
 
+  <!-- Bring up speech-to-text and text-to-speech -->
+  <!-- Several options here: PocketSphinx, Google speech-to-text, keyboard, ... -->
+  <!-- Optional if you use buttons on the controller instead -->
+  <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
+  <!-- <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" /> -->
+  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
+  <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher"/>
+
+
+  <!-- Pose controller -->
+  <include file="$(find spacenav_node)/launch/classic.launch"/>
+
+
+  <!-- Bring up Griffin Powermate (OPTIONAL - for motion scaling) -->
+  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
+
+
   <!-- Start soundplay_node that is responsible for voice synthesis -->
 <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
+
 
   <!-- Arm jogging -->
   <include file="$(find ur_gazebo)/launch/jog_arm.launch"/>
