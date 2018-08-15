@@ -199,9 +199,6 @@ private:
     {25, "disable compliance"} // Ctrl button
   };
 
-  enum joint_or_cartesian_jog { JOINT, CARTESIAN };
-  joint_or_cartesian_jog current_joint_or_cartesian_jog_ = CARTESIAN;
-
   // Did the user enable compliance?
   bool enable_compliance_ = false;
 

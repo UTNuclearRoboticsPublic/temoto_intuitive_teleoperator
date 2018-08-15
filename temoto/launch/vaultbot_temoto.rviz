@@ -4,7 +4,6 @@ Panels:
     Name: Displays
     Property Tree Widget:
       Expanded:
-        - /TF1
         - /TF1/Frames1
         - /MotionPlanning1/Planning Request1
       Splitter Ratio: 0.5
@@ -27,7 +26,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: ""
+    SyncSource: LaserScan
 Visualization Manager:
   Class: ""
   Displays:
@@ -62,7 +61,29 @@ Visualization Manager:
           Value: false
         bulkhead_link:
           Value: false
-        camera_ee_link:
+        camera_aligned_depth_to_color_frame:
+          Value: false
+        camera_aligned_depth_to_infra1_frame:
+          Value: false
+        camera_aligned_depth_to_infra2_frame:
+          Value: false
+        camera_color_frame:
+          Value: false
+        camera_color_optical_frame:
+          Value: false
+        camera_depth_frame:
+          Value: false
+        camera_depth_optical_frame:
+          Value: false
+        camera_infra1_frame:
+          Value: false
+        camera_infra1_optical_frame:
+          Value: false
+        camera_infra2_frame:
+          Value: false
+        camera_infra2_optical_frame:
+          Value: false
+        camera_link:
           Value: false
         floorplane_link:
           Value: false
@@ -72,11 +93,11 @@ Visualization Manager:
           Value: false
         front_right_wheel_link:
           Value: false
+        hokuyo_lidar:
+          Value: false
         imu_link:
           Value: false
         inertial_link:
-          Value: false
-        laser:
           Value: false
         laser_scan_link:
           Value: false
@@ -84,41 +105,19 @@ Visualization Manager:
           Value: false
         left_ur5_base_link:
           Value: false
-        left_ur5_cam_mount_link:
-          Value: false
         left_ur5_ee_link:
           Value: false
         left_ur5_forearm_link:
           Value: false
-        left_ur5_ft_link:
-          Value: false
-        left_ur5_gripper_base_link:
-          Value: false
-        left_ur5_gripper_finger1_finger_link:
-          Value: false
-        left_ur5_gripper_finger1_finger_tip_link:
-          Value: false
-        left_ur5_gripper_finger1_inner_knuckle_link:
-          Value: false
-        left_ur5_gripper_finger1_knuckle_link:
-          Value: false
-        left_ur5_gripper_finger2_finger_link:
-          Value: false
-        left_ur5_gripper_finger2_finger_tip_link:
-          Value: false
-        left_ur5_gripper_finger2_inner_knuckle_link:
-          Value: false
-        left_ur5_gripper_finger2_knuckle_link:
+        left_ur5_r200_tower_mount_link:
           Value: false
         left_ur5_shoulder_link:
           Value: false
-        left_ur5_temoto_ee:
-          Value: false
         left_ur5_tool0:
           Value: false
-        left_ur5_upper_arm_link:
+        left_ur5_tool0_controller:
           Value: false
-        left_ur5_webcam_surrogate:
+        left_ur5_upper_arm_link:
           Value: false
         left_ur5_wrist_1_link:
           Value: false
@@ -126,39 +125,29 @@ Visualization Manager:
           Value: false
         left_ur5_wrist_3_link:
           Value: false
+        map:
+          Value: false
+        odom:
+          Value: false
+        r_temoto_end_effector:
+          Value: false
         rear_bumper_link:
           Value: false
         rear_left_wheel_link:
           Value: false
         rear_right_wheel_link:
           Value: false
+        right_ur5_2_finger_140_gripper_link:
+          Value: false
         right_ur5_base:
           Value: false
         right_ur5_base_link:
           Value: false
+        right_ur5_cam_tilt_link:
+          Value: false
         right_ur5_ee_link:
           Value: false
         right_ur5_forearm_link:
-          Value: false
-        right_ur5_ft_link:
-          Value: false
-        right_ur5_gripper_base_link:
-          Value: false
-        right_ur5_gripper_finger1_finger_link:
-          Value: false
-        right_ur5_gripper_finger1_finger_tip_link:
-          Value: false
-        right_ur5_gripper_finger1_inner_knuckle_link:
-          Value: false
-        right_ur5_gripper_finger1_knuckle_link:
-          Value: false
-        right_ur5_gripper_finger2_finger_link:
-          Value: false
-        right_ur5_gripper_finger2_finger_tip_link:
-          Value: false
-        right_ur5_gripper_finger2_inner_knuckle_link:
-          Value: false
-        right_ur5_gripper_finger2_knuckle_link:
           Value: false
         right_ur5_shoulder_link:
           Value: false
@@ -166,9 +155,9 @@ Visualization Manager:
           Value: false
         right_ur5_sr300_surrogate:
           Value: false
-        right_ur5_temoto_ee:
-          Value: false
         right_ur5_tool0:
+          Value: false
+        right_ur5_tool0_controller:
           Value: false
         right_ur5_upper_arm_link:
           Value: false
@@ -178,7 +167,9 @@ Visualization Manager:
           Value: false
         right_ur5_wrist_3_link:
           Value: false
-        screen_link:
+        scanmatcher_frame:
+          Value: false
+        sensor_mast:
           Value: false
         temoto_command_frame:
           Value: true
@@ -192,104 +183,100 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        base_link:
-          base_footprint:
-            floorplane_link:
-              {}
-          bulkhead_link:
-            SICK_LMS291_link:
-              laser:
-                {}
-              laser_scan_link:
-                {}
-            left_ur5_base_link:
-              left_ur5_base:
-                {}
-              left_ur5_shoulder_link:
-                left_ur5_upper_arm_link:
-                  left_ur5_forearm_link:
-                    left_ur5_wrist_1_link:
-                      left_ur5_wrist_2_link:
-                        left_ur5_wrist_3_link:
-                          left_ur5_ee_link:
-                            left_ur5_cam_mount_link:
-                              left_ur5_webcam_surrogate:
+        map:
+          odom:
+            base_link:
+              base_footprint:
+                floorplane_link:
+                  {}
+              bulkhead_link:
+                SICK_LMS291_link:
+                  laser_scan_link:
+                    {}
+                left_ur5_base_link:
+                  left_ur5_base:
+                    {}
+                  left_ur5_shoulder_link:
+                    left_ur5_upper_arm_link:
+                      left_ur5_forearm_link:
+                        left_ur5_wrist_1_link:
+                          left_ur5_wrist_2_link:
+                            left_ur5_wrist_3_link:
+                              left_ur5_ee_link:
+                                hokuyo_lidar:
+                                  {}
+                                left_ur5_r200_tower_mount_link:
+                                  {}
+                              left_ur5_tool0:
                                 {}
-                            left_ur5_ft_link:
-                              {}
-                            left_ur5_gripper_base_link:
-                              left_ur5_gripper_finger1_inner_knuckle_link:
-                                left_ur5_gripper_finger1_finger_tip_link:
+                  left_ur5_tool0_controller:
+                    {}
+                right_ur5_base_link:
+                  right_ur5_base:
+                    {}
+                  right_ur5_shoulder_link:
+                    right_ur5_upper_arm_link:
+                      right_ur5_forearm_link:
+                        right_ur5_wrist_1_link:
+                          right_ur5_wrist_2_link:
+                            right_ur5_wrist_3_link:
+                              right_ur5_ee_link:
+                                r_temoto_end_effector:
                                   {}
-                              left_ur5_gripper_finger1_knuckle_link:
-                                left_ur5_gripper_finger1_finger_link:
+                                right_ur5_2_finger_140_gripper_link:
                                   {}
-                              left_ur5_gripper_finger2_inner_knuckle_link:
-                                left_ur5_gripper_finger2_finger_tip_link:
-                                  {}
-                              left_ur5_gripper_finger2_knuckle_link:
-                                left_ur5_gripper_finger2_finger_link:
-                                  {}
-                            left_ur5_temoto_ee:
-                              {}
-                          left_ur5_tool0:
-                            {}
-            right_ur5_base_link:
-              right_ur5_base:
+                                right_ur5_sr300_mount_link:
+                                  right_ur5_cam_tilt_link:
+                                    camera_link:
+                                      camera_aligned_depth_to_color_frame:
+                                        camera_color_optical_frame:
+                                          {}
+                                      camera_aligned_depth_to_infra1_frame:
+                                        camera_infra1_optical_frame:
+                                          {}
+                                      camera_aligned_depth_to_infra2_frame:
+                                        camera_infra2_optical_frame:
+                                          {}
+                                      camera_color_frame:
+                                        {}
+                                      camera_depth_frame:
+                                        camera_depth_optical_frame:
+                                          {}
+                                      camera_infra1_frame:
+                                        {}
+                                      camera_infra2_frame:
+                                        {}
+                                      right_ur5_sr300_surrogate:
+                                        {}
+                              right_ur5_tool0:
+                                {}
+                  right_ur5_tool0_controller:
+                    {}
+              front_bumper_link:
                 {}
-              right_ur5_shoulder_link:
-                right_ur5_upper_arm_link:
-                  right_ur5_forearm_link:
-                    right_ur5_wrist_1_link:
-                      right_ur5_wrist_2_link:
-                        right_ur5_wrist_3_link:
-                          right_ur5_ee_link:
-                            right_ur5_ft_link:
-                              {}
-                            right_ur5_gripper_base_link:
-                              right_ur5_gripper_finger1_inner_knuckle_link:
-                                right_ur5_gripper_finger1_finger_tip_link:
-                                  {}
-                              right_ur5_gripper_finger1_knuckle_link:
-                                right_ur5_gripper_finger1_finger_link:
-                                  {}
-                              right_ur5_gripper_finger2_inner_knuckle_link:
-                                right_ur5_gripper_finger2_finger_tip_link:
-                                  {}
-                              right_ur5_gripper_finger2_knuckle_link:
-                                right_ur5_gripper_finger2_finger_link:
-                                  {}
-                            right_ur5_sr300_mount_link:
-                              camera_ee_link:
-                                right_ur5_sr300_surrogate:
-                                  {}
-                            right_ur5_temoto_ee:
-                              {}
-                          right_ur5_tool0:
-                            {}
-            screen_link:
-              {}
-          front_bumper_link:
-            {}
-          front_left_wheel_link:
-            {}
-          front_right_wheel_link:
-            {}
-          imu_link:
-            {}
-          inertial_link:
-            {}
-          rear_bumper_link:
-            {}
-          rear_left_wheel_link:
-            {}
-          rear_right_wheel_link:
-            {}
-          temoto_command_frame:
-            {}
-          top_chassis_link:
-            {}
-          user_rail_link:
+              front_left_wheel_link:
+                {}
+              front_right_wheel_link:
+                {}
+              imu_link:
+                {}
+              inertial_link:
+                {}
+              rear_bumper_link:
+                {}
+              rear_left_wheel_link:
+                {}
+              rear_right_wheel_link:
+                {}
+              sensor_mast:
+                {}
+              temoto_command_frame:
+                {}
+              top_chassis_link:
+                {}
+              user_rail_link:
+                {}
+          scanmatcher_frame:
             {}
       Update Interval: 0
       Value: true
@@ -402,7 +389,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_ee_link:
+          camera_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -435,10 +422,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          laser:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           laser_scan_link:
             Alpha: 1
             Show Axes: false
@@ -448,11 +431,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
           left_ur5_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_cam_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -467,52 +445,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_ft_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_knuckle_link:
+          left_ur5_r200_tower_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -522,20 +455,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_temoto_ee:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           left_ur5_tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
           left_ur5_upper_arm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_webcam_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -555,6 +479,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          r_temoto_end_effector:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -570,6 +498,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_2_finger_140_gripper_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           right_ur5_base:
             Alpha: 1
             Show Axes: false
@@ -579,62 +512,16 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_cam_tilt_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_forearm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_ft_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -654,10 +541,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_temoto_ee:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           right_ur5_tool0:
             Alpha: 1
             Show Axes: false
@@ -682,7 +565,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          screen_link:
+          sensor_mast:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -761,7 +644,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          camera_ee_link:
+          camera_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -794,10 +677,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          laser:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           laser_scan_link:
             Alpha: 1
             Show Axes: false
@@ -807,11 +686,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
           left_ur5_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_cam_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -826,52 +700,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_ft_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger1_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_gripper_finger2_knuckle_link:
+          left_ur5_r200_tower_mount_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -881,20 +710,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          left_ur5_temoto_ee:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           left_ur5_tool0:
             Alpha: 1
             Show Axes: false
             Show Trail: false
           left_ur5_upper_arm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          left_ur5_webcam_surrogate:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -914,6 +734,10 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          r_temoto_end_effector:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           rear_bumper_link:
             Alpha: 1
             Show Axes: false
@@ -929,6 +753,11 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_2_finger_140_gripper_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           right_ur5_base:
             Alpha: 1
             Show Axes: false
@@ -938,62 +767,16 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
+          right_ur5_cam_tilt_link:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
           right_ur5_ee_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
           right_ur5_forearm_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_ft_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_base_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger1_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_finger_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_finger_tip_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_inner_knuckle_link:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          right_ur5_gripper_finger2_knuckle_link:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -1013,10 +796,6 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          right_ur5_temoto_ee:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
           right_ur5_tool0:
             Alpha: 1
             Show Axes: false
@@ -1041,7 +820,7 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          screen_link:
+          sensor_mast:
             Alpha: 1
             Show Axes: false
             Show Trail: false
