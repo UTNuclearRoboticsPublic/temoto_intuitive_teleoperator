@@ -36,6 +36,7 @@
  */
 
 // ROS includes
+#include "actionlib/client/simple_action_client.h"
 #include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "jog_msgs/JogJoint.h"
@@ -47,7 +48,6 @@
 #include "std_msgs/String.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
-#include "actionlib/client/simple_action_client.h"
 
 // temoto includes
 #include "griffin_powermate/PowermateEvent.h"
@@ -60,6 +60,11 @@
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
+
+// check_for_temoto_keyboard_priority includes X11, which causes preprocessor issues.
+// See https://stackoverflow.com/a/22944487
+#include "temoto/check_for_temoto_keyboard_priority.h" 
+//#undef Success
 
 #ifndef START_TELEOP_H
 #define START_TELEOP_H

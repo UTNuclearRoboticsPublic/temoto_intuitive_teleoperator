@@ -26,6 +26,9 @@ find_package(catkin REQUIRED
   view_controller_msgs
 )
 
+# To determine keyboard priority
+find_package(X11 REQUIRED)
+
 add_action_files(DIRECTORY action/temoto
    FILES
    PreplannedSequence.action
@@ -41,22 +44,23 @@ generate_messages(
 
 catkin_package(
   INCLUDE_DIRS include
- CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs
+  CATKIN_DEPENDS actionlib_msgs geometry_msgs robotiq_c_model_control roscpp rospy std_msgs
 )
 
 ###########
 ## Build ##
 ###########
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
 
-## Declare a C++ library
+link_directories(${X11_LIBRARY_DIR})
+
+add_library(check_for_temoto_keyboard_priority src/check_for_temoto_keyboard_priority.cpp)   
+target_link_libraries(check_for_temoto_keyboard_priority ${catkin_LIBRARIES} ${X11_LIBRARIES} )   
+add_dependencies(check_for_temoto_keyboard_priority temoto_generate_messages_cpp)
 
 # Preplanned sequences:
 
