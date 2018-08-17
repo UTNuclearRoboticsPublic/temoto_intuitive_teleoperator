@@ -61,11 +61,6 @@
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
 
-// check_for_temoto_keyboard_priority includes X11, which causes preprocessor issues.
-// See https://stackoverflow.com/a/22944487
-#include "temoto/check_for_temoto_keyboard_priority.h" 
-//#undef Success
-
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
 

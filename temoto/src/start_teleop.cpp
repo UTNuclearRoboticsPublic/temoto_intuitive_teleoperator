@@ -577,7 +577,7 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
  */
 void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
-  // If user put Temoto in sleep mode, do nothing.
+  // Do nothing if user put Temoto in sleep mode
   if (!temoto_sleep_)
   {
     //////////////////////////////////////////////////
