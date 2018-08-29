@@ -13,7 +13,7 @@
   <!-- Optional if you use buttons on the controller instead -->
   <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
   <!-- <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" /> -->
-  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" output="screen" />
+  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" />
   <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher" />
 
 
@@ -40,7 +40,7 @@
 
 
   <!-- Arm jogging -->
-  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" output="screen" />
+  <include file="$(find vaultbot_drivers)/launch/jog_arms.launch" />
 
 
   <!-- FOR TEACH_MOTIONS -->

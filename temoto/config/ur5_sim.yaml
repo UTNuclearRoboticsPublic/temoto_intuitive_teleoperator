@@ -6,7 +6,7 @@ temoto:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "temoto_end_effector"
       movegroup: "manipulator"
-      manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
+      manip_stl: "package://temoto/meshes/2_finger_140_gripper_marker.stl" #"package://temoto/meshes/manip_cube.stl"
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: "/joy"

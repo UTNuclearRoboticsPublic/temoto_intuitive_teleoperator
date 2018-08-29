@@ -11,7 +11,7 @@ temoto/config/<your_robot>.yaml
 
 temoto/launch/<your_robot>.launch
 
-If you want an accurate visualization of your end-effector to appear, add a mesh file in temoto_support/meshes. Otherwise you will get a blocky representation of the end-effector.
+If you want an accurate visualization of your end-effector to appear, add a mesh file in temoto/meshes. Otherwise you will get a blocky representation of the end-effector.
 
 ### Launch file tips
 Your robot's launch file needs to do these things:

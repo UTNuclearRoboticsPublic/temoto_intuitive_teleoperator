@@ -6,7 +6,7 @@ temoto:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "right_ur5_temoto_ee"
       movegroup: "right_ur5_temoto"
-      manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
+      manip_stl: "package://temoto/meshes/2_finger_85_gripper_marker.stl" #"package://temoto/meshes/manip_cube.stl"
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: ""
@@ -16,7 +16,7 @@ temoto:
     ee1:
       end_effector: "left_ur5_temoto_ee"
       movegroup: "left_ur5_temoto"
-      manip_stl: "package://temoto_support/meshes/2_finger_85_gripper_marker.stl"
+      manip_stl: "package://temoto/meshes/2_finger_85_gripper_marker.stl"
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: ""
