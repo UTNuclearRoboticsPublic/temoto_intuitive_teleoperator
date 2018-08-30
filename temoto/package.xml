@@ -12,26 +12,14 @@
   <depend>actionlib</depend>
   <depend>actionlib_msgs</depend>
   <depend>geometry_msgs</depend>
-  <depend>grasp_interface</depend>
   <depend>griffin_powermate</depend>
   <depend>jog_arm</depend>
   <depend>jog_msgs</depend>
-  <depend>message_generation</depend>
-  <depend>message_runtime</depend>
-  <depend>moveit_core</depend>
-  <depend>moveit_ros_planning_interface</depend>
+  <depend>keyboard_reader</depend>
   <depend>robotiq_c_model_control</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
-  <depend>rviz_animated_view_controller</depend>
-  <depend>sound_play</depend>
   <depend>std_msgs</depend>
-  <depend>std_srvs</depend>
-  <depend>tf</depend>
-  <depend>tf2</depend>
-  <depend>tf2_ros</depend>
-  <depend>view_controller_msgs</depend>
-  <depend>visualization_msgs</depend>
   
   <!-- The export tag contains other, unspecified, tags -->
   <export>

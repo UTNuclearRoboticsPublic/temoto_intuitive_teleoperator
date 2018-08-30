@@ -2,7 +2,6 @@
 #define GET_ROS_PARAMS_H
 
 #include <ros/ros.h>
-#include <string>
 
 namespace get_ros_params
 {

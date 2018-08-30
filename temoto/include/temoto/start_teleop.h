@@ -36,8 +36,6 @@
  */
 
 // ROS includes
-#include "actionlib/client/simple_action_client.h"
-#include "geometry_msgs/Pose.h"
 #include "geometry_msgs/PoseStamped.h"
 #include "jog_msgs/JogJoint.h"
 #include "map"

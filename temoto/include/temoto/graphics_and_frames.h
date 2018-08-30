@@ -36,8 +36,6 @@
  */
 
 // ROS includes
-#include "geometry_msgs/Pose.h"
-#include "ros/ros.h"
 #include "std_srvs/Empty.h"
 #include "temoto/get_ros_params.h"
 #include "visualization_msgs/Marker.h"

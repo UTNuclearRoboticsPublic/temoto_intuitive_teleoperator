@@ -37,7 +37,6 @@
 #ifndef MAKE_COMPLIANT_ADJUSTMENT_H
 #define MAKE_COMPLIANT_ADJUSTMENT_H
 
-#include "geometry_msgs/TwistStamped.h"
 #include "geometry_msgs/Vector3Stamped.h"
 #include "jog_arm/compliant_control.h"
 #include "ros/ros.h"

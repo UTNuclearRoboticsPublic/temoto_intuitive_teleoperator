@@ -2,8 +2,6 @@
 #define PREPLANNED_SEQUENCES_H
 
 // ROS includes
-#include "ros/ros.h"
-#include "std_msgs/Bool.h"
 #include "std_msgs/String.h"
 #include <actionlib/server/simple_action_server.h>
 

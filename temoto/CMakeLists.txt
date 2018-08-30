@@ -4,26 +4,12 @@ project(temoto)
 set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(catkin REQUIRED
-  actionlib
   actionlib_msgs
-  genmsg
-  geometry_msgs
   griffin_powermate
   jog_arm
   jog_msgs
   keyboard_reader
-  message_generation
-  move_base_msgs
-  moveit_core
-  moveit_ros_planning_interface
   robotiq_c_model_control
-  roscpp
-  rospy
-  std_msgs
-  tf
-  tf2
-  tf2_ros
-  view_controller_msgs
 )
 
 add_action_files(DIRECTORY action/temoto
@@ -74,4 +60,4 @@ target_link_libraries(start_teleop ${catkin_LIBRARIES} close_gripper open_grippe
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} )		
-add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp)
+add_dependencies(kb_fake_voice_commander temoto_generate_messages_cpp keyboard_reader)

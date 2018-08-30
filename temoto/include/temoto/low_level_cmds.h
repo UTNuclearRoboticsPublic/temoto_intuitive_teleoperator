@@ -1,8 +1,6 @@
 #ifndef MOTION_ACTIONS_H
 #define MOTION_ACTIONS_H
 
-#include <string>
-
 namespace low_level_cmds
 {
 const std::string ABORT = "abort";

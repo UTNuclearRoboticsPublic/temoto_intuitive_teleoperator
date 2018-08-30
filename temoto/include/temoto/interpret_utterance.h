@@ -38,7 +38,6 @@
  */
 
 // ROS includes
-#include "ros/ros.h"
 #include "sound_play/sound_play.h"
 #include "std_msgs/String.h"
 
