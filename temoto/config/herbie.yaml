@@ -6,15 +6,19 @@ temoto:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "temoto_end_effector"
       movegroup: "manipulator"
-      manip_stl: "package://temoto/meshes/Shovel.stl"
+      manip_stl: "package://temoto/meshes/MotorMount_Output.stl"
+      jog_topic: "/jog_arm_server/delta_jog_cmds"
+      wrist_joint_name: herbie/joint_5
+      allow_compliant_jog: false
+      joint_jog_topic: "/NOT_IMPLEMENTED"
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
-  temoto_xbox_pose_cmd_topic: "/joy"
-  incoming_jog_topic: "/jog_arm_server/delta_jog_cmds"
+  temoto_xbox_pose_cmd_topic: ""
+  temoto_leap_pose_cmd_topic: ""
 
    # navigate or manipulate
-  navigate: false
-  manipulate: true
+  enable_navigation: false
+  enable_manipulation: true
 
   input_voice_topic: "stt/spoken_text"
 
