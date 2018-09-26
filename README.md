@@ -54,4 +54,4 @@ Keyboard commands:
 
 7) Start a real-time jogger for each arm (optional):
 
-**include file="$(find vaultbot_drivers)/launch/jog_arms.launch" output="screen"**
+**include file="$(find vaultbot_launch)/launch/jog_arms.launch" output="screen"**
