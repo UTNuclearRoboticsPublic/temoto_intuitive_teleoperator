@@ -1,0 +1,32 @@
+<launch>
+
+  <!-- Load temoto parameters -->
+  <rosparam command="load" file="$(find temoto)/config/ur3.yaml" />
+
+  <!-- Most of the action happens here -->
+  <node name="start_teleop" pkg="temoto" type="start_teleop" />
+
+  <!-- Bring up speech-to-text and text-to-speech -->
+  <!-- Several options here: PocketSphinx, Google speech-to-text, keyboard, ... -->
+  <!-- Optional if you use buttons on the controller instead -->
+  <!-- <include file="$(find pocketsphinx)/launch/pocketsphinx.launch" /> -->
+  <!-- <include file="$(find google_speech_to_text)/launch/google_speech_to_text.launch" /> -->
+  <node name="kb_fake_voice_commander" pkg="temoto" type="kb_fake_voice_commander" />
+  <node name="keyboard_event_publisher" pkg="keyboard_reader" type="keyboard_event_publisher" />
+
+  <!-- Pose controller -->
+  <!-- node name="spacenav_pro" pkg="spacenav_pro" type="spacenav_pro" / -->
+  <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
+
+  <!-- Bring up Griffin Powermate (OPTIONAL - for motion scaling) -->
+  <node name="griffin_powermate" pkg="griffin_powermate" type="griffin_powermate" />
+
+  <!-- bringup proper rviz config -->
+  <include file="$(find ur3_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="config" value="true"/>
+  </include>
+
+  <!-- Start soundplay_node that is responsible for voice synthesis -->
+  <node name="soundplay_node" pkg="sound_play" type="soundplay_node.py" />
+
+</launch>
