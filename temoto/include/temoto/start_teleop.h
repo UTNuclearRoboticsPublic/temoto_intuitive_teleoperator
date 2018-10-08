@@ -57,7 +57,6 @@
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 #include "temoto/preplanned_sequences.h"
-
 #include "leap_motion_controller/Set.h"
 
 #ifndef START_TELEOP_H
@@ -186,5 +185,12 @@ private:
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
+
+  //Rest added by Cassidy
+  // ~*~ VARIABLES DESCRIBING THE STATE ~*~
+  bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
+  bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
+  bool orientation_locked_;   ///< Hand orientation info is to be ignored if TRUE.
+
 };
 #endif

@@ -4,7 +4,7 @@
   <rosparam command="load" file="$(find temoto)/config/ur3.yaml" />
 
   <!-- Most of the action happens here -->
-  <node name="start_teleop" pkg="temoto" type="start_teleop" />
+  <node name="start_teleop" pkg="temoto" type="start_teleop" output="screen" />
 
   <!-- Bring up speech-to-text and text-to-speech -->
   <!-- Several options here: PocketSphinx, Google speech-to-text, keyboard, ... -->

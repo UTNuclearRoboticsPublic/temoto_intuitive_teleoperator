@@ -3,7 +3,9 @@ Panels:
     Help Height: 75
     Name: Displays
     Property Tree Widget:
-      Expanded: ~
+      Expanded:
+        - /TF1
+        - /TF1/Frames1
       Splitter Ratio: 0.5
     Tree Height: 283
   - Class: rviz/Selection
@@ -244,8 +246,67 @@ Visualization Manager:
       Marker Topic: visualization_marker
       Name: Marker
       Namespaces:
-        {}
+        hand_pose_marker: true
       Queue Size: 100
+      Value: true
+    - Class: rviz/TF
+      Enabled: true
+      Frame Timeout: 15
+      Frames:
+        All Enabled: false
+        base:
+          Value: false
+        base_link:
+          Value: false
+        ee_link:
+          Value: false
+        forearm_link:
+          Value: false
+        shoulder_link:
+          Value: false
+        table:
+          Value: false
+        temoto_command_frame:
+          Value: true
+        tool0:
+          Value: false
+        tool0_controller:
+          Value: false
+        upper_arm_link:
+          Value: false
+        world:
+          Value: false
+        wrist_1_link:
+          Value: false
+        wrist_2_link:
+          Value: false
+        wrist_3_link:
+          Value: false
+      Marker Scale: 1
+      Name: TF
+      Show Arrows: true
+      Show Axes: true
+      Show Names: true
+      Tree:
+        world:
+          table:
+            base_link:
+              base:
+                tool0_controller:
+                  {}
+              shoulder_link:
+                upper_arm_link:
+                  forearm_link:
+                    wrist_1_link:
+                      wrist_2_link:
+                        wrist_3_link:
+                          ee_link:
+                            {}
+                          tool0:
+                            {}
+          temoto_command_frame:
+            {}
+      Update Interval: 0
       Value: true
   Enabled: true
   Global Options:
@@ -272,7 +333,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 2.24879503
+      Distance: 2.24637508
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
@@ -287,10 +348,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.190398201
+      Pitch: 0.040398106
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.75039935
+      Yaw: 2.05039692
     Saved: ~
 Window Geometry:
   Displays:

@@ -70,6 +70,18 @@ public:
       else if (kbCommand.key_code == 0x000f)
         voiceCommand.data = "next end effector";
 
+      // Execute trajectory: "1" key
+      else if (kbCommand.key_code == 0x0002)
+        voiceCommand.data = "set position limited";
+
+      // Execute trajectory: "2" key
+      else if (kbCommand.key_code == 0x0003)
+        voiceCommand.data = "set position fwd only";
+
+      // Execute trajectory: "3" key
+      else if (kbCommand.key_code == 0x0004)
+        voiceCommand.data = "set orientation locked";
+
       else
         voiceCommand.data = "unrecognized command";
 

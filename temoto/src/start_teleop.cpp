@@ -45,6 +45,11 @@ Teleoperator::Teleoperator()
   nav_interface_("move_base"),
   tf_listener_(tf_buffer_)
 {
+  //These three variables added by Cassidy
+  position_limited_ = false;
+  position_fwd_only_ = false;
+  orientation_locked_ = false;
+
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
   temoto_leap_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_leap_pose_cmd_topic", n_);
@@ -299,9 +304,7 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
   {
-    // Define and set contol hand as left hand
-    // Check if left hand is present
-    // Get number of fingers
+    // Define and set contol hand as left hand, Check if left hand is present, Get number of fingers
     geometry_msgs::Pose hand;
     hand = leap_data.left_hand.palm_pose.pose;
     bool hand_present = leap_data.left_hand.is_present;
@@ -337,6 +340,32 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
     scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
     scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
+
+
+
+    //ADDED BY CASSIDY FROM OLD VERSION
+    // Applying relevant limitations to direction and/or orientation
+    if (position_limited_ && position_fwd_only_)   // if position is limited and position_fwd_only_ is true
+    {
+      scaled_pose.position.x = 0;
+      scaled_pose.position.y = 0;
+    }
+    else if (position_limited_ && !position_fwd_only_)  // if position is limited and position_fwd_only_ is false, i.e. consider only sideways position change
+    {
+      scaled_pose.position.z = 0;
+    }
+    
+    if (orientation_locked_)        // if palm orientation is to be ignored 
+    {
+      // Overwrite orientation with identity quaternion.
+      scaled_pose.orientation.w = 1;
+      scaled_pose.orientation.x = 0;
+      scaled_pose.orientation.y = 0;
+      scaled_pose.orientation.z = 0;
+    } 
+    //END OF ADDED BY CASSIDY
+ 
+
 
     if (fingers == 2)
     {
@@ -751,7 +780,24 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
         callRobotMotionInterface(low_level_cmds::GO);
         return;
       }
-
+      else if (voice_command.data == "set position limited")
+      {
+        ROS_INFO("Setting position_limited_ ...");
+        position_limited_=true;
+        return;
+      }
+      else if (voice_command.data == "set position fwd only")
+      {
+        ROS_INFO("Setting forward motion only ...");
+        position_fwd_only_=true;
+        return;
+      }      
+      else if (voice_command.data == "set orientation locked")
+      {
+        ROS_INFO("Locking orientation ...");
+        orientation_locked_=true;
+        return;
+      }
       else
       {
         ROS_INFO("Unknown voice command.");
