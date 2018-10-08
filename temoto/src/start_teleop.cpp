@@ -616,6 +616,7 @@ void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult s
  */
 void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
 {
+  ROS_ERROR_STREAM(voice_command.data);
   // If user put Temoto in sleep mode, do nothing.
   if (!temoto_sleep_)
   {
@@ -782,19 +783,19 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       }
       else if (voice_command.data == "set position limited")
       {
-        ROS_INFO("Setting position_limited_ ...");
+        ROS_ERROR_STREAM("Setting position_limited_ ...");
         position_limited_=true;
         return;
       }
       else if (voice_command.data == "set position fwd only")
       {
-        ROS_INFO("Setting forward motion only ...");
-        position_fwd_only_=true;
+        ROS_ERROR_STREAM("Setting forward motion only ...");
+        position_fwd_only_=true; 
         return;
       }      
       else if (voice_command.data == "set orientation locked")
       {
-        ROS_INFO("Locking orientation ...");
+        ROS_ERROR_STREAM("Locking orientation ...");
         orientation_locked_=true;
         return;
       }
