@@ -7,3 +7,6 @@
 [submodule "leap_motion_controller"]
 	path = leap_motion_controller
 	url = https://github.com/UTNuclearRoboticsPublic/leap_motion_controller.git
+[submodule "rviz_animated_view_controller"]
+	path = rviz_animated_view_controller
+	url = https://github.com/UTNuclearRoboticsPublic/rviz_animated_view_controller.git
