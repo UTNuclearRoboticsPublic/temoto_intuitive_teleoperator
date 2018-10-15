@@ -82,6 +82,18 @@ public:
       else if (kbCommand.key_code == 0x0004)
         voiceCommand.data = "set orientation locked";
 
+      // Execute trajectory: "4" key
+      else if (kbCommand.key_code == 0x0005)
+        voiceCommand.data = "unlock position limited";      
+      
+      // Execute trajectory: "5" key
+      else if (kbCommand.key_code == 0x0006)
+        voiceCommand.data = "unlock fwd only";      
+      
+      // Execute trajectory: "6" key
+      else if (kbCommand.key_code == 0x0007)
+        voiceCommand.data = "unlock orientation";
+
       else
         voiceCommand.data = "unrecognized command";
 
@@ -97,15 +109,23 @@ int main(int argc, char** argv)
 
   std::cout << std::endl << "* * * List of commands: * * *" << std::endl;
   std::cout << "* l - robot please plan" << std::endl;
-  std::cout << "* e - robot please execute" << std::endl;
-  // std::cout << "* l - limit directions" << std::endl;
-  std::cout << "* f - free directions" << std::endl;
-  std::cout << "* x - ignore rotation" << std::endl;
-  std::cout << "* r - consider rotation" << std::endl;
+  std::cout << "* e - robot please execute" << std::endl;  
   std::cout << "* m - manipulation" << std::endl;
   std::cout << "* n - navigation" << std::endl;
+  std::cout << "* b - base move" << std::endl;
   std::cout << "* o - open gripper" << std::endl;
   std::cout << "* c - close gripper" << std::endl;
+  std::cout << "* j - jog mode" << std::endl;
+  std::cout << "* p - point to point mode" << std::endl;
+//  std::cout << "* /t - next end effector" << std::endl;
+
+  std::cout << "* 1 - set position limited" << std::endl;
+  std::cout << "* 2 - set position fwd only" << std::endl;
+  std::cout << "* 3 - set orientation locked" << std::endl;
+  std::cout << "* 4 - unlock position limited" << std::endl;
+  std::cout << "* 5 - unlock fwd only" << std::endl;
+  std::cout << "* 6 - unlock orientation" << std::endl;
+
   std::cout << "* * * * * * *" << std::endl << std::endl;
 
   ROS_INFO("Fake voice commander up and running");

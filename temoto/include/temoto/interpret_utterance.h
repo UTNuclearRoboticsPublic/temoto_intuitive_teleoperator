@@ -90,6 +90,13 @@ public:
     // They can be generally any C++ file
     { "open gripper" },   // open gripper, a preplanned sequence
     { "close gripper" },  // close gripper, a preplanned sequence
+  
+    { "set position limited" },
+    { "set position fwd only" },
+    { "set orientation locked" },
+    { "unlock position limited" },
+    { "unlock fwd only" },
+    { "unlock orientation" },
   };
 
   ros::NodeHandle n_;

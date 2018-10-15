@@ -781,6 +781,9 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
         callRobotMotionInterface(low_level_cmds::GO);
         return;
       }
+
+
+
       else if (voice_command.data == "set position limited")
       {
         ROS_ERROR_STREAM("Setting position_limited_ ...");
@@ -799,6 +802,29 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
         orientation_locked_=true;
         return;
       }
+            
+      else if (voice_command.data == "unlock position limited")
+      {
+        ROS_ERROR_STREAM("Unlocking position_limited_ ...");
+        orientation_locked_=false;
+        return;
+      }
+      else if (voice_command.data == "unlock fwd only")
+      {
+        ROS_ERROR_STREAM("Unlocking forward motion only ...");
+        orientation_locked_=false;
+        return;
+      }
+      else if (voice_command.data == "unlock orientation")
+      {
+        ROS_ERROR_STREAM("Unlocking orientation ...");
+        orientation_locked_=false;
+        return;
+      }
+
+
+
+
       else
       {
         ROS_INFO("Unknown voice command.");
