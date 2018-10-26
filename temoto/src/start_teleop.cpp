@@ -332,14 +332,10 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     //  y -> z
     //  z -> -x
 
-    // Because rotation of hand is limited I included an option  for z axis rotation
-
-    // 1 finger --> z spin cw
-    // 2 finger --> z spin ccw
-
     scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
     scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
     scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
+
 
 
 
@@ -347,17 +343,11 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     // Applying relevant limitations to direction and/or orientation
     if (position_fwd_only_)   // if position is limited and position_fwd_only_ is true
     {
-      scaled_pose.position.y = 0;
-      scaled_pose.position.z = 0;
+      scaled_pose.position.y = EE_pose.position.y;
+      scaled_pose.position.z = EE_pose.position.z;
     }
-    //else if (position_limited_)  // if position is limited and position_fwd_only_ is false, i.e. consider only sideways position change
-    //{
-    //  scaled_pose.position.y = 0;
-    //}
-    
     if (orientation_locked_)        // if palm orientation is to be ignored 
     {
-      ROS_ERROR_STREAM("locking orientation");
       // Overwrite orientation with identity quaternion.
       scaled_pose.orientation.x = 0;
       scaled_pose.orientation.y = 0;
@@ -366,6 +356,7 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     }
     //END OF ADDED BY CASSIDY
  
+
 
 /*
     if (fingers == 2)
@@ -393,6 +384,7 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
   }
 
   return;
+
 
 }  // end leapCallback
 
