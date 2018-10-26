@@ -345,28 +345,29 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
 
     //ADDED BY CASSIDY FROM OLD VERSION
     // Applying relevant limitations to direction and/or orientation
-    if (position_limited_ && position_fwd_only_)   // if position is limited and position_fwd_only_ is true
+    if (position_fwd_only_)   // if position is limited and position_fwd_only_ is true
     {
-      scaled_pose.position.x = 0;
       scaled_pose.position.y = 0;
-    }
-    else if (position_limited_ && !position_fwd_only_)  // if position is limited and position_fwd_only_ is false, i.e. consider only sideways position change
-    {
       scaled_pose.position.z = 0;
     }
+    //else if (position_limited_)  // if position is limited and position_fwd_only_ is false, i.e. consider only sideways position change
+    //{
+    //  scaled_pose.position.y = 0;
+    //}
     
     if (orientation_locked_)        // if palm orientation is to be ignored 
     {
+      ROS_ERROR_STREAM("locking orientation");
       // Overwrite orientation with identity quaternion.
-      scaled_pose.orientation.w = 1;
       scaled_pose.orientation.x = 0;
       scaled_pose.orientation.y = 0;
       scaled_pose.orientation.z = 0;
-    } 
+      scaled_pose.orientation.w = 1;
+    }
     //END OF ADDED BY CASSIDY
  
 
-
+/*
     if (fingers == 2)
     {
       scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
@@ -379,6 +380,7 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     {
       scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
     }
+*/
     tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
                          scaled_pose.orientation.w);
 
@@ -806,13 +808,13 @@ void Teleoperator::processVoiceCommand(std_msgs::String voice_command)
       else if (voice_command.data == "unlock position limited")
       {
         ROS_ERROR_STREAM("Unlocking position_limited_ ...");
-        orientation_locked_=false;
+        position_limited_=false;
         return;
       }
       else if (voice_command.data == "unlock fwd only")
       {
         ROS_ERROR_STREAM("Unlocking forward motion only ...");
-        orientation_locked_=false;
+        position_fwd_only_=false;
         return;
       }
       else if (voice_command.data == "unlock orientation")

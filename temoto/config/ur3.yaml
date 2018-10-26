@@ -1,5 +1,5 @@
 temoto:
-  human_input: "leap_motion"
+  human_input: "temoto_command_frame"
   base_frame: "base_link"
   num_ee: 1 # How many end-effectors might the user want to control?
   ee: # Specify all move_group/ee pairs

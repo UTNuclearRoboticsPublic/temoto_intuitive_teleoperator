@@ -23,10 +23,10 @@
   
 
   <!-- Pose Controllers, Launch spacenav, xbox, and hand tracker -->
-  <include file="$(find spacenav_node)/launch/classic.launch"/>
-  <node name="joy_node" pkg="joy" type="joy_node">
+  <!-- include file="$(find spacenav_node)/launch/classic.launch"/ -->
+  <!-- node name="joy_node" pkg="joy" type="joy_node">
     <param name="autorepeat_rate" value="30" />
-  </node>
+  </node -->
   <node name="leap_motion" pkg="leap_motion_controller" type="leap_motion" />
 
   <!-- Bring up Griffin Powermate -->

@@ -182,7 +182,6 @@ bool Visuals::crunch()
     pub_rviz_marker_.publish(cmd_pose_marker_);
   }
   // Setting markers & frames in MANIPULATION mode
-  // In Manip mode, set temoto_command_frame coincident with the base frame
   else
   {
     // ==  HAND POSE MARKER  ================================= //

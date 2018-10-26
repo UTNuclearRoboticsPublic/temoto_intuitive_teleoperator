@@ -1,5 +1,5 @@
-temoto_frames:
-  human_input: "current_cmd_frame"
+temoto:
+  human_input: "temoto_command_frame"
   base_frame: "base_link"
   num_ee: 1 # How many end-effectors might the user want to control?
   ee: # Specify all move_group/ee pairs
@@ -7,16 +7,19 @@ temoto_frames:
       end_effector: "temoto_end_effector"
       movegroup: "manipulator"
       manip_stl: "package://temoto_support/meshes/2_finger_140_gripper_marker.stl" #"package://temoto_support/meshes/manip_cube.stl"
+      jog_topic: ""
+      joint_jog_topic: ""
+      wrist_joint_name: "wrist_3_joint"
+      allow_compliant_jog: false
+      force_torque_frame: ""
+      force_torque_topic: ""
 
-temoto:
-  temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
-  temoto_xbox_pose_cmd_topic: "/joy"
-  temoto_leap_pose_cmd_topic: "/leap_motion_output"
-  incoming_jog_topic: "jog_arm_server/delta_jog_cmds"
+  temoto_spacenav_pose_cmd_topic: ""
+  temoto_xbox_pose_cmd_topic: ""
+  temoto_leap_pose_cmd_topic: "leap_motion_output"
 
-   # navigate or manipulate
-  navigate: false
-  manipulate: true
+  enable_navigation: false
+  enable_manipulation: true
 
   input_voice_topic: "stt/spoken_text"
 
