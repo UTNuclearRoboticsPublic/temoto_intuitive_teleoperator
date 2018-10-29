@@ -315,28 +315,16 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     EE_pose.position = graphics_and_frames_.latest_status_.end_effector_pose.pose.position;
     EE_pose.orientation = graphics_and_frames_.latest_status_.end_effector_pose.pose.orientation;
 
-    // Scale the xyz coordinates
-    // leap_data  -------> rviz
-    // x -> -y
-    // y -> z
-    // z -> -x */
 
     geometry_msgs::Pose scaled_pose;
     scaled_pose.position.x = pos_scale_ * -750 * hand.position.z + EE_pose.position.x;
     scaled_pose.position.y = pos_scale_ * -1000 * hand.position.x + EE_pose.position.y;
     scaled_pose.position.z = pos_scale_ * 750 * (hand.position.y - 0.15) + EE_pose.position.z;
 
-    // Scale the orientation
-    // leap_data  -------> rviz
-    //  x -> -y
-    //  y -> z
-    //  z -> -x
 
     scaled_pose.orientation.x = -1.5 * hand.orientation.z + EE_pose.orientation.x;
     scaled_pose.orientation.y = -1.5 * hand.orientation.x + EE_pose.orientation.y;
     scaled_pose.orientation.w = 1.5 * hand.orientation.w + EE_pose.orientation.w;
-
-
 
 
     //ADDED BY CASSIDY FROM OLD VERSION
@@ -357,21 +345,6 @@ void Teleoperator::leapCallback(leap_motion_controller::Set leap_data)
     //END OF ADDED BY CASSIDY
  
 
-
-/*
-    if (fingers == 2)
-    {
-      scaled_pose.orientation.z = 2 + absolute_pose_cmd_.pose.orientation.z;
-    }
-    else if (fingers == 1)
-    {
-      scaled_pose.orientation.z = -1 + absolute_pose_cmd_.pose.orientation.z;
-    }
-    else
-    {
-      scaled_pose.orientation.z = 1.5 * hand.orientation.y + EE_pose.orientation.z;
-    }
-*/
     tf::Quaternion q_cmd(scaled_pose.orientation.x, scaled_pose.orientation.y, scaled_pose.orientation.z,
                          scaled_pose.orientation.w);
 
