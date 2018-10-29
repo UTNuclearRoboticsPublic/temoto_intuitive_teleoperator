@@ -188,9 +188,11 @@ private:
 
   //Rest added by Cassidy
   // ~*~ VARIABLES DESCRIBING THE STATE ~*~
-  bool position_limited_;		///< Hand position is restricted to a specific direction/plane if TRUE.
-  bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion. Is only relevant when position_limited is 'true'.
   bool orientation_locked_;   ///< Hand orientation info is to be ignored if TRUE.
+  bool position_fwd_only_;		///< TRUE when hand position is restricted to back and forward motion.
+  bool position_sideways_only_;		///< TRUE when hand position is restricted to side to side motion. 
+  bool position_vertical_only_;		///< TRUE when hand position is restricted to up and down motion.
+
 
 };
 #endif

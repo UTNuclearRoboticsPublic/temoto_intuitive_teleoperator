@@ -70,29 +70,41 @@ public:
       else if (kbCommand.key_code == 0x000f)
         voiceCommand.data = "next end effector";
 
+
+
+
+
       // Execute trajectory: "1" key
       else if (kbCommand.key_code == 0x0002)
-        voiceCommand.data = "set position limited";
-
+        voiceCommand.data = "set orientation locked";
+      
       // Execute trajectory: "2" key
       else if (kbCommand.key_code == 0x0003)
         voiceCommand.data = "set position fwd only";
 
       // Execute trajectory: "3" key
       else if (kbCommand.key_code == 0x0004)
-        voiceCommand.data = "set orientation locked";
+        voiceCommand.data = "set position sideways only";
 
       // Execute trajectory: "4" key
       else if (kbCommand.key_code == 0x0005)
-        voiceCommand.data = "unlock position limited";      
-      
+        voiceCommand.data = "set position vertical only";
+
       // Execute trajectory: "5" key
       else if (kbCommand.key_code == 0x0006)
-        voiceCommand.data = "unlock fwd only";      
-      
+        voiceCommand.data = "unlock orientation";
+
       // Execute trajectory: "6" key
       else if (kbCommand.key_code == 0x0007)
-        voiceCommand.data = "unlock orientation";
+        voiceCommand.data = "unlock fwd only";      
+
+      // Execute trajectory: "7" key
+      else if (kbCommand.key_code == 0x0008)
+        voiceCommand.data = "unlock sideways only";      
+      
+      // Execute trajectory: "8" key
+      else if (kbCommand.key_code == 0x0009)
+        voiceCommand.data = "unlock vertical only";      
 
       else
         voiceCommand.data = "unrecognized command";
@@ -119,10 +131,10 @@ int main(int argc, char** argv)
   std::cout << "* p - point to point mode" << std::endl;
 //  std::cout << "* /t - next end effector" << std::endl;
 
-  std::cout << "* 1 - set position limited" << std::endl;
+  std::cout << "* 1 - set position sideways only" << std::endl;
   std::cout << "* 2 - set position fwd only" << std::endl;
   std::cout << "* 3 - set orientation locked" << std::endl;
-  std::cout << "* 4 - unlock position limited" << std::endl;
+  std::cout << "* 4 - unlock sideways only" << std::endl;
   std::cout << "* 5 - unlock fwd only" << std::endl;
   std::cout << "* 6 - unlock orientation" << std::endl;
 

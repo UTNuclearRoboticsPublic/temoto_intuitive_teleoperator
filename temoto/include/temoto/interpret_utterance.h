@@ -91,12 +91,16 @@ public:
     { "open gripper" },   // open gripper, a preplanned sequence
     { "close gripper" },  // close gripper, a preplanned sequence
   
-    { "set position limited" },
-    { "set position fwd only" },
     { "set orientation locked" },
-    { "unlock position limited" },
+    { "set position fwd only" },
+    { "set position sideways only" },
+    { "set position vertical only" },
+
+    { "unlock orientation" },    
     { "unlock fwd only" },
-    { "unlock orientation" },
+    { "unlock sideways only" },
+    { "unlock vertical only" },
+
   };
 
   ros::NodeHandle n_;
