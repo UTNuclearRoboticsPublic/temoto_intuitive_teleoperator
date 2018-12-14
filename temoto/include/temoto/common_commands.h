@@ -1,10 +1,11 @@
-#ifndef MOTION_ACTIONS_H
-#define MOTION_ACTIONS_H
+#ifndef COMMON_COMMANDS_H
+#define COMMON_COMMANDS_H
 
-namespace low_level_cmds
+// Several cpp/header files use this list of commands
+
+namespace common_commands
 {
 const std::string ABORT = "abort";
-const std::string NO_ABORT = "no_abort";
 const std::string GO = "go";
 const std::string EXECUTE = "execute";
 const std::string PLAN = "plan";

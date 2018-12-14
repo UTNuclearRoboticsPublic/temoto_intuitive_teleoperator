@@ -36,7 +36,7 @@
  */
 
 #include "temoto/move_robot.h"
-#include "temoto/low_level_cmds.h"
+#include "temoto/common_commands.h"
 
 /** Plans and/or executes the motion of the robot.
  *  @param robot MoveGroup object of the robot.
@@ -114,12 +114,12 @@ void MoveRobotInterface::requestMove()
   geometry_msgs::PoseStamped current_target = movegroup_.getPoseTarget();
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
-  if (req_action_type_ == low_level_cmds::PLAN)
+  if (req_action_type_ == common_commands::PLAN)
   {
     movegroup_.plan(latest_plan_);  // Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;     // Set new_plan_available_ to TRUE.
   }
-  else if (req_action_type_ == low_level_cmds::EXECUTE)
+  else if (req_action_type_ == common_commands::EXECUTE)
   {
     // ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
     if (new_plan_available_)
@@ -131,7 +131,7 @@ void MoveRobotInterface::requestMove()
                                                                  // plan"
     new_plan_available_ = false;                                 // Either case, set new_plan_available_ to FALSE.
   }
-  else if (req_action_type_ == low_level_cmds::GO)
+  else if (req_action_type_ == common_commands::GO)
   {
     // Since move() has a bug of start state not being current state, I am going
     // to plan and execute sequentally.

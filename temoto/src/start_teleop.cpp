@@ -173,13 +173,13 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   if (current_nav_or_manip_mode_==NAVIGATION)
   {
     // If operator requested ABORT
-    if (action_type == low_level_cmds::ABORT)
+    if (action_type == common_commands::ABORT)
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to "
                "stop navigation.");
       // Stop
       geometry_msgs::PoseStamped empty_pose;
-      if (!nav_interface_.navRequest(low_level_cmds::ABORT, empty_pose))
+      if (!nav_interface_.navRequest(common_commands::ABORT, empty_pose))
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot_srv");
@@ -187,7 +187,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       return;
     }  // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
-    else if (action_type == low_level_cmds::GO)
+    else if (action_type == common_commands::GO)
     {
       // Jogging
       if (in_jog_mode_)
@@ -506,7 +506,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
   {
     if (powermate.is_pressed)  // if the push button has been pressed
     {
-      callRobotMotionInterface(low_level_cmds::EXECUTE);  // makes the service
+      callRobotMotionInterface(common_commands::EXECUTE);  // makes the service
                                                           // request to move the
                                                           // robot, according to
                                                           // prior plan
@@ -601,20 +601,14 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Stopping ...");
       // Stop motions within temoto
-      callRobotMotionInterface(low_level_cmds::ABORT);
+      callRobotMotionInterface(common_commands::ABORT);
 
       // Publish to tell non-Temoto actions to abort
       std_msgs::String s;
-      s.data = low_level_cmds::ABORT;
+      s.data = common_commands::ABORT;
       pub_abort_.publish(s);
 
       return;
-    }
-    else  // No need to abort
-    {
-      std_msgs::String s;
-      s.data = low_level_cmds::NO_ABORT;
-      pub_abort_.publish(s);
     }
 
     ////////////////////////////////////
@@ -752,13 +746,13 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       else if (voice_command.data == "robot please plan")
       {
         ROS_INFO("Planning ...");
-        callRobotMotionInterface(low_level_cmds::PLAN);
+        callRobotMotionInterface(common_commands::PLAN);
         return;
       }
       else if (voice_command.data == "robot please execute")
       {
         ROS_INFO("Executing last plan ...");
-        callRobotMotionInterface(low_level_cmds::EXECUTE);
+        callRobotMotionInterface(common_commands::EXECUTE);
         resetEEGraphicPose();
         return;
       }
@@ -766,7 +760,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       {
         ROS_INFO("Planning and moving ...");
         resetEEGraphicPose();
-        callRobotMotionInterface(low_level_cmds::GO);
+        callRobotMotionInterface(common_commands::GO);
         return;
       }
 
@@ -952,7 +946,7 @@ int main(int argc, char** argv)
     {
       // Jog? Can't jog while doing something else.
       if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
-        temoto_teleop.callRobotMotionInterface(low_level_cmds::GO);
+        temoto_teleop.callRobotMotionInterface(common_commands::GO);
       else
       {
         // Update poses, scale, and nav-or-manip mode for the frames calculation

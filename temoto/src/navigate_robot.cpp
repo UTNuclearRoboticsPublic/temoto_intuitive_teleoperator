@@ -35,7 +35,7 @@
  */
 
 #include "temoto/navigate_robot.h"
-#include "temoto/low_level_cmds.h"
+#include "temoto/common_commands.h"
 
 bool NavigateRobotInterface::navRequest(std::string action_type, geometry_msgs::PoseStamped goal_pose)
 {
@@ -50,7 +50,7 @@ bool NavigateRobotInterface::navRequest(std::string action_type, geometry_msgs::
   }
 
   // check first if abort navigation has been requested.
-  if (action_type == low_level_cmds::ABORT)
+  if (action_type == common_commands::ABORT)
   {
     move_base_aclient_.cancelGoal();
     return true;

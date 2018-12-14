@@ -7,7 +7,7 @@
 
 // temoto includes
 #include "temoto/PreplannedSequenceAction.h"  // ROS Action. This is how the preplanned sequence gets triggered
-#include "temoto/low_level_cmds.h"
+#include "temoto/common_commands.h"
 #include "temoto/preplanned_sequences/close_gripper.h"
 #include "temoto/preplanned_sequences/open_gripper.h"
 

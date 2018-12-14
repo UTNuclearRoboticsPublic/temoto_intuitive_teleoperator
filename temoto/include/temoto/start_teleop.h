@@ -53,7 +53,7 @@
 #include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/interpret_utterance.h"
-#include "temoto/low_level_cmds.h"
+#include "temoto/common_commands.h"
 #include "temoto/make_compliant_adjustment.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"

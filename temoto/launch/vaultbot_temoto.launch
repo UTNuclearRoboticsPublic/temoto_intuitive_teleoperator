@@ -48,7 +48,7 @@
 
 
   <!-- Display joint angle warnings (OPTIONAL) -->
-  <node name="arm_warning_left" pkg="arm_warnings" type="arm_warnings" output="screen" respawn="true">
+  <node name="arm_warning_left" pkg="arm_warnings" type="arm_warnings" output="screen">
     <param name="move_group_name" type="str" value="left_ur5" />
     <param name="marker_id" type="int" value="573" />
 
@@ -56,7 +56,7 @@
     <param name="maximum_joint_rad" type="double" value="3.141" />
   </node>
 
-  <node name="arm_warning_right" pkg="arm_warnings" type="arm_warnings" output="screen" respawn="true">
+  <node name="arm_warning_right" pkg="arm_warnings" type="arm_warnings" output="screen">
     <param name="move_group_name" type="str" value="right_ur5" />
     <param name="marker_id" type="int" value="574" />
 

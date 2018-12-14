@@ -60,6 +60,6 @@ void preplanned_sequence::execute_CB_(const temoto::PreplannedSequenceGoalConstP
 // This provides a method of halting preplanned sequences.
 void preplanned_sequence::abort_cb_(const std_msgs::String::ConstPtr& msg)
 {
-  if (msg->data.c_str() == low_level_cmds::ABORT)
+  if (msg->data.c_str() == common_commands::ABORT)
     ROS_INFO_STREAM("[preplanned_sequences] ABORTING");
 }

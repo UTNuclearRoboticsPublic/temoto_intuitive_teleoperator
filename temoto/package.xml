@@ -19,7 +19,9 @@
   <depend>robotiq_c_model_control</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
+  <depend>sound_play</depend>
   <depend>std_msgs</depend>
+  <depend>view_controller_msgs</depend>
   
   <!-- The export tag contains other, unspecified, tags -->
   <export>
