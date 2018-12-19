@@ -698,7 +698,10 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Closing the gripper ...");
 
-      gripper_interface_->close( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      if ( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "" )
+        gripper_interface_->close( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      else
+        ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
 
       return;
     }
@@ -706,7 +709,10 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Opening the gripper ...");
 
-      gripper_interface_->open( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      if ( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "" )
+        gripper_interface_->open( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      else
+        ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
 
       return;
     }

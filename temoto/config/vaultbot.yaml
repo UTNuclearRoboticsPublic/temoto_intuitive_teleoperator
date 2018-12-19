@@ -24,7 +24,7 @@ temoto:
       allow_compliant_jog: false
       force_torque_frame: "left_ur5_base"
       force_torque_topic: "left_ur5_wrench"
-      gripper_topic: "/test"
+      gripper_topic: ""
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: ""
