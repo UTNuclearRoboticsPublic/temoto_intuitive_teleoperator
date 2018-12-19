@@ -48,20 +48,12 @@ public:
   // Constructor takes a vector of strings for each gripper topic
   Grippers(std::vector<std::string>& gripper_topics);
 
-  ~Grippers()
-  {
-    for ( int i=0; i<gripper_publishers_.size(); ++i )
-    {
-      delete gripper_publishers_.at(i);
-    }
-  }
-
   void close(std::string& gripper_topic);
 
   void open(std::string& gripper_topic);
 
 private:
-  std::vector<ros::Publisher*> gripper_publishers_;
+  std::vector<std::shared_ptr<ros::Publisher>> gripper_publishers_;
   ros::NodeHandle nh_;
 };
 }

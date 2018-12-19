@@ -45,8 +45,7 @@ Grippers::Grippers(std::vector<std::string>& gripper_topics)
   for ( std::string topic : gripper_topics )
   {
     ros::Publisher gripper_pub = nh_.advertise<robotiq_c_model_control::CModel_robot_output>(topic, 1);
-    ros::Publisher* gripper_pub_ptr = new ros::Publisher(gripper_pub);
-    gripper_publishers_.push_back( gripper_pub_ptr );
+    gripper_publishers_.push_back( std::make_shared<ros::Publisher>(gripper_pub) );
   }
 }
 

@@ -78,17 +78,13 @@ Teleoperator::Teleoperator()
     std::string jog_topic =
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/jog_topic", n_);
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
-    // Create a 'new' copy of this publisher, to persist until deleted.
-    ros::Publisher* jog_pub_ptr = new ros::Publisher(jog_pub);
-    end_effector_parameters_.jog_publishers.push_back(jog_pub_ptr);
+    end_effector_parameters_.jog_publishers.push_back( std::make_shared<ros::Publisher>(jog_pub) );
 
     // Joint jogging commands
     std::string joint_jog_topic =
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
     ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
-    // Create a 'new' copy of this publisher, to persist until deleted.
-    ros::Publisher* joint_jog_pub_ptr = new ros::Publisher(joint_jog_pub);
-    end_effector_parameters_.joint_jog_publishers.push_back(joint_jog_pub_ptr);
+    end_effector_parameters_.joint_jog_publishers.push_back( std::make_shared<ros::Publisher>(joint_jog_pub) );
 
     // Names of wrist joints, for jogging
     end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );

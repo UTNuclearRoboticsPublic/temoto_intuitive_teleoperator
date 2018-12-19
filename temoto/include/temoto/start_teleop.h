@@ -71,8 +71,6 @@ public:
     for (int i = 0; i < end_effector_parameters_.ee_names.size(); ++i)
     {
       delete end_effector_parameters_.arm_interface_ptrs.at(i);
-      delete end_effector_parameters_.jog_publishers.at(i);
-      delete end_effector_parameters_.joint_jog_publishers.at(i);
     }
   }
 
@@ -198,7 +196,7 @@ private:
 
     // Jogging publishers for each end-effector. Ptr needed because the MoveGroup
     // name is determined at run time
-    std::vector<ros::Publisher*> jog_publishers, joint_jog_publishers;
+    std::vector<std::shared_ptr<ros::Publisher>> jog_publishers, joint_jog_publishers;
 
     // Wrist jogging requires the name of each wrist joint
     std::vector<std::string> wrist_joint_names;
