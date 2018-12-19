@@ -39,9 +39,7 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator()
-  : nav_interface_("move_base"),
-  tf_listener_(tf_buffer_)
+Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
@@ -75,32 +73,35 @@ Teleoperator::Teleoperator()
     end_effector_parameters_.arm_interface_ptrs.push_back(new MoveRobotInterface(move_group_name));
 
     // Cartesian jogging commands
-    std::string jog_topic =
-        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/jog_topic", n_);
+    std::string jog_topic = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/jog_topic", n_);
     ros::Publisher jog_pub = n_.advertise<geometry_msgs::TwistStamped>(jog_topic, 1);
-    end_effector_parameters_.jog_publishers.push_back( std::make_shared<ros::Publisher>(jog_pub) );
+    end_effector_parameters_.jog_publishers.push_back(std::make_shared<ros::Publisher>(jog_pub));
 
     // Joint jogging commands
     std::string joint_jog_topic =
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
     ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
-    end_effector_parameters_.joint_jog_publishers.push_back( std::make_shared<ros::Publisher>(joint_jog_pub) );
+    end_effector_parameters_.joint_jog_publishers.push_back(std::make_shared<ros::Publisher>(joint_jog_pub));
 
     // Names of wrist joints, for jogging
-    end_effector_parameters_.wrist_joint_names.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_) );
+    end_effector_parameters_.wrist_joint_names.push_back(
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_));
 
     // Enable compliance for this end-effector?
-    end_effector_parameters_.allow_compliant_jog.push_back( get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/allow_compliant_jog", n_) );
+    end_effector_parameters_.allow_compliant_jog.push_back(
+        get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/allow_compliant_jog", n_));
 
     if (end_effector_parameters_.allow_compliant_jog.at(i))
       compliance_object_.addCompliantEndEffector(i);
 
     // Names of gripper topics
-    end_effector_parameters_.gripper_topics.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_) );
+    end_effector_parameters_.gripper_topics.push_back(
+        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_));
   }
 
   // An object to handle gripper commands
-  gripper_interface_ = std::unique_ptr<grippers::Grippers>(new grippers::Grippers(end_effector_parameters_.gripper_topics));
+  gripper_interface_ =
+      std::unique_ptr<grippers::Grippers>(new grippers::Grippers(end_effector_parameters_.gripper_topics));
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
@@ -133,7 +134,7 @@ Teleoperator::Teleoperator()
   // navigation, manipulation, or both.
   if (enable_manipulation_ && enable_navigation_)
     current_nav_or_manip_mode_ = MANIPULATION;  // if navigation AND manipulation are enabled,
-                              // start out in manipulation mode.
+                                                // start out in manipulation mode.
   else if (enable_navigation_ && !enable_manipulation_)
     current_nav_or_manip_mode_ = NAVIGATION;
   else if (enable_manipulation_ && !enable_navigation_)
@@ -142,7 +143,8 @@ Teleoperator::Teleoperator()
   // Initial pose
   // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
   ros::Duration(1).sleep();
-  absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+  absolute_pose_cmd_ =
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Wait for this pose to be available
   geometry_msgs::TransformStamped prev_frame_to_new;
@@ -168,7 +170,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   // === Calling NavigateRobotInterface ==============
   // =================================================
-  if (current_nav_or_manip_mode_==NAVIGATION)
+  if (current_nav_or_manip_mode_ == NAVIGATION)
   {
     // If operator requested ABORT
     if (action_type == common_commands::ABORT)
@@ -229,19 +231,19 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if (current_nav_or_manip_mode_==MANIPULATION)
+  else if (current_nav_or_manip_mode_ == MANIPULATION)
   {
     // Jogging
     if (in_jog_mode_)
     {
       // If compliance is allowed (yaml file) and user gave a command to enable it
-      if ( enable_compliance_ )
-        compliance_object_.cartesianCompliantAdjustment( jog_twist_cmd_, current_movegroup_ee_index_ );
+      if (enable_compliance_)
+        compliance_object_.cartesianCompliantAdjustment(jog_twist_cmd_, current_movegroup_ee_index_);
 
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
-      
+
       end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
-  
+
       return;
     }
     // Point-to-point motion
@@ -249,7 +251,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     {
       // Send the motion request
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
-      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->target_pose_stamped_ = absolute_pose_cmd_;
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->target_pose_stamped_ =
+          absolute_pose_cmd_;
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove();
 
       return;
@@ -281,32 +284,33 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   if (!temoto_sleep_)
   {
     // Wrist joint jogging with these two buttons (SpaceNav Pro)
-    joint_jog_cmd_.deltas[0] = ( pose_cmd.buttons[2] - pose_cmd.buttons[8] );
+    joint_jog_cmd_.deltas[0] = (pose_cmd.buttons[2] - pose_cmd.buttons[8]);
     joint_jog_cmd_.header.stamp = ros::Time::now();
 
     // Search for buttons that are mapped to verbal commands.
     // These are defined in a std::map in start_teleop.h
-    for (int i=0; i<pose_cmd.buttons.size(); ++i)
+    for (int i = 0; i < pose_cmd.buttons.size(); ++i)
     {
-      if ( pose_cmd.buttons[i] )
+      if (pose_cmd.buttons[i])
       {
         std_msgs::String text_command;
 
         // If that command exists in the std::map
-        if ( spacenav_buttons_.find(i) != spacenav_buttons_.end() )
+        if (spacenav_buttons_.find(i) != spacenav_buttons_.end())
         {
           // Find the string that maps to this button index
           text_command.data = spacenav_buttons_.find(i)->second;
-          processStringCommand( text_command );
+          processStringCommand(text_command);
         }
-  
+
         // Debounce
         ros::Duration(0.1).sleep();
         break;
       }
     }
 
-    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4], pose_cmd.axes[5]);
+    processIncrementalPoseCmd(pose_cmd.axes[0], pose_cmd.axes[1], pose_cmd.axes[2], pose_cmd.axes[3], pose_cmd.axes[4],
+                              pose_cmd.axes[5]);
   }
 
   return;
@@ -367,7 +371,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ///////////////////////////////////////////////////////////
   if (in_jog_mode_)
   {
-    if ( current_nav_or_manip_mode_==NAVIGATION )
+    if (current_nav_or_manip_mode_ == NAVIGATION)
     {
       nav_twist_cmd_.header.stamp = ros::Time::now();
       nav_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
@@ -378,7 +382,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
       nav_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
     }
 
-    if ( current_nav_or_manip_mode_==MANIPULATION )
+    if (current_nav_or_manip_mode_ == MANIPULATION)
     {
       jog_twist_cmd_.header.stamp = ros::Time::now();
       jog_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
@@ -393,7 +397,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ////////////////////////////
   // POINT-TO-POINT NAVIGATION
   ////////////////////////////
-  if ( (current_nav_or_manip_mode_==NAVIGATION) && !in_jog_mode_)
+  if ((current_nav_or_manip_mode_ == NAVIGATION) && !in_jog_mode_)
   {
     // ORIENTATION
     // new incremental yaw command
@@ -444,7 +448,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   //////////////////////////////
   // POINT-TO-POINT MANIPULATION
   //////////////////////////////
-  if ( (current_nav_or_manip_mode_==MANIPULATION) && !in_jog_mode_)
+  if ((current_nav_or_manip_mode_ == MANIPULATION) && !in_jog_mode_)
   {
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already
@@ -481,7 +485,8 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
 
     geometry_msgs::TransformStamped prev_frame_to_new;
     // Make sure the transform is available, otherwise skip updating the pose
-    if (calculateTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id, prev_frame_to_new))
+    if (calculateTransform(incoming_position_cmd.header.frame_id, absolute_pose_cmd_.header.frame_id,
+                           prev_frame_to_new))
     {
       tf2::doTransform(incoming_position_cmd, incoming_position_cmd, prev_frame_to_new);
 
@@ -505,9 +510,9 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
     if (powermate.is_pressed)  // if the push button has been pressed
     {
       callRobotMotionInterface(common_commands::EXECUTE);  // makes the service
-                                                          // request to move the
-                                                          // robot, according to
-                                                          // prior plan
+                                                           // request to move the
+                                                           // robot, according to
+                                                           // prior plan
     }
     return;
   }
@@ -666,7 +671,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (!in_jog_mode_)
         ROS_INFO_STREAM("Compliance is only available in jog mode.");
-      if ( !end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_) )
+      if (!end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_))
         ROS_INFO_STREAM("Compliance was not enabled in the YAML file.");
       else
       {
@@ -678,9 +683,9 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     }
     else if (voice_command.data == "disable compliance")
     {
-      if ( !in_jog_mode_ )
+      if (!in_jog_mode_)
         ROS_INFO_STREAM("Compliance is only available in jog mode.");
-      if ( !end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_) )
+      if (!end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_))
         ROS_INFO_STREAM("Compliance was not enabled in the YAML file.");
       else
       {
@@ -694,8 +699,8 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Closing the gripper ...");
 
-      if ( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "" )
-        gripper_interface_->close( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
+        gripper_interface_->close(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
       else
         ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
 
@@ -705,8 +710,8 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Opening the gripper ...");
 
-      if ( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "" )
-        gripper_interface_->open( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+      if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
+        gripper_interface_->open(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
       else
         ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
 
@@ -755,7 +760,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
         ROS_INFO_STREAM("Unknown voice command: " << voice_command.data);
       }
     }  // End of handling non-Abort commands
-  }  // End of !temoto_sleep_
+  }    // End of !temoto_sleep_
 
   return;
 }
@@ -766,7 +771,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
  */
 void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 {
-  graphics_and_frames_.latest_status_.in_navigation_mode = (current_nav_or_manip_mode_==NAVIGATION);
+  graphics_and_frames_.latest_status_.in_navigation_mode = (current_nav_or_manip_mode_ == NAVIGATION);
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose =
@@ -776,16 +781,15 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
   graphics_and_frames_.adjust_camera_ = adjust_camera;
 
   // Sometimes, false may be returned if a pose is not initialized
-  while ( !graphics_and_frames_.crunch() )
+  while (!graphics_and_frames_.crunch())
     ros::Duration(0.01).sleep();
-
 
   return;
 }  // end setGraphicsFramesStatus()
 
 void Teleoperator::setScale()
 {
-  if (current_nav_or_manip_mode_==NAVIGATION)
+  if (current_nav_or_manip_mode_ == NAVIGATION)
   {
     if (in_jog_mode_)  // nav, jog mode
     {
@@ -829,7 +833,6 @@ void Teleoperator::switchEE()
   jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
   joint_jog_cmd_.joint_names[0] = end_effector_parameters_.wrist_joint_names.at(current_movegroup_ee_index_);
 
-
   graphics_and_frames_.latest_status_.moveit_planning_frame =
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
 
@@ -845,7 +848,7 @@ void Teleoperator::switchEE()
 
 // Calculate a transform between 2 frames
 bool Teleoperator::calculateTransform(std::string source_frame, std::string target_frame,
-                                    geometry_msgs::TransformStamped& transform)
+                                      geometry_msgs::TransformStamped& transform)
 {
   bool success = false;
 
@@ -876,7 +879,7 @@ bool Teleoperator::calculateTransform(std::string source_frame, std::string targ
 // Reset the end-effector graphic to current robot pose
 void Teleoperator::resetEEGraphicPose()
 {
-  if (current_nav_or_manip_mode_==NAVIGATION)  // Navigation --> Center on base_frame
+  if (current_nav_or_manip_mode_ == NAVIGATION)  // Navigation --> Center on base_frame
   {
     absolute_pose_cmd_.pose.position.x = 0.;
     absolute_pose_cmd_.pose.position.y = 0.;
@@ -896,7 +899,8 @@ void Teleoperator::resetEEGraphicPose()
     incremental_orientation_cmd_.vector.z = 0.;
   }
   else  // Manipulation --> Center on EE
-    absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+    absolute_pose_cmd_ =
+        end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 }
 
 // MAIN
@@ -914,10 +918,10 @@ int main(int argc, char** argv)
 
   Teleoperator temoto_teleop;
 
-  while (ros::ok() )
+  while (ros::ok())
   {
     // Don't do anything if the user put Temoto in sleep mode
-    if ( !temoto_teleop.temoto_sleep_ )
+    if (!temoto_teleop.temoto_sleep_)
     {
       // Jog?
       if (temoto_teleop.in_jog_mode_)

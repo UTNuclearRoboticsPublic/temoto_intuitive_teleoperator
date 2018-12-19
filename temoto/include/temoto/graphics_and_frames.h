@@ -78,8 +78,7 @@ public:
 
     for (int i = 0; i < num_ee; i++)
     {
-      std::string stl_name =
-          get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/manip_stl", nh_);
+      std::string stl_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/manip_stl", nh_);
       manip_stl_names_.push_back(stl_name);
     }
 

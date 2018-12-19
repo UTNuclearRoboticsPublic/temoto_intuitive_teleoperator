@@ -87,7 +87,11 @@ public:
 
   // navigation: interpret absolute_pose_cmd_ as 2D navigation goal;
   // manipulation: absolute_pose_cmd_ is the motion planning target for robot EEF.
-  enum navigation_or_manipulation { NAVIGATION, MANIPULATION };
+  enum navigation_or_manipulation
+  {
+    NAVIGATION,
+    MANIPULATION
+  };
   navigation_or_manipulation current_nav_or_manip_mode_ = MANIPULATION;
 
 private:
@@ -101,7 +105,8 @@ private:
 
   void sleepCallback(const std_msgs::Bool::ConstPtr& msg);
 
-  bool calculateTransform(std::string source_frame, std::string target_frame, geometry_msgs::TransformStamped& transform);
+  bool calculateTransform(std::string source_frame, std::string target_frame,
+                          geometry_msgs::TransformStamped& transform);
 
   void resetEEGraphicPose();
 
@@ -113,23 +118,22 @@ private:
 
   void xboxCallback(sensor_msgs::Joy pose_cmd);
 
-  void processIncrementalPoseCmd(double x_pos, double y_pos, double z_pos, double x_ori, double y_ori,
-                                 double z_ori);
+  void processIncrementalPoseCmd(double x_pos, double y_pos, double z_pos, double x_ori, double y_ori, double z_ori);
 
   CompliantAdjustment compliance_object_;  // Handle compliance, if enabled
 
-  bool enable_navigation_ = true;  // Is navigation enabled?
-  bool enable_manipulation_ = true;                      // Is manipulation enabled?
+  bool enable_navigation_ = true;               // Is navigation enabled?
+  bool enable_manipulation_ = true;             // Is manipulation enabled?
   std::string temoto_spacenav_pose_cmd_topic_;  // Topic of incoming pose cmds
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
-  std::string base_frame_ = "base_link";    // Frame of robot base
+  std::string base_frame_ = "base_link";        // Frame of robot base
 
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
 
   ros::NodeHandle n_;
 
   // Other Temoto classes (each encapsulating its own functionality)
-  Interpreter interpreter;             // Interpret voice commands
+  Interpreter interpreter;                // Interpret voice commands
   NavigateRobotInterface nav_interface_;  // Send motion commands to the base
 
   // Scaling factor
@@ -156,8 +160,8 @@ private:
   ros::Publisher pub_abort_, pub_jog_base_cmds_;
 
   // ROS subscribers
-  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_,
-    sub_scaling_factor_, sub_temoto_sleep_;
+  ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_, sub_scaling_factor_,
+      sub_temoto_sleep_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
@@ -168,18 +172,18 @@ private:
 
   // Button map for SpaceNavigator controllers
   std::map<int, std::string> spacenav_buttons_ = {
-    {0, "robot please plan"},  // Menu button
-    {1, "robot please execute"}, // Fit button
-    {12, "jog mode"}, // 1 button
-    {13, "point to point mode"}, // 2 button
-    {14, "navigation"}, // 3 button
-    {15, "manipulation"}, // 4 button
-    {26, "next end effector"}, // Rotation button
-    {22, "base move"}, // Esc button
-    {5, "open gripper"}, // F button
-    {4, "close gripper"}, // R button
-    {24, "enable compliance"}, // Shift button
-    {25, "disable compliance"} // Ctrl button
+    { 0, "robot please plan" },     // Menu button
+    { 1, "robot please execute" },  // Fit button
+    { 12, "jog mode" },             // 1 button
+    { 13, "point to point mode" },  // 2 button
+    { 14, "navigation" },           // 3 button
+    { 15, "manipulation" },         // 4 button
+    { 26, "next end effector" },    // Rotation button
+    { 22, "base move" },            // Esc button
+    { 5, "open gripper" },          // F button
+    { 4, "close gripper" },         // R button
+    { 24, "enable compliance" },    // Shift button
+    { 25, "disable compliance" }    // Ctrl button
   };
 
   // Did the user enable compliance?
@@ -212,6 +216,5 @@ private:
     std::vector<std::string> gripper_topics;
   };
   endEffectorParameters end_effector_parameters_;
-
 };
 #endif

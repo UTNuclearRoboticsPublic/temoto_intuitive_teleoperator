@@ -38,21 +38,20 @@
 
 namespace grippers
 {
-
 Grippers::Grippers(std::vector<std::string>& gripper_topics)
 {
   // Create a publisher for each gripper
-  for ( std::string topic : gripper_topics )
+  for (std::string topic : gripper_topics)
   {
     ros::Publisher gripper_pub = nh_.advertise<robotiq_c_model_control::CModel_robot_output>(topic, 1);
-    gripper_publishers_.push_back( std::make_shared<ros::Publisher>(gripper_pub) );
+    gripper_publishers_.push_back(std::make_shared<ros::Publisher>(gripper_pub));
   }
 }
 
 void Grippers::close(std::string& gripper_topic)
 {
   // Find the publisher on this topic
-  for ( auto pub : gripper_publishers_)
+  for (auto pub : gripper_publishers_)
   {
     if (pub->getTopic() == gripper_topic)
     {
@@ -73,7 +72,7 @@ void Grippers::close(std::string& gripper_topic)
 void Grippers::open(std::string& gripper_topic)
 {
   // Find the publisher on this topic
-  for ( auto pub : gripper_publishers_)
+  for (auto pub : gripper_publishers_)
   {
     if (pub->getTopic() == gripper_topic)
     {
@@ -91,4 +90,4 @@ void Grippers::open(std::string& gripper_topic)
   }
 }
 
-} // namespace grippers
+}  // namespace grippers
