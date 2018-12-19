@@ -13,6 +13,7 @@ temoto:
       allow_compliant_jog: false
       force_torque_frame: "right_ur5_base"
       force_torque_topic: "right_ur5_wrench"
+      gripper_topic: "/CModelRobotOutput"
     ee1:
       end_effector: "left_ur5_ee_link"
       movegroup: "left_ur5"
@@ -23,6 +24,7 @@ temoto:
       allow_compliant_jog: false
       force_torque_frame: "left_ur5_base"
       force_torque_topic: "left_ur5_wrench"
+      gripper_topic: "/test"
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: ""

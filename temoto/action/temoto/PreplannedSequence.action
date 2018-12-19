@@ -1,9 +1,0 @@
-# Define the goal
-string sequence_name  # Name the sequence to run, e.g. "turn handle clockwise"
----
-# Define the result
-bool success
----
-# Define a feedback message
-# Not used here - we don't need incremental feedback
-bool success

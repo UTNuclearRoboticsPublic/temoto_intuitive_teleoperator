@@ -12,11 +12,6 @@ find_package(catkin REQUIRED
   robotiq_c_model_control
 )
 
-add_action_files(DIRECTORY action/temoto
-   FILES
-   PreplannedSequence.action
-)
-
 generate_messages(
   DEPENDENCIES
   actionlib_msgs
@@ -39,24 +34,22 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-link_directories(${X11_LIBRARY_DIR})
-
-# Preplanned sequences:
-
-add_library(close_gripper src/preplanned_sequences/close_gripper.cpp)
-target_link_libraries(close_gripper ${catkin_LIBRARIES})
-
-add_library(open_gripper src/preplanned_sequences/open_gripper.cpp)
-target_link_libraries(open_gripper ${catkin_LIBRARIES})
-
-
 ##########################################
 # This is where most of the action happens
 ##########################################
-add_executable(start_teleop src/start_teleop.cpp src/interpret_utterance.cpp src/preplanned_sequences.cpp src/navigate_robot.cpp src/graphics_and_frames.cpp src/move_robot.cpp src/get_ros_params.cpp src/make_compliant_adjustment.cpp)
+add_executable(start_teleop
+  src/get_ros_params.cpp
+  src/graphics_and_frames.cpp
+  src/grippers.cpp
+  src/interpret_utterance.cpp
+  src/make_compliant_adjustment.cpp
+  src/move_robot.cpp
+  src/navigate_robot.cpp
+  src/start_teleop.cpp
+)
 add_dependencies(start_teleop temoto_generate_messages_cpp )
 # Add one-off commands to trigger short, pre-planned sequences here
-target_link_libraries(start_teleop ${catkin_LIBRARIES} close_gripper open_gripper)
+target_link_libraries(start_teleop ${catkin_LIBRARIES})
 
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} )		

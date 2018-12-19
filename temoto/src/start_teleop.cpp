@@ -32,7 +32,7 @@
  *  @brief Central node for TEMOTO teleoperator. Subscribes to relevant
  * messages, calls move and navigation interfaces, and publishes system status.
  *
- *  @author karl.kruusamae(at)utexas.edu, andy(at)utexas.edu
+ *  @author karl.kruusamae(at)utexas.edu, andyz(at)utexas.edu
  */
 
 #include "temoto/start_teleop.h"
@@ -40,9 +40,7 @@
 /** Constructor for Teleoperator.
  */
 Teleoperator::Teleoperator()
-  : preplanned_sequence_client_("temoto/preplanned_sequence",
-                                true),
-  nav_interface_("move_base"),
+  : nav_interface_("move_base"),
   tf_listener_(tf_buffer_)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
@@ -100,7 +98,13 @@ Teleoperator::Teleoperator()
 
     if (end_effector_parameters_.allow_compliant_jog.at(i))
       compliance_object_.addCompliantEndEffector(i);
+
+    // Names of gripper topics
+    end_effector_parameters_.gripper_topics.push_back( get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_) );
   }
+
+  // An object to handle gripper commands
+  gripper_interface_ = std::unique_ptr<grippers::Grippers>(new grippers::Grippers(end_effector_parameters_.gripper_topics));
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
@@ -118,8 +122,6 @@ Teleoperator::Teleoperator()
   sub_spacenav_pose_cmd_ = n_.subscribe(temoto_spacenav_pose_cmd_topic_, 1, &Teleoperator::spaceNavCallback, this);
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processStringCommand, this);
-  sub_executing_preplanned_ =
-      n_.subscribe("temoto/preplanned_sequence/result", 1, &Teleoperator::updatePreplannedFlag, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1,
                                                                         &Teleoperator::processPowermate, this);
   sub_temoto_sleep_ = n_.subscribe<std_msgs::Bool>("temoto/temoto_sleep", 1, &Teleoperator::sleepCallback, this);
@@ -557,20 +559,6 @@ void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
   temoto_sleep_ = msg->data;
 }
 
-/** Callback function for /temoto/preplanned_sequence/result
- *  Sets the "executing_preplanned_sequence_" flag. If true, other Temoto
- * commands are blocked.
- * @param sequence_result true indicates a preplanned sequence has completed
-*/
-void Teleoperator::updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result)
-{
-  // Successfully completed the preplanned sequence ==> false for blocking other
-  // temoto commands
-  executing_preplanned_sequence_ = !sequence_result.result.success;
-  if (!executing_preplanned_sequence_)
-    ROS_INFO_STREAM("The preplanned sequence is complete.");
-}
-
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
  *  @param voice_command contains the specific command as an unsigned integer.
@@ -615,13 +603,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     //  Handle all commands except ABORT
     ////////////////////////////////////
 
-    // Normal temoto motions are OK if a preplanned sequence isn't running
-    if (executing_preplanned_sequence_ == true)
-    {
-      ROS_INFO_STREAM("Executing a preplanned sequence. Other Temoto actions are blocked.");
-      return;
-    }
-
     if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
     {
       if (!enable_manipulation_)
@@ -648,7 +629,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
         ROS_INFO("Already in manipulation mode.");
       return;
     }
-    else if (voice_command.data == "navigation")  // Switch over to navigation mode
+    else if (voice_command.data == "navigation")  // Switch to navigation mode
     {
       if (!enable_navigation_)
       {
@@ -673,19 +654,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
       else
         ROS_INFO("Already in navigation mode.");
-      return;
-    }
-
-    if (voice_command.data == "close gripper")  // Close the gripper - a preplanned sequence
-    {
-      ROS_INFO("Closing the gripper ...");
-      Teleoperator::triggerSequence(voice_command.data);
-      return;
-    }
-    else if (voice_command.data == "open gripper")  // Open the gripper - a preplanned sequence
-    {
-      ROS_INFO("Opening the gripper ...");
-      Teleoperator::triggerSequence(voice_command.data);
       return;
     }
     else if (voice_command.data == "next end effector")
@@ -723,6 +691,22 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
         ROS_INFO_STREAM("Disabling compliance");
         enable_compliance_ = false;
       }
+
+      return;
+    }
+    else if (voice_command.data == "close gripper")
+    {
+      ROS_INFO("Closing the gripper ...");
+
+      gripper_interface_->close( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
+
+      return;
+    }
+    else if (voice_command.data == "open gripper")
+    {
+      ROS_INFO("Opening the gripper ...");
+
+      gripper_interface_->open( end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) );
 
       return;
     }
@@ -766,23 +750,12 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
       else
       {
-        ROS_INFO("Unknown voice command.");
+        ROS_INFO_STREAM("Unknown voice command: " << voice_command.data);
       }
     }  // End of handling non-Abort commands
   }  // End of !temoto_sleep_
 
   return;
-}
-
-void Teleoperator::triggerSequence(std::string& voice_command)
-{
-  temoto::PreplannedSequenceGoal goal;
-  goal.sequence_name = voice_command;
-  preplanned_sequence_client_.sendGoal(goal);
-
-  // Flag that a preplanned sequence is running, so pause most other commands
-  // (except Abort)
-  executing_preplanned_sequence_ = true;
 }
 
 /** Puts the latest private variable values into temoto/status message.
@@ -944,8 +917,8 @@ int main(int argc, char** argv)
     // Don't do anything if the user put Temoto in sleep mode
     if ( !temoto_teleop.temoto_sleep_ )
     {
-      // Jog? Can't jog while doing something else.
-      if (temoto_teleop.in_jog_mode_ && !temoto_teleop.executing_preplanned_sequence_)
+      // Jog?
+      if (temoto_teleop.in_jog_mode_)
         temoto_teleop.callRobotMotionInterface(common_commands::GO);
       else
       {

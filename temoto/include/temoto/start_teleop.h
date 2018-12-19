@@ -37,6 +37,7 @@
 
 // ROS includes
 #include "geometry_msgs/PoseStamped.h"
+#include "griffin_powermate/PowermateEvent.h"
 #include "jog_msgs/JogJoint.h"
 #include "map"
 #include "ros/ros.h"
@@ -48,16 +49,14 @@
 #include "tf2_ros/transform_listener.h"
 
 // temoto includes
-#include "griffin_powermate/PowermateEvent.h"
-#include "temoto/PreplannedSequenceAction.h"  // Define an action. This is how a preplanned sequence gets triggered
 #include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
+#include "temoto/grippers.h"
 #include "temoto/interpret_utterance.h"
 #include "temoto/common_commands.h"
 #include "temoto/make_compliant_adjustment.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
-#include "temoto/preplanned_sequences.h"
 
 #ifndef START_TELEOP_H
 #define START_TELEOP_H
@@ -84,8 +83,6 @@ public:
   bool in_jog_mode_ = false;  //< If true, send new joints/poses immediately.
                               // Otherwise, pt-to-pt motion
 
-  bool executing_preplanned_sequence_ = false;  //< TRUE blocks other Temoto cmds
-
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
   bool temoto_sleep_ = false;  // If set to true, temoto will spin without sending commands.
@@ -100,11 +97,7 @@ private:
                                                                        // general case, e.g.
                                                                        // processScaleFactor
 
-  void updatePreplannedFlag(temoto::PreplannedSequenceActionResult sequence_result);
-
   void processStringCommand(std_msgs::String voice_command);
-
-  void triggerSequence(std::string& voice_command);
 
   void navCollisionCallback(const std_msgs::Float64::ConstPtr& msg);
 
@@ -139,8 +132,6 @@ private:
 
   // Other Temoto classes (each encapsulating its own functionality)
   Interpreter interpreter;             // Interpret voice commands
-  preplanned_sequence sequence_;       // Process the cmds that trigger short,
-                                       // predefined actions, e.g. open gripper
   NavigateRobotInterface nav_interface_;  // Send motion commands to the base
 
   // Scaling factor
@@ -168,15 +159,11 @@ private:
 
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_,
-      sub_executing_preplanned_, sub_scaling_factor_, sub_temoto_sleep_;
+    sub_scaling_factor_, sub_temoto_sleep_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
   double nav_speed_fraction_ = 1.;
-
-  // ROS services/actions
-  actionlib::SimpleActionClient<temoto::PreplannedSequenceAction> preplanned_sequence_client_;  // Used to trigger a
-                                                                                                // preplanned sequence
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
@@ -200,6 +187,9 @@ private:
   // Did the user enable compliance?
   bool enable_compliance_ = false;
 
+  // An object which sends commands to the grippers
+  std::unique_ptr<grippers::Grippers> gripper_interface_;
+
   // Vectors of data for each end-effector. These params are read from the config file.
   struct endEffectorParameters
   {
@@ -219,6 +209,9 @@ private:
 
     // Enable compliant jogging for each end-effector?
     std::vector<bool> allow_compliant_jog;
+
+    // A list of gripper topic for each end-effector
+    std::vector<std::string> gripper_topics;
   };
   endEffectorParameters end_effector_parameters_;
 
