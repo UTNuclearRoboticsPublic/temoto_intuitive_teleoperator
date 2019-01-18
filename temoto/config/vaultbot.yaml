@@ -10,7 +10,6 @@ temoto:
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: "right_ur5_wrist_3_joint"
-      allow_compliant_jog: false
       force_torque_frame: "right_ur5_base"
       force_torque_topic: "right_ur5_wrench"
       gripper_topic: "/CModelRobotOutput"
@@ -21,7 +20,6 @@ temoto:
       jog_topic: "left_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "left_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: "left_ur5_wrist_3_joint"
-      allow_compliant_jog: false
       force_torque_frame: "left_ur5_base"
       force_torque_topic: "left_ur5_wrench"
       gripper_topic: ""

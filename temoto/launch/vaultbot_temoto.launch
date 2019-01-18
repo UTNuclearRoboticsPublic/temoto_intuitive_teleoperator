@@ -26,7 +26,7 @@
 
 
   <!-- bringup proper rviz config -->
-  <include file="$(find temoto)/launch/vaultbot_moveit_rviz.launch">
+  <include file="$(find vaultbot_tools_moveit_config)/launch/moveit_rviz.launch">
     <arg name="config" value="true"/>
   </include>
 
@@ -41,10 +41,6 @@
 
   <!-- Arm jogging -->
   <include file="$(find vaultbot_launch)/launch/jog_arms.launch" />
-
-
-  <!-- FOR TEACH_MOTIONS -->
-  <!-- include file="$(find teach_motions)/launch/vaultbot_prepare_to_send.launch"/ -->
 
 
   <!-- Display joint angle warnings (OPTIONAL) -->
@@ -63,9 +59,5 @@
     <param name="minimum_joint_rad" type="double" value="-3.141" />
     <param name="maximum_joint_rad" type="double" value="3.141" />
   </node>
-
-
-  <!-- maintain_pose (OPTIONAL) -->
-  <!-- include file="$(find maintain_pose)/launch/maintain_pose.launch" / -->
 
 </launch>

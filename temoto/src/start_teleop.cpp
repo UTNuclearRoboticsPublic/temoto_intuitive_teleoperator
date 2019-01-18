@@ -87,13 +87,6 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     end_effector_parameters_.wrist_joint_names.push_back(
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_));
 
-    // Enable compliance for this end-effector?
-    end_effector_parameters_.allow_compliant_jog.push_back(
-        get_ros_params::getBoolParam("/temoto/ee/ee" + std::to_string(i) + "/allow_compliant_jog", n_));
-
-    if (end_effector_parameters_.allow_compliant_jog.at(i))
-      compliance_object_.addCompliantEndEffector(i);
-
     // Names of gripper topics
     end_effector_parameters_.gripper_topics.push_back(
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_));
@@ -236,10 +229,6 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (in_jog_mode_)
     {
-      // If compliance is allowed (yaml file) and user gave a command to enable it
-      if (enable_compliance_)
-        compliance_object_.cartesianCompliantAdjustment(jog_twist_cmd_, current_movegroup_ee_index_);
-
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
 
       end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
@@ -664,34 +653,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       // No jogging, initially, for safety
       in_jog_mode_ = false;
       switchEE();
-
-      return;
-    }
-    else if (voice_command.data == "enable compliance")
-    {
-      if (!in_jog_mode_)
-        ROS_INFO_STREAM("Compliance is only available in jog mode.");
-      if (!end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_))
-        ROS_INFO_STREAM("Compliance was not enabled in the YAML file.");
-      else
-      {
-        ROS_INFO_STREAM("Enabling compliance");
-        enable_compliance_ = true;
-      }
-
-      return;
-    }
-    else if (voice_command.data == "disable compliance")
-    {
-      if (!in_jog_mode_)
-        ROS_INFO_STREAM("Compliance is only available in jog mode.");
-      if (!end_effector_parameters_.allow_compliant_jog.at(current_movegroup_ee_index_))
-        ROS_INFO_STREAM("Compliance was not enabled in the YAML file.");
-      else
-      {
-        ROS_INFO_STREAM("Disabling compliance");
-        enable_compliance_ = false;
-      }
 
       return;
     }

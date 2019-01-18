@@ -83,14 +83,12 @@ public:
     { "jog mode" },              // send small motions commands immediately
     { "point to point mode" },   // plan to one point at a time
     { "next end effector" },     // switch to the next end effector
-    { "enable compliance" },     // enable compliance while jogging
-    { "disable compliance" },    // disable compliance while jogging
 
     // Preplanned sequences: these will interrupt other Temoto commands
     // (except abort)
     // They can be generally any C++ file
     { "open gripper" },   // open gripper, a preplanned sequence
-    { "close gripper" },  // close gripper, a preplanned sequence
+    { "close gripper" }  // close gripper, a preplanned sequence
   };
 
   ros::NodeHandle n_;
