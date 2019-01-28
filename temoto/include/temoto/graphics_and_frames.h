@@ -36,9 +36,9 @@
  */
 
 // ROS includes
-#include "std_srvs/Empty.h"
-#include "temoto/get_ros_params.h"
-#include "visualization_msgs/Marker.h"
+#include <sensor_msgs/JointState.h>
+#include <std_srvs/Empty.h>
+#include <temoto/get_ros_params.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/transform_datatypes.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -47,6 +47,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
 #include "view_controller_msgs/CameraPlacement.h"
 
@@ -85,10 +86,6 @@ public:
     // Get all the relevant frame names from parameter server
     nh_.param<std::string>("/temoto/base_frame", base_frame_, "base_link");
 
-    // Initialize point-of-view camera placement and all the required markers
-    initCameraFrames();
-    initHandPoseMarker();
-
     adjust_camera_ = true;
 
     // Publishers
@@ -102,9 +99,15 @@ public:
   // Return true if successful
   bool crunch();
 
+  // ___ INITIALIZERS ___
+
+  /** Creates the initial marker that visualizes hand pose as a flattened box.
+   */
+  void initHandPoseMarker();
+
   // Initializes camera placement to a preset pose in frame specified by
   // frame_id
-  void initCameraFrames();
+  void initCameraFrame();
 
   // ROS camera placement message that defines user's point-of-view in RViz.
   view_controller_msgs::CameraPlacement point_of_view_;
@@ -118,12 +121,6 @@ public:
 
 private:
   ros::NodeHandle nh_;
-
-  // ___ INITIALIZERS ___
-
-  /** Creates the initial marker that visualizes hand pose as a flattened box.
-   */
-  void initHandPoseMarker();
 
   // ___ CLASS VARIABLES AND CONSTANTS ___
 

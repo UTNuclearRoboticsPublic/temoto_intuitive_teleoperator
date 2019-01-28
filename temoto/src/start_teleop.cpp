@@ -138,23 +138,28 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   else if (enable_manipulation_ && !enable_navigation_)
     current_nav_or_manip_mode_ = MANIPULATION;
 
-  // Initial pose
-  // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
-  ros::Duration(1).sleep();
-  absolute_pose_cmd_ =
-      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+  ////////////////////////////////////////
+  // Wait for initial pose to be available
+  ////////////////////////////////////////
+  ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
-  // Wait for this pose to be available
+  // The next few lines are hacks for MoveIt! Otherwise the first call to getCurrentPose() often fails.
+  absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
+
+  // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
   geometry_msgs::TransformStamped prev_frame_to_new;
-  while (!calculateTransform(absolute_pose_cmd_.header.frame_id, base_frame_, prev_frame_to_new))
+  while (ros::ok() && !calculateTransform(absolute_pose_cmd_.header.frame_id, base_frame_, prev_frame_to_new))
+  {
+    ros::Duration(0.2).sleep();
     ROS_WARN_STREAM("Waiting for initial transform from command frame to base_frame_");
+  }
   tf2::doTransform(absolute_pose_cmd_, absolute_pose_cmd_, prev_frame_to_new);
 
-  // Reset the graphic now that we're sure the tf is available.
+  // Initialize the Temoto command graphic now that we're sure the tf is available.
   graphics_and_frames_.latest_status_.moveit_planning_frame =
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
-  resetEEGraphicPose();
   setGraphicsFramesStatus(true);
+  initializeGraphics();
 }
 
 /** Function that actually makes the service call to appropriate robot motion
@@ -644,6 +649,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
         bool adjust_camera = true;
         setGraphicsFramesStatus(adjust_camera);
+        graphics_and_frames_.crunch();
         resetEEGraphicPose();
         setScale();
       }
@@ -767,12 +773,8 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 
   graphics_and_frames_.adjust_camera_ = adjust_camera;
 
-  // Sometimes, false may be returned if a pose is not initialized
-  while (!graphics_and_frames_.crunch())
-    ros::Duration(0.01).sleep();
-
   return;
-}  // end setGraphicsFramesStatus()
+}
 
 void Teleoperator::setScale()
 {
@@ -826,6 +828,7 @@ void Teleoperator::switchEE()
   // Set camera at new EE
   bool adjust_camera = true;
   setGraphicsFramesStatus(adjust_camera);
+  graphics_and_frames_.crunch();
 
   resetEEGraphicPose();
 
@@ -861,6 +864,13 @@ bool Teleoperator::calculateTransform(std::string source_frame, std::string targ
   }
 
   return success;
+}
+
+// Set the initial camera angle and Temoto marker
+void Teleoperator::initializeGraphics()
+{
+  graphics_and_frames_.initCameraFrame();
+  graphics_and_frames_.initHandPoseMarker();
 }
 
 // Reset the end-effector graphic to current robot pose

@@ -108,6 +108,8 @@ private:
   bool calculateTransform(std::string source_frame, std::string target_frame,
                           geometry_msgs::TransformStamped& transform);
 
+  void initializeGraphics();
+
   void resetEEGraphicPose();
 
   void setScale();

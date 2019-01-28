@@ -42,7 +42,7 @@
 /** Creates the initial CameraPlacment message that is used for positioning
  * point-of-view (POV) camera in RViz.
  */
-void Visuals::initCameraFrames()
+void Visuals::initCameraFrame()
 {
   // Set target frame and animation time
   point_of_view_.target_frame = base_frame_;  // Use base_frame_ because it does
@@ -63,10 +63,12 @@ void Visuals::initCameraFrames()
 /** Creates the initial marker that visualizes hand pose */
 void Visuals::initHandPoseMarker()
 {
-  cmd_pose_marker_.header.frame_id = latest_status_.moveit_planning_frame;
+  cmd_pose_marker_.header.frame_id = latest_status_.commanded_pose.header.frame_id;
   cmd_pose_marker_.header.stamp = ros::Time();
   cmd_pose_marker_.ns = "hand_pose_marker";
   cmd_pose_marker_.id = 0;
+
+  cmd_pose_marker_.pose = latest_status_.commanded_pose.pose;
 
   cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
   cmd_pose_marker_.mesh_resource = manip_stl_names_.at(latest_status_.current_movegroup_ee_index);
@@ -82,7 +84,7 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.color.a = 1;
 
   return;
-}  // end Visuals::initHandPoseMarker()
+}
 
 bool Visuals::crunch()
 {
