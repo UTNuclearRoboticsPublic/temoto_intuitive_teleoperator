@@ -45,6 +45,7 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
+#include "std_srvs/Trigger.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
 
@@ -113,6 +114,8 @@ private:
 
   void switchEE();
 
+  void toggleCompliance(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+
   void spaceNavCallback(sensor_msgs::Joy pose_cmd);
 
   void xboxCallback(sensor_msgs::Joy pose_cmd);
@@ -178,7 +181,8 @@ private:
     { 26, "next end effector" },    // Rotation button
     { 22, "base move" },            // Esc button
     { 5, "open gripper" },          // F button
-    { 4, "close gripper" }         // R button
+    { 4, "close gripper" },         // R button
+    { 24, "toggle compliance" }     // Shift button
   };
 
   // An object which sends commands to the grippers
@@ -203,6 +207,9 @@ private:
 
     // A list of gripper topic for each end-effector
     std::vector<std::string> gripper_topics;
+
+    // A list of services to toggle compliance for each end-effector
+    std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
   };
   endEffectorParameters end_effector_parameters_;
 };

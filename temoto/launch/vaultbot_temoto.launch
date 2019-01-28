@@ -43,6 +43,11 @@
   <include file="$(find vaultbot_launch)/launch/jog_arms.launch" />
 
 
+  <!-- Publish compliance velocity adjustments (OPTIONAL) -->
+  <include file="$(find vaultbot_launch)/launch/left_compliance.launch"/>
+  <include file="$(find vaultbot_launch)/launch/right_compliance.launch"/>
+
+
   <!-- Display joint angle warnings (OPTIONAL) -->
   <node name="arm_warning_left" pkg="arm_warnings" type="arm_warnings" output="screen">
     <param name="move_group_name" type="str" value="left_ur5" />

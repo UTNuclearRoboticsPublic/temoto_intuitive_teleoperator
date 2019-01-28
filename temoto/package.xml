@@ -14,12 +14,14 @@
   <depend>griffin_powermate</depend>
   <depend>jog_msgs</depend>
   <depend>keyboard_reader</depend>
+  <depend>message_runtime</depend>
   <depend>moveit_ros_planning_interface</depend>
   <depend>robotiq_c_model_control</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>sound_play</depend>
   <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
   <depend>tf</depend>
   <depend>view_controller_msgs</depend>
 

@@ -75,18 +75,15 @@ public:
   /** Maps verbal instructions to specific command code. */
   std::vector<std::string> command_list_ = {
     // Commands for basic Temoto functionality: moving and navigating
-    { "robot please plan" },     // command PLAN
-    { "robot please execute" },  // command EXECUTE plan
-    { "base move" },             // command PLAN&EXECUTE
-    { "manipulation" },          // operator controls robot manipulator (MoveIt!)
-    { "navigation" },            // operator navigates the robot base (ROS_navigation)
-    { "jog mode" },              // send small motions commands immediately
-    { "point to point mode" },   // plan to one point at a time
-    { "next end effector" },     // switch to the next end effector
-
-    // Preplanned sequences: these will interrupt other Temoto commands
-    // (except abort)
-    // They can be generally any C++ file
+    { "robot please plan" },      // command PLAN
+    { "robot please execute" },   // command EXECUTE plan
+    { "base move" },              // command PLAN&EXECUTE
+    { "manipulation" },           // operator controls robot manipulator (MoveIt!)
+    { "navigation" },             // operator navigates the robot base (ROS_navigation)
+    { "jog mode" },               // send small motions commands immediately
+    { "point to point mode" },    // plan to one point at a time
+    { "next end effector" },      // switch to the next end effector
+    { "toggle compliance" },      // toggle compliance for this end effector
     { "open gripper" },   // open gripper, a preplanned sequence
     { "close gripper" }  // close gripper, a preplanned sequence
   };

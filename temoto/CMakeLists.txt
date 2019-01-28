@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
   keyboard_reader
   moveit_ros_planning_interface
   robotiq_c_model_control
+  std_srvs
   tf
 )
 
@@ -23,6 +24,7 @@ catkin_package(
     keyboard_reader
     moveit_ros_planning_interface
     robotiq_c_model_control
+    std_srvs
     tf
 )
 
