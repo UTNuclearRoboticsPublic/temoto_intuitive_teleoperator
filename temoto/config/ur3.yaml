@@ -1,0 +1,37 @@
+temoto:
+  human_input: "current_cmd_frame"
+  base_frame: "base_link"
+  num_ee: 1 # How many end-effectors might the user want to control?
+  ee: # Specify all move_group/ee pairs
+    ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
+      end_effector: "ee_link"
+      movegroup: "manipulator"
+      manip_stl: "package://temoto/meshes/2_finger_140_gripper_marker.stl"
+      jog_topic: "delta_jog_cmds"
+      joint_jog_topic: "joint_delta_jog_cmds"
+      wrist_joint_name: "wrist_3_joint"
+      force_torque_frame: "base"
+      force_torque_topic: "wrench"
+      gripper_topic: ""
+      toggle_compliance_service: "/compliance_controller/toggle_compliance"
+
+  temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
+  temoto_xbox_pose_cmd_topic: ""
+  temoto_leap_pose_cmd_topic: ""
+
+  enable_navigation: false
+  enable_manipulation: true
+
+  input_voice_topic: "stt/spoken_text"
+
+  motion_scales:
+    pt_to_pt:
+      nav_pos_scale: 0.01
+      nav_rot_scale: 0.008
+      manip_pos_scale: 0.006
+      manip_rot_scale: 0.008
+    jog:
+      nav_pos_scale: 0.3
+      nav_rot_scale: 0.2
+      manip_pos_scale: 1.
+      manip_rot_scale: 1.
