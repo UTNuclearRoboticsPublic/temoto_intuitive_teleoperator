@@ -40,8 +40,9 @@
 
 /** Plans and/or executes the motion of the robot.
  *  @param robot MoveGroup object of the robot.
+ *  Return TRUE if successful.
  */
-void MoveRobotInterface::requestMove()
+bool MoveRobotInterface::requestMove()
 {
   // Set current state as the start state for planner. For some reason the
   // actual built-in function doesn't do that.
@@ -57,7 +58,7 @@ void MoveRobotInterface::requestMove()
     if (movegroup_.setNamedTarget(named_target_))  // check if setting named target was successful
     {
       ROS_INFO("[move_robot/requestMove] Failed to set named target. Please retry.");
-      return;  // return if setNamedTarget failed
+      return false;
     }
     else
       ROS_INFO("[move_robot/requestMove] Using NAMED TARGET for planning "
@@ -75,7 +76,7 @@ void MoveRobotInterface::requestMove()
     if (!movegroup_.setPoseTarget(target_pose_stamped_))  // check if set target pose failed
     {
       ROS_INFO("[move_robot/requestMove] Failed to set pose target. Please retry.");
-      return;  // return if setPoseTarget failed
+      return false;
     }
     else
       ROS_INFO("[move_robot/requestMove] Using POSE TARGET for planning and/or "
@@ -96,9 +97,12 @@ void MoveRobotInterface::requestMove()
 
     // Move to the new target joints
     movegroup_.setJointValueTarget(joints);
-    movegroup_.move();
+    auto result = movegroup_.move();
 
-    return;
+    if (result.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
+      return true;
+    else
+      return false;
   }
 
   // Continue with MoveGroup stuff for Cartesian moves
@@ -110,26 +114,27 @@ void MoveRobotInterface::requestMove()
   calculate_linear_tols(current_pose_stamped, target_pose_stamped_);
   calculate_ang_tols(current_pose_stamped, target_pose_stamped_);
 
-  // Just checking what is the target pose
-  geometry_msgs::PoseStamped current_target = movegroup_.getPoseTarget();
+  moveit::planning_interface::MoveItErrorCode result;
+  result.val = moveit_msgs::MoveItErrorCodes::FAILURE;
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
   if (req_action_type_ == common_commands::PLAN)
   {
-    movegroup_.plan(latest_plan_);  // Calculate plan and store it in latest_plan_.
+    result = movegroup_.plan(latest_plan_);  // Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;     // Set new_plan_available_ to TRUE.
   }
   else if (req_action_type_ == common_commands::EXECUTE)
   {
-    // ROS_INFO("[move_robot/requestMove] Starting to execute last plan ...");
     if (new_plan_available_)
-      movegroup_.execute(latest_plan_);  // If there is a new plan, execute latest_plan_.
+    {
+      result = movegroup_.execute(latest_plan_);
+    }
     else
-      ROS_INFO("[move_robot/requestMove] No plan to execute.");  // Else do
-                                                                 // nothing but
-                                                                 // printout "no
-                                                                 // plan"
-    new_plan_available_ = false;                                 // Either case, set new_plan_available_ to FALSE.
+    {
+      result.val = moveit_msgs::MoveItErrorCodes::FAILURE;
+      ROS_INFO("[move_robot/requestMove] No plan to execute.");
+    }
+    new_plan_available_ = false;
   }
   else if (req_action_type_ == common_commands::GO)
   {
@@ -137,12 +142,15 @@ void MoveRobotInterface::requestMove()
     // to plan and execute sequentally.
     moveit::planning_interface::MoveGroupInterface::Plan move_plan;
     movegroup_.plan(move_plan);
-    movegroup_.execute(move_plan);
+    result = movegroup_.execute(move_plan);
     new_plan_available_ = false;  // As any previous plan has become invalid, set
                                   // new_plan_available_ to FALSE.
   }
 
-  return;
+  if (result.val == moveit_msgs::MoveItErrorCodes::SUCCESS)
+    return true;
+  else
+    return false;
 }  // end requestMove
 
 void MoveRobotInterface::calculate_linear_tols(geometry_msgs::PoseStamped curr_pose,

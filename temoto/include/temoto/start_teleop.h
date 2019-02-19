@@ -74,7 +74,7 @@ public:
     }
   }
 
-  void callRobotMotionInterface(std::string action_type);
+  bool callRobotMotionInterface(std::string action_type);
 
   void setGraphicsFramesStatus(bool adjust_camera);
 

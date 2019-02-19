@@ -167,8 +167,9 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
  *  Currently, there are MoveRobotInterface and NavigateRobotInterface.
  *  @param action_type determines what is requested from MoveGroup, i.e. PLAN,
  * EXECUTE PLAN, or GO (aka plan and execute).
+ * Return TRUE if successful.
  */
-void Teleoperator::callRobotMotionInterface(std::string action_type)
+bool Teleoperator::callRobotMotionInterface(std::string action_type)
 {
   // =================================================
   // === Calling NavigateRobotInterface ==============
@@ -187,7 +188,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot_srv");
       }
-      return;
+      return false;
     }  // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
     else if (action_type == common_commands::GO)
@@ -207,7 +208,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
         nav_twist_cmd_.twist.angular.z *= nav_speed_fraction_;
 
         pub_jog_base_cmds_.publish(nav_twist_cmd_.twist);
-        return;
+        return true;
       }
 
       double bl_roll, bl_pitch, bl_yaw;
@@ -227,8 +228,9 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot/navRequest()");
+        return false;
       }
-      return;
+      return true;
     }  // else if (action_type == "go")
   }    // if (current_nav_or_manip_mode_==NAVIGATION)
   // =================================================
@@ -243,7 +245,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
 
       end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
 
-      return;
+      return true;
     }
     // Point-to-point motion
     else
@@ -252,9 +254,8 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->target_pose_stamped_ =
           absolute_pose_cmd_;
-      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove();
 
-      return;
+      return end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove();
     }
   }
   // =================================================
@@ -269,7 +270,7 @@ void Teleoperator::callRobotMotionInterface(std::string action_type)
   // Reset the hand marker to be at the EE
   resetEEGraphicPose();
 
-  return;
+  return true;
 }  // end callRobotMotionInterface
 
 /** Callback function for relative position commands.
@@ -736,8 +737,10 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       else if (voice_command.data == "robot please execute")
       {
         ROS_INFO("Executing last plan ...");
-        callRobotMotionInterface(common_commands::EXECUTE);
-        resetEEGraphicPose();
+        // Move the graphic to new end-effector pose if motion is successful
+        bool result = callRobotMotionInterface(common_commands::EXECUTE);
+        if (result)
+          resetEEGraphicPose();
         return;
       }
       else if (voice_command.data == "base move")
