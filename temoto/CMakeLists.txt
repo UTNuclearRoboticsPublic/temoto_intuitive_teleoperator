@@ -9,7 +9,7 @@ find_package(catkin REQUIRED
   jog_msgs
   keyboard_reader
   moveit_ros_planning_interface
-  robotiq_c_model_control
+  robotiq_2f_gripper_control
   std_srvs
   tf
 )
@@ -23,7 +23,7 @@ catkin_package(
     jog_msgs
     keyboard_reader
     moveit_ros_planning_interface
-    robotiq_c_model_control
+    robotiq_2f_gripper_control
     std_srvs
     tf
 )

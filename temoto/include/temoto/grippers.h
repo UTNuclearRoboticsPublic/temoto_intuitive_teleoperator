@@ -34,7 +34,7 @@
  *  @author andyz(at)utexas.edu
  */
 
-#include <robotiq_c_model_control/CModel_robot_output.h>  // RCGripper msg type
+#include <robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h>  // RCGripper msg type
 #include "ros/ros.h"
 
 #ifndef GRIPPERS_H

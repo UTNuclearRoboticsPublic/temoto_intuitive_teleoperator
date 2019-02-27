@@ -17,7 +17,7 @@
   <depend>message_runtime</depend>
   <depend>move_base_msgs</depend>
   <depend>moveit_ros_planning_interface</depend>
-  <depend>robotiq_c_model_control</depend>
+  <depend>robotiq_2f_gripper_control</depend>
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>sound_play</depend>
