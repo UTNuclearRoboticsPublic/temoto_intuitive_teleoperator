@@ -65,4 +65,7 @@
     <param name="maximum_joint_rad" type="double" value="3.141" />
   </node>
 
+  <!-- Frame for VR headset attachment (OPTIONAL) -->
+  <include file="$(find temoto)/launch/static_hmd_tf_publisher.launch" />
+
 </launch>
