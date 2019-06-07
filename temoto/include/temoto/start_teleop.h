@@ -130,6 +130,9 @@ private:
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string base_frame_ = "base_link";        // Frame of robot base
 
+  std::vector<std::string> image_topics_{"/camera_ee/color/image_raw", "/camera_hmd/color/image_raw"};
+  std::size_t current_image_topic_index_ = 0;
+
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
 
   ros::NodeHandle n_;
@@ -159,7 +162,7 @@ private:
   jog_msgs::JogJoint joint_jog_cmd_;
 
   // ROS publishers
-  ros::Publisher pub_abort_, pub_jog_base_cmds_;
+  ros::Publisher pub_abort_, pub_jog_base_cmds_, pub_current_image_topic_;
 
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_, sub_scaling_factor_,
@@ -180,11 +183,12 @@ private:
     { 13, "point to point mode" },  // 2 button
     { 14, "navigation" },           // 3 button
     { 15, "manipulation" },         // 4 button
-    { 26, "next end effector" },    // Rotation button
-    { 22, "base move" },            // Esc button
     { 5, "open gripper" },          // F button
     { 4, "close gripper" },         // R button
-    { 24, "toggle compliance" }     // Shift button
+    { 22, "base move" },            // Esc button
+    { 23, "cycle camera feed" },    // Alt button
+    { 24, "toggle compliance" },     // Shift button
+    { 26, "next end effector" },    // Rotation button
   };
 
   // An object which sends commands to the grippers

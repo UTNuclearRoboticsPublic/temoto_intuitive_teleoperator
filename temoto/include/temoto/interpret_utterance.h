@@ -84,6 +84,7 @@ public:
     { "point to point mode" },    // plan to one point at a time
     { "next end effector" },      // switch to the next end effector
     { "toggle compliance" },      // toggle compliance for this end effector
+    { "cycle camera feed" },      // publish the next camera topic string, to switch views
     { "open gripper" },   // open gripper, a preplanned sequence
     { "close gripper" }  // close gripper, a preplanned sequence
   };

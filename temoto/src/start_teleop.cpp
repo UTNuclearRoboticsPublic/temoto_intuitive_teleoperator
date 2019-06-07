@@ -51,8 +51,9 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
 
   base_frame_ = get_ros_params::getStringParam("temoto/base_frame", n_);
 
-  pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
+  pub_abort_ = n_.advertise<std_msgs::String>("/temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
+  pub_current_image_topic_ = n_.advertise<std_msgs::String>("/temoto/current_image_topic", 1);
 
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
@@ -562,7 +563,8 @@ void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
 
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
- *  @param voice_command contains the specific command as an unsigned integer.
+ *  These commands come from interpret_utterance.cpp
+ *  @param voice_command contains the specific command as a String
  */
 void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
@@ -708,6 +710,18 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
       else
         ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
+
+      return;
+    }
+    else if (voice_command.data == "cycle camera feed")
+    {
+      ++current_image_topic_index_;
+      if (current_image_topic_index_ > image_topics_.size() - 1)
+        current_image_topic_index_ = 0;
+      ROS_WARN_STREAM(image_topics_[current_image_topic_index_]);
+      std_msgs::String image_topic;
+      image_topic.data = image_topics_[current_image_topic_index_];
+      pub_current_image_topic_.publish(image_topic);
 
       return;
     }
