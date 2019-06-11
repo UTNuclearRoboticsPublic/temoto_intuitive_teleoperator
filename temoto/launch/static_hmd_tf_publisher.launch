@@ -1,7 +1,0 @@
-<launch>
-
-  <!-- HMD pose with respect to base_link -->
-  <node pkg="tf" type="static_transform_publisher" name="world_tf" args="0 0 1.3 0 0 0 /base_link /hmd 10"/>
-
-</launch>
-

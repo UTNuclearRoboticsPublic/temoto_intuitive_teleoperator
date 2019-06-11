@@ -66,6 +66,6 @@
   </node>
 
   <!-- Frame for VR headset attachment (OPTIONAL) -->
-  <include file="$(find temoto)/launch/static_hmd_tf_publisher.launch" />
+  <include file="$(find temoto)/launch/vr_setup.launch" />
 
 </launch>
