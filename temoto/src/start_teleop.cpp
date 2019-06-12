@@ -39,7 +39,7 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_), button_debounce_timeout_(0.1)
+Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_), button_debounce_timeout_(0.2)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
