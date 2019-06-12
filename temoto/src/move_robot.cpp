@@ -127,7 +127,7 @@ bool MoveRobotInterface::requestMove()
   {
     if (new_plan_available_)
     {
-      result = movegroup_.execute(latest_plan_);
+      result = movegroup_.asyncExecute(latest_plan_);
     }
     else
     {
@@ -156,21 +156,6 @@ bool MoveRobotInterface::requestMove()
 void MoveRobotInterface::calculate_linear_tols(geometry_msgs::PoseStamped curr_pose,
                                                geometry_msgs::PoseStamped target_pose)
 {
-  // double sum_of_squares = pow( curr_pose.pose.position.x -
-  // target_pose.pose.position.x,2) + pow( curr_pose.pose.position.y -
-  // target_pose.pose.position.y,2) + pow( curr_pose.pose.position.z -
-  // target_pose.pose.position.z,2);
-
-  // double delta_position = pow( sum_of_squares, 0.5);
-
-  // delta_position *= fractional_tolerance_;
-
-  // if ( delta_position < min_position_tolerance_ )
-  //  delta_position = min_position_tolerance_;
-
-  // movegroup_.setGoalPositionTolerance( delta_position );
-
-  // ^Dynamically adjusting tol's wasn't helping. Back to basics.
   movegroup_.setGoalPositionTolerance(min_position_tolerance_);
 
   return;
@@ -179,22 +164,6 @@ void MoveRobotInterface::calculate_linear_tols(geometry_msgs::PoseStamped curr_p
 void MoveRobotInterface::calculate_ang_tols(geometry_msgs::PoseStamped curr_pose,
                                             geometry_msgs::PoseStamped target_pose)
 {
-  // double sum_of_squares = pow( curr_pose.pose.orientation.x -
-  // target_pose.pose.orientation.x,2) + pow( curr_pose.pose.orientation.y -
-  // target_pose.pose.orientation.y,2) + pow( curr_pose.pose.orientation.z -
-  // target_pose.pose.orientation.z,2) + pow( curr_pose.pose.orientation.w -
-  // target_pose.pose.orientation.w,2);
-
-  // double delta_orientation = pow( sum_of_squares, 0.5);
-
-  // delta_orientation *= fractional_tolerance_;
-
-  // if ( delta_orientation < min_orientation_tolerance_ )
-  //  delta_orientation = min_orientation_tolerance_;
-
-  // movegroup_.setGoalOrientationTolerance( delta_orientation );
-
-  // ^Dynamically adjusting tol's wasn't helping. Back to basics.
   movegroup_.setGoalOrientationTolerance(min_orientation_tolerance_);
 
   return;
