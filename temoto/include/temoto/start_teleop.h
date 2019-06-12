@@ -95,7 +95,7 @@ public:
   navigation_or_manipulation current_nav_or_manip_mode_ = MANIPULATION;
 
 private:
-  void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
+  void powermateCallback(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
                                                                        // general case, e.g.
                                                                        // processScaleFactor
 
@@ -130,7 +130,7 @@ private:
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string base_frame_ = "base_link";        // Frame of robot base
 
-  std::vector<std::string> image_topics_{"/camera_ee/color/image_raw", "/camera_hmd/color/image_raw"};
+  std::vector<std::string> image_topics_{"/camera_anthro/color/image_raw", "/camera_ee/color/image_raw", "/camera_hmd/image_raw"};
   std::size_t current_image_topic_index_ = 0;
 
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
@@ -167,6 +167,10 @@ private:
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_, sub_scaling_factor_,
       sub_temoto_sleep_;
+
+  // Debounce buttons
+  ros::Duration button_debounce_timeout_;  // Seconds
+  ros::Time most_recent_button_press_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
