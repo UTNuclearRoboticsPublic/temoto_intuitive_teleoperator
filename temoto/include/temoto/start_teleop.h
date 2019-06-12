@@ -95,7 +95,7 @@ public:
   navigation_or_manipulation current_nav_or_manip_mode_ = MANIPULATION;
 
 private:
-  void processPowermate(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
+  void powermateCallback(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
                                                                        // general case, e.g.
                                                                        // processScaleFactor
 
@@ -164,6 +164,10 @@ private:
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_, sub_scaling_factor_,
       sub_temoto_sleep_;
+
+  // Debounce buttons
+  ros::Duration button_debounce_timeout_;  // Seconds
+  ros::Time most_recent_button_press_;
 
   // Scale speed cmds when near obstacles
   ros::Subscriber sub_nav_spd_;
