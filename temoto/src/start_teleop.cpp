@@ -39,7 +39,7 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_)
+Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_), button_debounce_timeout_(0.2)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
@@ -54,6 +54,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   pub_abort_ = n_.advertise<std_msgs::String>("/temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
   pub_current_image_topic_ = n_.advertise<std_msgs::String>("/temoto/current_image_topic", 1);
+
+  most_recent_button_press_ = ros::Time::now();
 
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
@@ -119,7 +121,7 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   sub_xbox_pose_cmd_ = n_.subscribe(temoto_xbox_pose_cmd_topic_, 1, &Teleoperator::xboxCallback, this);
   sub_voice_commands_ = n_.subscribe("temoto/voice_commands", 1, &Teleoperator::processStringCommand, this);
   sub_scaling_factor_ = n_.subscribe<griffin_powermate::PowermateEvent>("/griffin_powermate/events", 1,
-                                                                        &Teleoperator::processPowermate, this);
+                                                                        &Teleoperator::powermateCallback, this);
   sub_temoto_sleep_ = n_.subscribe<std_msgs::Bool>("temoto/temoto_sleep", 1, &Teleoperator::sleepCallback, this);
 
   // Set initial scale on incoming commands
@@ -294,19 +296,22 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
     {
       if (pose_cmd.buttons[i])
       {
-        std_msgs::String text_command;
-
-        // If that command exists in the std::map
-        if (spacenav_buttons_.find(i) != spacenav_buttons_.end())
+        // Debounce buttons
+        if (ros::Time::now() - most_recent_button_press_ > button_debounce_timeout_)
         {
-          // Find the string that maps to this button index
-          text_command.data = spacenav_buttons_.find(i)->second;
-          processStringCommand(text_command);
-        }
+          most_recent_button_press_ = ros::Time::now();
+          std_msgs::String text_command;
 
-        // Debounce
-        ros::Duration(0.1).sleep();
-        break;
+          // If that command exists in the std::map
+          if (spacenav_buttons_.find(i) != spacenav_buttons_.end())
+          {
+            // Find the string that maps to this button index
+            text_command.data = spacenav_buttons_.find(i)->second;
+            processStringCommand(text_command);
+          }
+
+          break;
+        }
       }
     }
 
@@ -503,7 +508,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
  * factor.
  *  @param powermate temoto::Dial message published by griffin_powermate node.
  */
-void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
+void Teleoperator::powermateCallback(griffin_powermate::PowermateEvent powermate)
 {
   if (powermate.push_state_changed)  // if push event (i.e. press or depress) has
                                      // occured_occured
@@ -541,7 +546,7 @@ void Teleoperator::processPowermate(griffin_powermate::PowermateEvent powermate)
 
     return;
   }  // else
-}  // end processPowermate()
+}  // end powermateCallback()
 
 /** Callback function for /nav_collision_warning/spd_fraction
  *  Scales teleoperated velocity cmds when an obstacle is close.
