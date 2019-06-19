@@ -130,7 +130,8 @@ private:
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string base_frame_ = "base_link";        // Frame of robot base
 
-  std::vector<std::string> image_topics_{"/camera_right/color/image_raw/compressed", "/camera_left/color/image_raw/compressed", "/camera_hmd/image_raw/compressed"};
+  // Toggle between these camera topics. "transparent" hides the overlay
+  std::vector<std::string> image_topics_{"/camera_right/color/image_raw", "/camera_left/color/image_raw", "/camera_hmd/image_raw", "transparent"};
   std::size_t current_image_topic_index_ = 0;
 
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
