@@ -1,7 +1,7 @@
 <launch>
 
-  <!-- HMD pose with respect to base_link -->
-  <node pkg="tf" type="static_transform_publisher" name="world_tf" args="0 0 1.3 0 0 0 /base_link /hmd 10"/>
+  <!-- HMD pose -->
+  <node pkg="tf" type="static_transform_publisher" name="hmd_tf_pub" args="0 0 0 0 -0.785 0 /camera_tail /hmd 10"/>
 
   <!-- Rviz inset camera frame -->
   <node pkg="tf" type="static_transform_publisher" name="inset_camera_tf" args="1.2 0 0 -1.5707 0 -1.5707 /hmd /inset_camera_frame 10"/>

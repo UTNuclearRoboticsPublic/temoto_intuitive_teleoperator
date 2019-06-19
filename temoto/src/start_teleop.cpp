@@ -723,7 +723,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       ++current_image_topic_index_;
       if (current_image_topic_index_ > image_topics_.size() - 1)
         current_image_topic_index_ = 0;
-      ROS_WARN_STREAM(image_topics_[current_image_topic_index_]);
       std_msgs::String image_topic;
       image_topic.data = image_topics_[current_image_topic_index_];
       pub_current_image_topic_.publish(image_topic);
