@@ -42,6 +42,7 @@
 #include "map"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
+#include "sound_play/sound_play.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
@@ -53,7 +54,6 @@
 #include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/grippers.h"
-#include "temoto/interpret_utterance.h"
 #include "temoto/common_commands.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
@@ -139,8 +139,10 @@ private:
   ros::NodeHandle n_;
 
   // Other Temoto classes (each encapsulating its own functionality)
-  Interpreter interpreter;                // Interpret voice commands
   NavigateRobotInterface nav_interface_;  // Send motion commands to the base
+
+  // Instance of SoundClient used for text-to-speech synthesis
+  sound_play::SoundClient sound_client_;
 
   // Scaling factor
   double pos_scale_;

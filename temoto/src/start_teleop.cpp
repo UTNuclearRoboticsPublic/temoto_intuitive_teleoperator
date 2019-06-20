@@ -163,6 +163,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
   setGraphicsFramesStatus(true);
   initializeGraphics();
+
+  sound_client_.say("Hello! I am ready to receive verbal instructions.");
 }
 
 /** Function that actually makes the service call to appropriate robot motion
