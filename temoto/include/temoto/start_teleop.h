@@ -42,6 +42,7 @@
 #include "map"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
+#include "sound_play/sound_play.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
@@ -53,8 +54,7 @@
 #include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/grippers.h"
-#include "temoto/interpret_utterance.h"
-#include "temoto/common_commands.h"
+#include "temoto/temoto_commands.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 
@@ -122,13 +122,19 @@ private:
   std::string temoto_xbox_pose_cmd_topic_;      // The incoming xbox pose cmds
   std::string base_frame_ = "base_link";        // Frame of robot base
 
+  // Toggle between these camera topics. "transparent" hides the overlay
+  std::vector<std::string> image_topics_{"/camera_right/color/image_raw", "/camera_left/color/image_raw", "/camera_hmd/image_raw", "transparent"};
+  std::size_t current_image_topic_index_ = 0;
+
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?
 
   ros::NodeHandle n_;
 
   // Other Temoto classes (each encapsulating its own functionality)
-  Interpreter interpreter;                // Interpret voice commands
   NavigateRobotInterface nav_interface_;  // Send motion commands to the base
+
+  // Instance of SoundClient used for text-to-speech synthesis
+  sound_play::SoundClient sound_client_;
 
   // Scaling factor
   double pos_scale_;
@@ -151,7 +157,7 @@ private:
   jog_msgs::JogJoint joint_jog_cmd_;
 
   // ROS publishers
-  ros::Publisher pub_abort_, pub_jog_base_cmds_;
+  ros::Publisher pub_abort_, pub_jog_base_cmds_, pub_current_image_topic_;
 
   // ROS subscribers
   ros::Subscriber sub_spacenav_pose_cmd_, sub_xbox_pose_cmd_, sub_voice_commands_, sub_scaling_factor_,
@@ -167,21 +173,6 @@ private:
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
-
-  // Button map for SpaceNavigator controllers
-  std::map<int, std::string> spacenav_buttons_ = {
-    { 0, "robot please plan" },     // Menu button
-    { 1, "robot please execute" },  // Fit button
-    { 12, "jog mode" },             // 1 button
-    { 13, "point to point mode" },  // 2 button
-    { 14, "navigation" },           // 3 button
-    { 15, "manipulation" },         // 4 button
-    { 26, "next end effector" },    // Rotation button
-    { 22, "base move" },            // Esc button
-    { 5, "open gripper" },          // F button
-    { 4, "close gripper" },         // R button
-    { 24, "toggle compliance" }     // Shift button
-  };
 
   // An object which sends commands to the grippers
   std::unique_ptr<grippers::Grippers> gripper_interface_;

@@ -61,7 +61,7 @@ public:
 
   moveit::planning_interface::MoveGroupInterface movegroup_;
 
-  bool requestMove();
+  bool requestMove(std::string named_target);
 
   void requestCartesianMove();
 
@@ -71,7 +71,6 @@ public:
 
   geometry_msgs::PoseStamped target_pose_stamped_;                    ///< Target pose for the robot, if applicable.
   std::vector<double> joint_deltas_;                                  ///< Joint target, if applicable.
-  std::string named_target_;                                          ///< Named target for the robot.
   moveit::planning_interface::MoveGroupInterface::Plan latest_plan_;  ///< Latest motion plan.
   std::string req_action_type_ = "";                                  ///< Action type associated with target
                                                                       /// request, i.e. PLAN, EXECUTE PLAN, or
