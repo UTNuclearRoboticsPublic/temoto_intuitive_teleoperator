@@ -54,7 +54,7 @@
 #include "temoto/get_ros_params.h"
 #include "temoto/graphics_and_frames.h"
 #include "temoto/grippers.h"
-#include "temoto/common_commands.h"
+#include "temoto/temoto_commands.h"
 #include "temoto/move_robot.h"
 #include "temoto/navigate_robot.h"
 
@@ -173,22 +173,6 @@ private:
 
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
-
-  // Button map for SpaceNavigator controllers
-  std::map<int, std::string> spacenav_buttons_ = {
-    { 0, "robot please plan" },     // Menu button
-    { 1, "robot please execute" },  // Fit button
-    { 12, "jog mode" },             // 1 button
-    { 13, "point to point mode" },  // 2 button
-    { 14, "navigation" },           // 3 button
-    { 15, "manipulation" },         // 4 button
-    { 5, "open gripper" },          // F button
-    { 4, "close gripper" },         // R button
-    { 22, "base move" },            // Esc button
-    { 23, "cycle camera feed" },    // Alt button
-    { 24, "toggle compliance" },     // Shift button
-    { 26, "next end effector" },    // Rotation button
-  };
 
   // An object which sends commands to the grippers
   std::unique_ptr<grippers::Grippers> gripper_interface_;

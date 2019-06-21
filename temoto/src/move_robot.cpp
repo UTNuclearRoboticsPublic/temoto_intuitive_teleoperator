@@ -36,13 +36,13 @@
  */
 
 #include "temoto/move_robot.h"
-#include "temoto/common_commands.h"
+#include "temoto/temoto_commands.h"
 
 /** Plans and/or executes the motion of the robot.
- *  @param robot MoveGroup object of the robot.
+ *  @param named_target A named set of joints from the URDF. If not empty, move to this pose.
  *  Return TRUE if successful.
  */
-bool MoveRobotInterface::requestMove()
+bool MoveRobotInterface::requestMove(std::string named_target)
 {
   // Set current state as the start state for planner. For some reason the
   // actual built-in function doesn't do that.
@@ -53,9 +53,9 @@ bool MoveRobotInterface::requestMove()
   // msg)
   // Named target:
   ////////////////////////////////////////////////////////////////////////////////
-  if (named_target_ != "")
+  if (named_target != "")
   {
-    if (movegroup_.setNamedTarget(named_target_))  // check if setting named target was successful
+    if (movegroup_.setNamedTarget(named_target))  // check if setting named target was successful
     {
       ROS_INFO("[move_robot/requestMove] Failed to set named target. Please retry.");
       return false;
@@ -118,12 +118,12 @@ bool MoveRobotInterface::requestMove()
   result.val = moveit_msgs::MoveItErrorCodes::FAILURE;
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
-  if (req_action_type_ == common_commands::PLAN)
+  if (req_action_type_ == temoto_commands::PLAN)
   {
     result = movegroup_.plan(latest_plan_);  // Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;     // Set new_plan_available_ to TRUE.
   }
-  else if (req_action_type_ == common_commands::EXECUTE)
+  else if (req_action_type_ == temoto_commands::EXECUTE)
   {
     if (new_plan_available_)
     {
@@ -136,7 +136,7 @@ bool MoveRobotInterface::requestMove()
     }
     new_plan_available_ = false;
   }
-  else if (req_action_type_ == common_commands::GO)
+  else if (req_action_type_ == temoto_commands::GO)
   {
     // Since move() has a bug of start state not being current state, I am going
     // to plan and execute sequentally.
