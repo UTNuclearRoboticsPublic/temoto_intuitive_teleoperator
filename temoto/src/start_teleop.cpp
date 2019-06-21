@@ -575,6 +575,9 @@ void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
  */
 void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
+  ROS_INFO_STREAM(voice_command.data);
+  sound_client_.say(voice_command.data);
+
   // Do nothing if user put Temoto in sleep mode
   if (!temoto_sleep_)
   {
@@ -584,7 +587,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
     if (voice_command.data == "point to point mode")
     {
-      ROS_INFO("Switching to point-to-point mode");
       in_jog_mode_ = false;
       resetEEGraphicPose();
       setScale();
@@ -597,7 +599,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     /////////////////////////
     if (voice_command.data == "stop stop")
     {
-      ROS_INFO("Stopping ...");
       // Stop motions within temoto
       callRobotMotionInterface(common_commands::ABORT);
 
@@ -617,7 +618,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (!enable_manipulation_)
       {
-        ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
+        ROS_WARN_STREAM("Manipulation was not enabled in the yaml file.");
         return;
       }
 
@@ -643,7 +644,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (!enable_navigation_)
       {
-        ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+        ROS_WARN_STREAM("Navigation was not enabled in the yaml file.");
         return;
       }
 
@@ -651,10 +652,8 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       if (current_nav_or_manip_mode_ == MANIPULATION)
       {
         // Make sure we aren't in jog mode, for safety
-        ROS_INFO("Switching out of jog mode");
         resetEEGraphicPose();
         in_jog_mode_ = false;
-        ROS_INFO("Going into NAVIGATION mode  ...");
         current_nav_or_manip_mode_ = NAVIGATION;
 
         bool adjust_camera = true;
@@ -669,8 +668,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     }
     else if (voice_command.data == "next end effector")
     {
-      ROS_INFO("Controlling the next EE from yaml file ...");
-
       // No jogging, initially, for safety
       in_jog_mode_ = false;
       switchEE();
@@ -682,8 +679,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       // If non-empty service name
       if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
       {
-        ROS_INFO_STREAM("Toggling compliance");
-
         std_srvs::Trigger srv;
 
         if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
@@ -700,7 +695,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
       {
-        ROS_INFO("Closing the gripper ...");
         gripper_interface_->close(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
       }
       else
@@ -712,7 +706,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
       {
-        ROS_INFO("Opening the gripper ...");
         gripper_interface_->open(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
       }
       else
@@ -741,7 +734,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       if (voice_command.data == "jog mode")
       {
-        ROS_INFO("Switching to jog mode");
         in_jog_mode_ = true;
         resetEEGraphicPose();
         setScale();
@@ -750,13 +742,11 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
       else if (voice_command.data == "robot please plan")
       {
-        ROS_INFO("Planning ...");
         callRobotMotionInterface(common_commands::PLAN);
         return;
       }
       else if (voice_command.data == "robot please execute")
       {
-        ROS_INFO("Executing last plan ...");
         // Move the graphic to new end-effector pose if motion is successful
         bool result = callRobotMotionInterface(common_commands::EXECUTE);
         if (result)
@@ -765,7 +755,6 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       }
       else if (voice_command.data == "base move")
       {
-        ROS_INFO("Planning and moving ...");
         resetEEGraphicPose();
         callRobotMotionInterface(common_commands::GO);
         return;
@@ -773,7 +762,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
       else
       {
-        ROS_INFO_STREAM("Unknown voice command: " << voice_command.data);
+        ROS_WARN_STREAM("Unknown voice command: " << voice_command.data);
       }
     }  // End of handling non-Abort commands
   }    // End of !temoto_sleep_
