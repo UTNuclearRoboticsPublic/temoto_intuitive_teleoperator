@@ -66,14 +66,6 @@ class Teleoperator
 public:
   Teleoperator();
 
-  ~Teleoperator()
-  {
-    for (int i = 0; i < end_effector_parameters_.ee_names.size(); ++i)
-    {
-      delete end_effector_parameters_.arm_interface_ptrs.at(i);
-    }
-  }
-
   bool callRobotMotionInterface(std::string action_type);
 
   void setGraphicsFramesStatus(bool adjust_camera);
@@ -209,7 +201,7 @@ private:
 
     // Send motion commands to each end-effector. Ptr needed because the MoveGroup name is
     // determined at run time
-    std::vector<MoveRobotInterface*> arm_interface_ptrs;
+    std::vector<std::unique_ptr<MoveRobotInterface>> arm_interface_ptrs;
 
     // A list of gripper topic for each end-effector
     std::vector<std::string> gripper_topics;

@@ -72,7 +72,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     // Objects for arm motion interface
     std::string move_group_name =
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/movegroup", n_);
-    end_effector_parameters_.arm_interface_ptrs.push_back(new MoveRobotInterface(move_group_name));
+    std::unique_ptr<MoveRobotInterface> move_robot_ptr = std::unique_ptr<MoveRobotInterface>(new MoveRobotInterface(move_group_name));
+    end_effector_parameters_.arm_interface_ptrs.push_back( std::move(move_robot_ptr));
 
     // Cartesian jogging commands
     std::string jog_topic = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/jog_topic", n_);
