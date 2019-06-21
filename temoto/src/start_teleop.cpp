@@ -57,6 +57,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
 
   most_recent_button_press_ = ros::Time::now();
 
+  most_recent_button_press_ = ros::Time::now();
+
   // Get movegroup and frame names of all arms the user might want to control
   // First, how many ee's are there?
   int num_ee = 1;
@@ -299,7 +301,7 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
     {
       if (pose_cmd.buttons[i])
       {
-        // Debounce buttons
+       // Debounce buttons
         if (ros::Time::now() - most_recent_button_press_ > button_debounce_timeout_)
         {
           most_recent_button_press_ = ros::Time::now();
