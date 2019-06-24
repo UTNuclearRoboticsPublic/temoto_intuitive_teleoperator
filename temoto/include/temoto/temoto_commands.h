@@ -24,8 +24,8 @@ namespace temoto_commands
     { 22, "base move" },            // Esc button
     { 23, "cycle camera feed" },    // Alt button
     { 24, "toggle compliance" },    // Shift button
-    { 25, "arms go home" },					// Ctrl button
-    { 26, "next end effector" }    // Rotation button
+    { 25, "arm plan home" },		// Ctrl button
+    { 26, "next end effector" }     // Rotation button
   };
 }
 

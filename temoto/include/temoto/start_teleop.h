@@ -199,6 +199,9 @@ private:
 
     // A list of services to toggle compliance for each end-effector
     std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
+
+    // A list of MoveIt "named targets" -- default home poses
+    std::vector<std::string> home_pose_names;
   };
   endEffectorParameters end_effector_parameters_;
 };

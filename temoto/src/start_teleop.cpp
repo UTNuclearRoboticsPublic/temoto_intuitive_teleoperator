@@ -101,6 +101,10 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     std::string service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/toggle_compliance_service", n_);
     ros::ServiceClient client = n_.serviceClient<std_srvs::Trigger>(service_name);
     end_effector_parameters_.toggle_compliance_services.push_back(std::make_shared<ros::ServiceClient>(client));
+
+    // MoveIt "named targets" -- pre-defined home poses
+    std::string named_target = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/home_pose_name", n_);
+    end_effector_parameters_.home_pose_names.push_back(named_target);
   }
 
   // An object to handle gripper commands
@@ -258,10 +262,9 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
     // Arm go home
     else if (action_type == temoto_commands::ARM_PLAN_HOME)
     {
-      // TODO: match current end effector
-      std::string named_target = "left_ur5_temoto";
+      std::string home_pose_name = end_effector_parameters_.home_pose_names.at(current_movegroup_ee_index_);
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
-      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove(named_target);
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove(home_pose_name);
     }
     // Point-to-point motion
     else
@@ -751,7 +754,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
         return;
       }
-      else if (voice_command.data == "arms go home")
+      else if (voice_command.data == "arm plan home")
       {
         callRobotMotionInterface(temoto_commands::ARM_PLAN_HOME);
         return;

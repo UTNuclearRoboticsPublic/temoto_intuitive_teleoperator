@@ -14,6 +14,7 @@ temoto:
       force_torque_topic: "right_ur5_wrench"
       gripper_topic: "/Robotiq2FGripperRobotOutput"
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
+      home_pose_name: "right_ur5_temoto"
     ee1:
       end_effector: "left_ur5_ee_link"
       movegroup: "left_ur5"
@@ -25,6 +26,7 @@ temoto:
       force_torque_topic: "left_ur5_wrench"
       gripper_topic: ""
       toggle_compliance_service: "/left_ur5compliance_controller/toggle_compliance"
+      home_pose_name: "left_ur5_temoto"
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"
   temoto_xbox_pose_cmd_topic: ""
