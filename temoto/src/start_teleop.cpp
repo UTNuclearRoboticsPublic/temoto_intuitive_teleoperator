@@ -255,6 +255,14 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
 
       return true;
     }
+    // Arm go home
+    else if (action_type == temoto_commands::ARM_PLAN_HOME)
+    {
+      // TODO: match current end effector
+      std::string named_target = "left_ur5_temoto";
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove(named_target);
+    }
     // Point-to-point motion
     else
     {
@@ -741,6 +749,11 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
         resetEEGraphicPose();
         setScale();
 
+        return;
+      }
+      else if (voice_command.data == "arms go home")
+      {
+        callRobotMotionInterface(temoto_commands::ARM_PLAN_HOME);
         return;
       }
       else if (voice_command.data == "robot please plan")

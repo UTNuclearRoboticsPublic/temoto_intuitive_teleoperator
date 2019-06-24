@@ -61,7 +61,7 @@ public:
 
   moveit::planning_interface::MoveGroupInterface movegroup_;
 
-  bool requestMove(std::string named_target);
+  bool requestMove(std::string& named_target);
 
   void requestCartesianMove();
 

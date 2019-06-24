@@ -9,6 +9,7 @@ namespace temoto_commands
 	const std::string GO = "go";
 	const std::string EXECUTE = "execute";
 	const std::string PLAN = "plan";
+	const std::string ARM_PLAN_HOME = "arm go home";
 
   // Button map for SpaceNavigator controllers
   const std::map<int, std::string> spacenav_buttons = {
@@ -22,8 +23,9 @@ namespace temoto_commands
     { 4, "close gripper" },         // R button
     { 22, "base move" },            // Esc button
     { 23, "cycle camera feed" },    // Alt button
-    { 24, "toggle compliance" },     // Shift button
-    { 26, "next end effector" },    // Rotation button
+    { 24, "toggle compliance" },    // Shift button
+    { 25, "arms go home" },					// Ctrl button
+    { 26, "next end effector" }    // Rotation button
   };
 }
 

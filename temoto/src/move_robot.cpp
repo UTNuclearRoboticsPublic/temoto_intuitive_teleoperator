@@ -42,7 +42,7 @@
  *  @param named_target A named set of joints from the URDF. If not empty, move to this pose.
  *  Return TRUE if successful.
  */
-bool MoveRobotInterface::requestMove(std::string named_target)
+bool MoveRobotInterface::requestMove(std::string& named_target)
 {
   // Set current state as the start state for planner. For some reason the
   // actual built-in function doesn't do that.
@@ -55,7 +55,7 @@ bool MoveRobotInterface::requestMove(std::string named_target)
   ////////////////////////////////////////////////////////////////////////////////
   if (named_target != "")
   {
-    if (movegroup_.setNamedTarget(named_target))  // check if setting named target was successful
+    if (!movegroup_.setNamedTarget(named_target))  // check if setting named target was successful
     {
       ROS_INFO("[move_robot/requestMove] Failed to set named target. Please retry.");
       return false;
@@ -118,7 +118,7 @@ bool MoveRobotInterface::requestMove(std::string named_target)
   result.val = moveit_msgs::MoveItErrorCodes::FAILURE;
 
   // Based on action type: PLAN, EXECUTE PLAN, or PLAN&EXECUTE (aka GO)
-  if (req_action_type_ == temoto_commands::PLAN)
+  if (req_action_type_ == temoto_commands::PLAN || req_action_type_ == temoto_commands::ARM_PLAN_HOME)
   {
     result = movegroup_.plan(latest_plan_);  // Calculate plan and store it in latest_plan_.
     new_plan_available_ = true;     // Set new_plan_available_ to TRUE.
