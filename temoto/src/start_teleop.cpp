@@ -39,7 +39,7 @@
 
 /** Constructor for Teleoperator.
  */
-Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_), button_debounce_timeout_(0.1)
+Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buffer_), button_debounce_timeout_(0.2)
 {
   temoto_spacenav_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_spacenav_pose_cmd_topic", n_);
   temoto_xbox_pose_cmd_topic_ = get_ros_params::getStringParam("/temoto/temoto_xbox_pose_cmd_topic", n_);
@@ -51,8 +51,11 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
 
   base_frame_ = get_ros_params::getStringParam("temoto/base_frame", n_);
 
-  pub_abort_ = n_.advertise<std_msgs::String>("temoto/abort", 1, true);
+  pub_abort_ = n_.advertise<std_msgs::String>("/temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
+  pub_current_image_topic_ = n_.advertise<std_msgs::String>("/temoto/current_image_topic", 1);
+
+  most_recent_button_press_ = ros::Time::now();
 
   most_recent_button_press_ = ros::Time::now();
 
@@ -98,6 +101,10 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     std::string service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/toggle_compliance_service", n_);
     ros::ServiceClient client = n_.serviceClient<std_srvs::Trigger>(service_name);
     end_effector_parameters_.toggle_compliance_services.push_back(std::make_shared<ros::ServiceClient>(client));
+
+    // MoveIt "named targets" -- pre-defined home poses
+    std::string named_target = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/home_pose_name", n_);
+    end_effector_parameters_.home_pose_names.push_back(named_target);
   }
 
   // An object to handle gripper commands
@@ -163,6 +170,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getPlanningFrame();
   setGraphicsFramesStatus(true);
   initializeGraphics();
+
+  sound_client_.say("Hello! I am ready to receive verbal instructions.");
 }
 
 /** Function that actually makes the service call to appropriate robot motion
@@ -180,13 +189,13 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
   if (current_nav_or_manip_mode_ == NAVIGATION)
   {
     // If operator requested ABORT
-    if (action_type == common_commands::ABORT)
+    if (action_type == temoto_commands::ABORT)
     {
       ROS_INFO("[start_teleop/callRobotMotionInterface] Requesting robot to "
                "stop navigation.");
       // Stop
       geometry_msgs::PoseStamped empty_pose;
-      if (!nav_interface_.navRequest(common_commands::ABORT, empty_pose))
+      if (!nav_interface_.navRequest(temoto_commands::ABORT, empty_pose))
       {
         ROS_ERROR("[start_teleop/callRobotMotionInterface] Failed to call "
                   "temoto/navigate_robot_srv");
@@ -194,7 +203,7 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
       return false;
     }  // end: if (action_type == "abort")
     // If operator requested the robot to move to a goal pose
-    else if (action_type == common_commands::GO)
+    else if (action_type == temoto_commands::GO)
     {
       // Jogging
       if (in_jog_mode_)
@@ -250,6 +259,13 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
 
       return true;
     }
+    // Arm go home
+    else if (action_type == temoto_commands::ARM_PLAN_HOME)
+    {
+      std::string home_pose_name = end_effector_parameters_.home_pose_names.at(current_movegroup_ee_index_);
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
+      end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove(home_pose_name);
+    }
     // Point-to-point motion
     else
     {
@@ -257,8 +273,8 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->req_action_type_ = action_type;
       end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->target_pose_stamped_ =
           absolute_pose_cmd_;
-
-      return end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove();
+      std::string named_target = "";
+      return end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->requestMove(named_target);
     }
   }
   // =================================================
@@ -303,15 +319,15 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
           std_msgs::String text_command;
 
           // If that command exists in the std::map
-          if (spacenav_buttons_.find(i) != spacenav_buttons_.end())
+          if (temoto_commands::spacenav_buttons.find(i) != temoto_commands::spacenav_buttons.end())
           {
             // Find the string that maps to this button index
-            text_command.data = spacenav_buttons_.find(i)->second;
+            text_command.data = temoto_commands::spacenav_buttons.find(i)->second;
             processStringCommand(text_command);
           }
-        }
 
-        break;
+          break;
+        }
       }
     }
 
@@ -515,7 +531,7 @@ void Teleoperator::powermateCallback(griffin_powermate::PowermateEvent powermate
   {
     if (powermate.is_pressed)  // if the push button has been pressed
     {
-      callRobotMotionInterface(common_commands::EXECUTE);  // makes the service
+      callRobotMotionInterface(temoto_commands::EXECUTE);  // makes the service
                                                            // request to move the
                                                            // robot, according to
                                                            // prior plan
@@ -568,18 +584,21 @@ void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
 
 /** Callback function for /temoto/voice_commands.
  *  Executes published voice command.
- *  @param voice_command contains the specific command as an unsigned integer.
+ *  These commands come from interpret_utterance.cpp
+ *  @param voice_command contains the specific command as a String
  */
 void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
-  if (temoto_sleep_) return;    // do nothing if temoto is in sleep mode (obselete?)
+  if (temoto_sleep_) return;    // do nothing if temoto is in sleep mode
+
+  ROS_INFO_STREAM(voice_command.data);
+  sound_client_.say(voice_command.data);
 
   //////////////////////////////////////////////////
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
   if (voice_command.data == "toggle mode" && in_jog_mode_)
-  {
     ROS_INFO("Switching to point-to-point mode");
     in_jog_mode_ = false;
     resetEEGraphicPose();
@@ -919,7 +938,7 @@ int main(int argc, char** argv)
     {
       // Jog?
       if (temoto_teleop.in_jog_mode_)
-        temoto_teleop.callRobotMotionInterface(common_commands::GO);
+        temoto_teleop.callRobotMotionInterface(temoto_commands::GO);
       else
       {
         // Update poses, scale, and nav-or-manip mode for the frames calculation

@@ -44,7 +44,6 @@ add_executable(start_teleop
   src/get_ros_params.cpp
   src/graphics_and_frames.cpp
   src/grippers.cpp
-  src/interpret_utterance.cpp
   src/move_robot.cpp
   src/navigate_robot.cpp
   src/start_teleop.cpp
