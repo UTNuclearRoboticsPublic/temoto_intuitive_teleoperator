@@ -36,6 +36,7 @@
  */
 
 #include "temoto/start_teleop.h"
+#include "temoto/temoto_commands.h"
 
 /** Constructor for Teleoperator.
  */
@@ -319,10 +320,10 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
           std_msgs::String text_command;
 
           // If that command exists in the std::map
-          if (temoto_commands::spacenav_buttons.find(i) != temoto_commands::spacenav_buttons.end())
+          if (temoto_commands::spacenav_buttons_.find(i) != temoto_commands::spacenav_buttons_.end())
           {
             // Find the string that maps to this button index
-            text_command.data = temoto_commands::spacenav_buttons.find(i)->second;
+            text_command.data = temoto_commands::spacenav_buttons_.find(i)->second;
             processStringCommand(text_command);
           }
 
@@ -599,7 +600,9 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //////////////////////////////////////////////////
 
   if (voice_command.data == "toggle mode" && in_jog_mode_)
+  {
     ROS_INFO("Switching to point-to-point mode");
+    sound_client_.say("point-to-point mode");
     in_jog_mode_ = false;
     resetEEGraphicPose();
     setScale();
@@ -614,11 +617,11 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   {
     ROS_INFO("Stopping ...");
     // Stop motions within temoto
-    callRobotMotionInterface(common_commands::ABORT);
+    callRobotMotionInterface(temoto_commands::ABORT);
 
     // Publish to tell non-Temoto actions to abort
     std_msgs::String s;
-    s.data = common_commands::ABORT;
+    s.data = temoto_commands::ABORT;
     pub_abort_.publish(s);
 
     return;
@@ -643,6 +646,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     setScale();
 
     ROS_INFO("Going into MANIPULATION mode  ...");
+    sound_client_.say("manipulation mode");
     current_nav_or_manip_mode_ = MANIPULATION;
     resetEEGraphicPose();
     setScale();
@@ -662,6 +666,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     resetEEGraphicPose();
     in_jog_mode_ = false;
     ROS_INFO("Going into NAVIGATION mode  ...");
+    sound_client_.say("navigation mode");
     current_nav_or_manip_mode_ = NAVIGATION;
 
     bool adjust_camera = true;
@@ -736,6 +741,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     if (voice_command.data == "toggle mode" && !in_jog_mode_)
     {
       ROS_INFO("Switching to jog mode");
+      sound_client_.say("jog mode");
       in_jog_mode_ = true;
       resetEEGraphicPose();
       setScale();
@@ -745,14 +751,14 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     else if (voice_command.data == "robot please plan")
     {
       ROS_INFO("Planning ...");
-      callRobotMotionInterface(common_commands::PLAN);
+      callRobotMotionInterface(temoto_commands::PLAN);
       return;
     }
     else if (voice_command.data == "robot please execute")
     {
       ROS_INFO("Executing last plan ...");
       // Move the graphic to new end-effector pose if motion is successful
-      bool result = callRobotMotionInterface(common_commands::EXECUTE);
+      bool result = callRobotMotionInterface(temoto_commands::EXECUTE);
       if (result)
         resetEEGraphicPose();
       return;
@@ -761,7 +767,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     {
       ROS_INFO("Planning and moving ...");
       resetEEGraphicPose();
-      callRobotMotionInterface(common_commands::GO);
+      callRobotMotionInterface(temoto_commands::GO);
       return;
     }
 

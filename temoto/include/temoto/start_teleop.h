@@ -174,24 +174,6 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
-<<<<<<< HEAD
-  // Button map for SpaceNavigator controllers
-  std::map<int, std::string> spacenav_buttons_ = {
-    { 0, "robot please plan" },     // Menu button
-    { 1, "robot please execute" },  // Fit button
-    { 12, "toggle mode" },          // 1 button
-    { 13, "unassigned" },           // 2 button
-    { 14, "toggle control" },       // 3 button
-    { 15, "stop stop" },           // 4 button
-    { 26, "next end effector" },    // Rotation button
-    { 22, "base move" },            // Esc button
-    { 5, "open gripper" },          // F button
-    { 4, "close gripper" },         // R button
-    { 24, "toggle compliance" }     // Shift button
-  };
-
-=======
->>>>>>> 6598c1fb5d988c12e1f0489ffe0b34e964a16e48
   // An object which sends commands to the grippers
   std::unique_ptr<grippers::Grippers> gripper_interface_;
 
