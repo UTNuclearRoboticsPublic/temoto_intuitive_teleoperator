@@ -730,6 +730,17 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
     return;
   }
+  else if (voice_command.data == "cycle camera feed")
+  {
+    ++current_image_topic_index_;
+    if (current_image_topic_index_ > image_topics_.size() - 1)
+      current_image_topic_index_ = 0;
+    std_msgs::String image_topic;
+    image_topic.data = image_topics_[current_image_topic_index_];
+    pub_current_image_topic_.publish(image_topic);
+
+    return;
+  }
 
   // Avoid planning, executing, etc. while in jog mode
   if (in_jog_mode_)
@@ -746,6 +757,11 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       resetEEGraphicPose();
       setScale();
 
+      return;
+    }
+    else if (voice_command.data == "arm plan home")
+    {
+      callRobotMotionInterface(temoto_commands::ARM_PLAN_HOME);
       return;
     }
     else if (voice_command.data == "robot please plan")
