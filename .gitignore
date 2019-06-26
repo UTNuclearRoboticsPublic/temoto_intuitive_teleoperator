@@ -2,6 +2,7 @@ build/
 devel/
 .kdev4/
 src.kdev4
+.vscode
 
 # Temp files
 *~

@@ -172,10 +172,10 @@ private:
   std::map<int, std::string> spacenav_buttons_ = {
     { 0, "robot please plan" },     // Menu button
     { 1, "robot please execute" },  // Fit button
-    { 12, "jog mode" },             // 1 button
-    { 13, "point to point mode" },  // 2 button
-    { 14, "navigation" },           // 3 button
-    { 15, "manipulation" },         // 4 button
+    { 12, "toggle mode" },          // 1 button
+    { 13, "unassigned" },           // 2 button
+    { 14, "toggle control" },       // 3 button
+    { 15, "stop stop" },           // 4 button
     { 26, "next end effector" },    // Rotation button
     { 22, "base move" },            // Esc button
     { 5, "open gripper" },          // F button

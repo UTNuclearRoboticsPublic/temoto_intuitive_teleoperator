@@ -572,197 +572,185 @@ void Teleoperator::sleepCallback(const std_msgs::Bool::ConstPtr& msg)
  */
 void Teleoperator::processStringCommand(std_msgs::String voice_command)
 {
-  // Do nothing if user put Temoto in sleep mode
-  if (!temoto_sleep_)
-  {
-    //////////////////////////////////////////////////
-    //  Stop jogging (jogging preempts other commands)
-    //////////////////////////////////////////////////
+  if (temoto_sleep_) return;    // do nothing if temoto is in sleep mode (obselete?)
 
-    if (voice_command.data == "point to point mode")
+  //////////////////////////////////////////////////
+  //  Stop jogging (jogging preempts other commands)
+  //////////////////////////////////////////////////
+
+  if (voice_command.data == "toggle mode" && in_jog_mode_)
+  {
+    ROS_INFO("Switching to point-to-point mode");
+    in_jog_mode_ = false;
+    resetEEGraphicPose();
+    setScale();
+
+    return;
+  }
+
+  /////////////////////////
+  //  Handle ABORT commands
+  /////////////////////////
+  if (voice_command.data == "stop stop")
+  {
+    ROS_INFO("Stopping ...");
+    // Stop motions within temoto
+    callRobotMotionInterface(common_commands::ABORT);
+
+    // Publish to tell non-Temoto actions to abort
+    std_msgs::String s;
+    s.data = common_commands::ABORT;
+    pub_abort_.publish(s);
+
+    return;
+  }
+
+  ////////////////////////////////////
+  //  Handle all commands except ABORT
+  ////////////////////////////////////
+
+  if (voice_command.data == "toggle control" && current_nav_or_manip_mode_ == NAVIGATION)  // Switch over to manipulation (MoveIt!) mode
+  {
+    if (!enable_manipulation_)
     {
-      ROS_INFO("Switching to point-to-point mode");
-      in_jog_mode_ = false;
+      ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
+      return;
+    }
+
+    // Make sure we aren't in jog mode. Don't want to start jogging an arm
+    // suddenly
+    ROS_INFO("Switching out of jog mode");
+    in_jog_mode_ = false;
+    setScale();
+
+    ROS_INFO("Going into MANIPULATION mode  ...");
+    current_nav_or_manip_mode_ = MANIPULATION;
+    resetEEGraphicPose();
+    setScale();
+
+    return;
+  }
+  else if (voice_command.data == "toggle control" && current_nav_or_manip_mode_ == MANIPULATION)  // Switch to navigation mode
+  {
+    if (!enable_navigation_)
+    {
+      ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+      return;
+    }
+
+    // Make sure we aren't in jog mode, for safety
+    ROS_INFO("Switching out of jog mode");
+    resetEEGraphicPose();
+    in_jog_mode_ = false;
+    ROS_INFO("Going into NAVIGATION mode  ...");
+    current_nav_or_manip_mode_ = NAVIGATION;
+
+    bool adjust_camera = true;
+    setGraphicsFramesStatus(adjust_camera);
+    graphics_and_frames_.crunch();
+    resetEEGraphicPose();
+    setScale();
+
+    return;
+  }
+  else if (voice_command.data == "next end effector")
+  {
+    ROS_INFO("Controlling the next EE from yaml file ...");
+
+    // No jogging, initially, for safety
+    in_jog_mode_ = false;
+    switchEE();
+
+    return;
+  }
+  else if (voice_command.data == "toggle compliance")
+  {
+    // If non-empty service name
+    if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
+    {
+      ROS_INFO_STREAM("Toggling compliance");
+
+      std_srvs::Trigger srv;
+
+      if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
+        ROS_INFO_STREAM("Message: " << srv.response.message);
+      else
+        ROS_ERROR("Failed to call service");
+    }
+    else
+      ROS_WARN_STREAM("A toggle compliance service name is not defined for this end-effector. Check yaml file.");
+
+    return;
+  }
+  else if (voice_command.data == "close gripper")
+  {
+    if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
+    {
+      ROS_INFO("Closing the gripper ...");
+      gripper_interface_->close(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
+    }
+    else
+      ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
+
+    return;
+  }
+  else if (voice_command.data == "open gripper")
+  {
+    if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
+    {
+      ROS_INFO("Opening the gripper ...");
+      gripper_interface_->open(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
+    }
+    else
+      ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
+
+    return;
+  }
+
+  // Avoid planning, executing, etc. while in jog mode
+  if (in_jog_mode_)
+    return;
+
+  // There's nothing blocking any arbitrary command
+  else
+  {
+    if (voice_command.data == "toggle mode" && !in_jog_mode_)
+    {
+      ROS_INFO("Switching to jog mode");
+      in_jog_mode_ = true;
       resetEEGraphicPose();
       setScale();
 
       return;
     }
-
-    /////////////////////////
-    //  Handle ABORT commands
-    /////////////////////////
-    if (voice_command.data == "stop stop")
+    else if (voice_command.data == "robot please plan")
     {
-      ROS_INFO("Stopping ...");
-      // Stop motions within temoto
-      callRobotMotionInterface(common_commands::ABORT);
-
-      // Publish to tell non-Temoto actions to abort
-      std_msgs::String s;
-      s.data = common_commands::ABORT;
-      pub_abort_.publish(s);
-
+      ROS_INFO("Planning ...");
+      callRobotMotionInterface(common_commands::PLAN);
       return;
     }
-
-    ////////////////////////////////////
-    //  Handle all commands except ABORT
-    ////////////////////////////////////
-
-    if (voice_command.data == "manipulation")  // Switch over to manipulation (MoveIt!) mode
+    else if (voice_command.data == "robot please execute")
     {
-      if (!enable_manipulation_)
-      {
-        ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
-        return;
-      }
-
-      // If not already in manipulation mode
-      if (current_nav_or_manip_mode_ == NAVIGATION)
-      {
-        // Make sure we aren't in jog mode. Don't want to start jogging an arm
-        // suddenly
-        ROS_INFO("Switching out of jog mode");
-        in_jog_mode_ = false;
-        setScale();
-
-        ROS_INFO("Going into MANIPULATION mode  ...");
-        current_nav_or_manip_mode_ = MANIPULATION;
+      ROS_INFO("Executing last plan ...");
+      // Move the graphic to new end-effector pose if motion is successful
+      bool result = callRobotMotionInterface(common_commands::EXECUTE);
+      if (result)
         resetEEGraphicPose();
-        setScale();
-      }
-      else
-        ROS_INFO("Already in manipulation mode.");
       return;
     }
-    else if (voice_command.data == "navigation")  // Switch to navigation mode
+    else if (voice_command.data == "base move")
     {
-      if (!enable_navigation_)
-      {
-        ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
-        return;
-      }
-
-      // If not already in nav mode
-      if (current_nav_or_manip_mode_ == MANIPULATION)
-      {
-        // Make sure we aren't in jog mode, for safety
-        ROS_INFO("Switching out of jog mode");
-        resetEEGraphicPose();
-        in_jog_mode_ = false;
-        ROS_INFO("Going into NAVIGATION mode  ...");
-        current_nav_or_manip_mode_ = NAVIGATION;
-
-        bool adjust_camera = true;
-        setGraphicsFramesStatus(adjust_camera);
-        graphics_and_frames_.crunch();
-        resetEEGraphicPose();
-        setScale();
-      }
-      else
-        ROS_INFO("Already in navigation mode.");
-      return;
-    }
-    else if (voice_command.data == "next end effector")
-    {
-      ROS_INFO("Controlling the next EE from yaml file ...");
-
-      // No jogging, initially, for safety
-      in_jog_mode_ = false;
-      switchEE();
-
-      return;
-    }
-    else if (voice_command.data == "toggle compliance")
-    {
-      // If non-empty service name
-      if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
-      {
-        ROS_INFO_STREAM("Toggling compliance");
-
-        std_srvs::Trigger srv;
-
-        if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
-          ROS_INFO_STREAM("Message: " << srv.response.message);
-        else
-          ROS_ERROR("Failed to call service");
-      }
-      else
-        ROS_WARN_STREAM("A toggle compliance service name is not defined for this end-effector. Check yaml file.");
-
-      return;
-    }
-    else if (voice_command.data == "close gripper")
-    {
-      if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
-      {
-        ROS_INFO("Closing the gripper ...");
-        gripper_interface_->close(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
-      }
-      else
-        ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
-
-      return;
-    }
-    else if (voice_command.data == "open gripper")
-    {
-      if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
-      {
-        ROS_INFO("Opening the gripper ...");
-        gripper_interface_->open(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
-      }
-      else
-        ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
-
+      ROS_INFO("Planning and moving ...");
+      resetEEGraphicPose();
+      callRobotMotionInterface(common_commands::GO);
       return;
     }
 
-    // Avoid planning, executing, etc. while in jog mode
-    if (in_jog_mode_)
-      return;
-
-    // There's nothing blocking any arbitrary command
     else
     {
-      if (voice_command.data == "jog mode")
-      {
-        ROS_INFO("Switching to jog mode");
-        in_jog_mode_ = true;
-        resetEEGraphicPose();
-        setScale();
-
-        return;
-      }
-      else if (voice_command.data == "robot please plan")
-      {
-        ROS_INFO("Planning ...");
-        callRobotMotionInterface(common_commands::PLAN);
-        return;
-      }
-      else if (voice_command.data == "robot please execute")
-      {
-        ROS_INFO("Executing last plan ...");
-        // Move the graphic to new end-effector pose if motion is successful
-        bool result = callRobotMotionInterface(common_commands::EXECUTE);
-        if (result)
-          resetEEGraphicPose();
-        return;
-      }
-      else if (voice_command.data == "base move")
-      {
-        ROS_INFO("Planning and moving ...");
-        resetEEGraphicPose();
-        callRobotMotionInterface(common_commands::GO);
-        return;
-      }
-
-      else
-      {
-        ROS_INFO_STREAM("Unknown voice command: " << voice_command.data);
-      }
-    }  // End of handling non-Abort commands
-  }    // End of !temoto_sleep_
+      ROS_INFO_STREAM("Unknown voice command: " << voice_command.data);
+    }
+  }  // End of handling non-Abort commands
 
   return;
 }
