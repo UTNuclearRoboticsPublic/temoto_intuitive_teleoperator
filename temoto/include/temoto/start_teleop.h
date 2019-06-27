@@ -70,26 +70,33 @@ public:
 
   void setGraphicsFramesStatus(bool adjust_camera);
 
-  bool in_jog_mode_ = false;  //< If true, send new joints/poses immediately.
-                              // Otherwise, pt-to-pt motion
-
   Visuals graphics_and_frames_;  // Publish markers to RViz and adjust cmd frame
 
   bool temoto_sleep_ = false;  // If set to true, temoto will spin without sending commands.
 
-  // navigation: interpret absolute_pose_cmd_ as 2D navigation goal;
-  // manipulation: absolute_pose_cmd_ is the motion planning target for robot EEF.
-  enum navigation_or_manipulation
+  /*
+    track the control state of the robot
+  */
+  enum control_mode_t
+  {
+    JOG,
+    P2P
+  };
+  control_mode_t cur_control_mode_ = P2P;
+
+  /*
+    navigation: interpret absolute_pose_cmd_ as 2D navigation goal;
+    manipulation: absolute_pose_cmd_ is the motion planning target for robot EEF.
+  */
+  enum teleop_mode_t
   {
     NAVIGATION,
     MANIPULATION
   };
-  navigation_or_manipulation current_nav_or_manip_mode_ = MANIPULATION;
+  teleop_mode_t cur_teleop_mode_ = MANIPULATION;
 
 private:
-  void powermateCallback(griffin_powermate::PowermateEvent powermate);  // TODO rename to more
-                                                                       // general case, e.g.
-                                                                       // processScaleFactor
+  void powermateCallback(griffin_powermate::PowermateEvent powermate);
 
   void processStringCommand(std_msgs::String voice_command);
 
@@ -108,7 +115,8 @@ private:
 
   void switchEE();
 
-  void toggleCompliance(std_srvs::Trigger::Request &req, std_srvs::Trigger::Response &res);
+  void toggleCompliance(std_srvs::Trigger::Request &req,
+                        std_srvs::Trigger::Response &res);
 
   void spaceNavCallback(sensor_msgs::Joy pose_cmd);
 
@@ -123,7 +131,8 @@ private:
   std::string base_frame_ = "base_link";        // Frame of robot base
 
   // Toggle between these camera topics. "transparent" hides the overlay
-  std::vector<std::string> image_topics_{"/camera_right/color/image_raw", "/camera_left/color/image_raw", "/camera_hmd/image_raw", "transparent"};
+  std::vector<std::string> image_topics_;
+
   std::size_t current_image_topic_index_ = 0;
 
   int current_movegroup_ee_index_ = 0;  // What is the active movegroup/ee pair?

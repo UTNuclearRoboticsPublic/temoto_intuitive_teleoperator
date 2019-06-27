@@ -52,6 +52,8 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
 
   base_frame_ = get_ros_params::getStringParam("temoto/base_frame", n_);
 
+  image_topics_ = get_ros_params::getStrVecParam("temoto/image_topics", n_);
+
   pub_abort_ = n_.advertise<std_msgs::String>("/temoto/abort", 1, true);
   pub_jog_base_cmds_ = n_.advertise<geometry_msgs::Twist>("/temoto/base_cmd_vel", 1);
   pub_current_image_topic_ = n_.advertise<std_msgs::String>("/temoto/current_image_topic", 1);
@@ -142,12 +144,12 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   // Setting up control_state, i.e., whether teleoperator is controlling
   // navigation, manipulation, or both.
   if (enable_manipulation_ && enable_navigation_)
-    current_nav_or_manip_mode_ = MANIPULATION;  // if navigation AND manipulation are enabled,
+    cur_teleop_mode_ = MANIPULATION;  // if navigation AND manipulation are enabled,
                                                 // start out in manipulation mode.
   else if (enable_navigation_ && !enable_manipulation_)
-    current_nav_or_manip_mode_ = NAVIGATION;
+    cur_teleop_mode_ = NAVIGATION;
   else if (enable_manipulation_ && !enable_navigation_)
-    current_nav_or_manip_mode_ = MANIPULATION;
+    cur_teleop_mode_ = MANIPULATION;
 
   ////////////////////////////////////////
   // Wait for initial pose to be available
@@ -184,10 +186,10 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
  */
 bool Teleoperator::callRobotMotionInterface(std::string action_type)
 {
-  // =================================================
-  // === Calling NavigateRobotInterface ==============
-  // =================================================
-  if (current_nav_or_manip_mode_ == NAVIGATION)
+  /*
+    Calling NavigateRobotInterface
+  */
+  if (cur_teleop_mode_ == NAVIGATION)
   {
     // If operator requested ABORT
     if (action_type == temoto_commands::ABORT)
@@ -207,7 +209,7 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
     else if (action_type == temoto_commands::GO)
     {
       // Jogging
-      if (in_jog_mode_)
+      if (cur_control_mode_ == JOG)
       {
         nav_twist_cmd_.twist.angular.z = nav_twist_cmd_.twist.linear.y;
 
@@ -245,14 +247,14 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
       }
       return true;
     }  // else if (action_type == "go")
-  }    // if (current_nav_or_manip_mode_==NAVIGATION)
+  }    // if (cur_teleop_mode_==NAVIGATION)
   // =================================================
   // === Calling MoveRobotInterface ==================
   // =================================================
-  else if (current_nav_or_manip_mode_ == MANIPULATION)
+  else if (cur_teleop_mode_ == MANIPULATION)
   {
     // Jogging
-    if (in_jog_mode_)
+    if (cur_control_mode_ == JOG)
     {
       end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
 
@@ -392,9 +394,9 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ///////////////////////////////////////////////////////////
   // JOGGING
   ///////////////////////////////////////////////////////////
-  if (in_jog_mode_)
+  if (cur_control_mode_ == JOG)
   {
-    if (current_nav_or_manip_mode_ == NAVIGATION)
+    if (cur_teleop_mode_ == NAVIGATION)
     {
       nav_twist_cmd_.header.stamp = ros::Time::now();
       nav_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
@@ -405,7 +407,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
       nav_twist_cmd_.twist.angular.z = rot_scale_ * z_ori;
     }
 
-    if (current_nav_or_manip_mode_ == MANIPULATION)
+    if (cur_teleop_mode_ == MANIPULATION)
     {
       jog_twist_cmd_.header.stamp = ros::Time::now();
       jog_twist_cmd_.twist.linear.x = pos_scale_ * x_pos;
@@ -420,7 +422,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ////////////////////////////
   // POINT-TO-POINT NAVIGATION
   ////////////////////////////
-  if ((current_nav_or_manip_mode_ == NAVIGATION) && !in_jog_mode_)
+  if ((cur_teleop_mode_ == NAVIGATION) && cur_control_mode_ == P2P)
   {
     // ORIENTATION
     // new incremental yaw command
@@ -471,7 +473,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   //////////////////////////////
   // POINT-TO-POINT MANIPULATION
   //////////////////////////////
-  if ((current_nav_or_manip_mode_ == MANIPULATION) && !in_jog_mode_)
+  if ((cur_teleop_mode_ == MANIPULATION) && cur_control_mode_ == P2P)
   {
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already
@@ -599,11 +601,11 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
-  if (voice_command.data == "toggle mode" && in_jog_mode_)
+  if (voice_command.data == "toggle mode" && cur_control_mode_ JOG)
   {
     ROS_INFO("Switching to point-to-point mode");
     sound_client_.say("point-to-point mode");
-    in_jog_mode_ = false;
+    cur_control_mode_ = P2P;
     resetEEGraphicPose();
     setScale();
 
@@ -631,7 +633,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //  Handle all commands except ABORT
   ////////////////////////////////////
 
-  if (voice_command.data == "toggle control" && current_nav_or_manip_mode_ == NAVIGATION)  // Switch over to manipulation (MoveIt!) mode
+  if (voice_command.data == "toggle control" && cur_teleop_mode_ == NAVIGATION)  // Switch over to manipulation (MoveIt!) mode
   {
     if (!enable_manipulation_)
     {
@@ -642,18 +644,18 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode. Don't want to start jogging an arm
     // suddenly
     ROS_INFO("Switching out of jog mode");
-    in_jog_mode_ = false;
+    cur_control_mode_ = P2P;
     setScale();
 
     ROS_INFO("Going into MANIPULATION mode  ...");
     sound_client_.say("manipulation mode");
-    current_nav_or_manip_mode_ = MANIPULATION;
+    cur_teleop_mode_ = MANIPULATION;
     resetEEGraphicPose();
     setScale();
 
     return;
   }
-  else if (voice_command.data == "toggle control" && current_nav_or_manip_mode_ == MANIPULATION)  // Switch to navigation mode
+  else if (voice_command.data == "toggle control" && cur_teleop_mode_ == MANIPULATION)  // Switch to navigation mode
   {
     if (!enable_navigation_)
     {
@@ -664,10 +666,10 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode, for safety
     ROS_INFO("Switching out of jog mode");
     resetEEGraphicPose();
-    in_jog_mode_ = false;
+    cur_control_mode_ = P2P;
     ROS_INFO("Going into NAVIGATION mode  ...");
     sound_client_.say("navigation mode");
-    current_nav_or_manip_mode_ = NAVIGATION;
+    cur_teleop_mode_ = NAVIGATION;
 
     bool adjust_camera = true;
     setGraphicsFramesStatus(adjust_camera);
@@ -682,7 +684,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     ROS_INFO("Controlling the next EE from yaml file ...");
 
     // No jogging, initially, for safety
-    in_jog_mode_ = false;
+    cur_control_mode_ = P2P;
     switchEE();
 
     return;
@@ -743,17 +745,17 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   }
 
   // Avoid planning, executing, etc. while in jog mode
-  if (in_jog_mode_)
+  if (cur_control_mode_ == JOG)
     return;
 
   // There's nothing blocking any arbitrary command
   else
   {
-    if (voice_command.data == "toggle mode" && !in_jog_mode_)
+    if (voice_command.data == "toggle mode" && cur_control_mode_ == P2P)
     {
       ROS_INFO("Switching to jog mode");
       sound_client_.say("jog mode");
-      in_jog_mode_ = true;
+      cur_control_mode_ = JOG;
       resetEEGraphicPose();
       setScale();
 
@@ -802,7 +804,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
  */
 void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 {
-  graphics_and_frames_.latest_status_.in_navigation_mode = (current_nav_or_manip_mode_ == NAVIGATION);
+  graphics_and_frames_.latest_status_.in_navigation_mode = (cur_teleop_mode_ == NAVIGATION);
   graphics_and_frames_.latest_status_.scale_by = pos_scale_;
   graphics_and_frames_.latest_status_.commanded_pose = absolute_pose_cmd_;
   graphics_and_frames_.latest_status_.end_effector_pose =
@@ -816,9 +818,9 @@ void Teleoperator::setGraphicsFramesStatus(bool adjust_camera)
 
 void Teleoperator::setScale()
 {
-  if (current_nav_or_manip_mode_ == NAVIGATION)
+  if (cur_teleop_mode_ == NAVIGATION)
   {
-    if (in_jog_mode_)  // nav, jog mode
+    if (cur_control_mode_ == JOG)  // nav, jog mode
     {
       pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/nav_pos_scale", n_);
       rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/nav_rot_scale", n_);
@@ -831,7 +833,7 @@ void Teleoperator::setScale()
   }
   else  // manipulation
   {
-    if (in_jog_mode_)  // manipulate, jog mode
+    if (cur_control_mode_ == JOG)  // manipulate, jog mode
     {
       pos_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/manip_pos_scale", n_);
       rot_scale_ = get_ros_params::getDoubleParam("temoto/motion_scales/jog/manip_rot_scale", n_);
@@ -914,7 +916,7 @@ void Teleoperator::initializeGraphics()
 // Reset the end-effector graphic to current robot pose
 void Teleoperator::resetEEGraphicPose()
 {
-  if (current_nav_or_manip_mode_ == NAVIGATION)  // Navigation --> Center on base_frame
+  if (cur_teleop_mode_ == NAVIGATION)  // Navigation --> Center on base_frame
   {
     absolute_pose_cmd_.pose.position.x = 0.;
     absolute_pose_cmd_.pose.position.y = 0.;
@@ -959,7 +961,7 @@ int main(int argc, char** argv)
     if (!temoto_teleop.temoto_sleep_)
     {
       // Jog?
-      if (temoto_teleop.in_jog_mode_)
+      if (temoto_teleop.cur_control_mode_ == JOG)
         temoto_teleop.callRobotMotionInterface(temoto_commands::GO);
       else
       {

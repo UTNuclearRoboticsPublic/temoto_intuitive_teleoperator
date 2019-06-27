@@ -48,3 +48,9 @@ temoto:
       nav_rot_scale: 0.2
       manip_pos_scale: 1.
       manip_rot_scale: 1.
+
+  image_topics:
+    - "/camera_right/color/image_raw"
+    - "/camera_left/color/image_raw"
+    - "/camera_hmd/image_raw"
+    - "transparent"
