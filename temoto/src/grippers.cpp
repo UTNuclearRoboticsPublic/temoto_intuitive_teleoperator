@@ -36,6 +36,9 @@
 
 #include "temoto/grippers.h"
 
+#include "dlfcn.h"
+#include "temoto/gripper_base_class.h"
+
 namespace grippers
 {
 Grippers::Grippers(std::vector<std::string>& gripper_topics)
@@ -50,6 +53,19 @@ Grippers::Grippers(std::vector<std::string>& gripper_topics)
 
 void Grippers::close(std::string& gripper_topic)
 {
+  void* handle = dlopen("./myclass.so", RTLD_LAZY);
+
+  MyClass* (*create)();
+  void (*destroy)(MyClass*);
+
+  create = (MyClass* (*)())dlsym(handle, "create_object");
+  destroy = (void (*)(MyClass*))dlsym(handle, "destroy_object");
+
+  MyClass* myClass = (MyClass*)create();
+  myClass->DoSomething();
+  destroy( myClass );
+
+
   // Find the publisher on this topic
   for (auto pub : gripper_publishers_)
   {
