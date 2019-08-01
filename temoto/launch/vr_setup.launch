@@ -7,6 +7,12 @@
   <node pkg="tf" type="static_transform_publisher" name="inset_camera_tf" args="1.2 0 0 -1.5707 0 -1.5707 /hmd /inset_camera_frame 10"/>
 
   <!-- Launch hmd camera (assumes /dev/video0 device, no other cams detected) -->
-  <node pkg="usb_cam" type="usb_cam_node" name="camera_hmd" args="_image_width:=612 _image_height:=460 _framerate:=30 _pixel_format:=yuyv"/>
+  <node pkg="usb_cam" type="usb_cam_node" name="camera_hmd" >
+    <param name="video_device" value="/dev/video2" />
+    <param name="image_width" value="612" />
+    <param name="image_height" value="460" />
+    <param name="framerate" value="30" />
+    <param name="pixel_format" value="yuyv" />
+  </node>
 
 </launch>
