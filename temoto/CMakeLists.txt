@@ -44,7 +44,7 @@ add_executable(start_teleop
   src/get_ros_params.cpp
   src/graphics_and_frames.cpp
   src/grippers.cpp
-  src/gripper_base_class.cpp
+  src/gripper_robotiq.cpp
   src/move_robot.cpp
   src/navigate_robot.cpp
   src/start_teleop.cpp

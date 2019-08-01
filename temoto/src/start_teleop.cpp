@@ -94,10 +94,6 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     end_effector_parameters_.wrist_joint_names.push_back(
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_));
 
-    // Names of gripper topics
-    end_effector_parameters_.gripper_topics.push_back(
-        get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_));
-
     // Names of "enable compliance" topics
     std::string service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/toggle_compliance_service", n_);
     ros::ServiceClient client = n_.serviceClient<std_srvs::Trigger>(service_name);
@@ -106,11 +102,12 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     // MoveIt "named targets" -- pre-defined home poses
     std::string named_target = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/home_pose_name", n_);
     end_effector_parameters_.home_pose_names.push_back(named_target);
-  }
 
-  // An object to handle gripper commands
-  gripper_interface_ =
-      std::unique_ptr<grippers::Grippers>(new grippers::Grippers(end_effector_parameters_.gripper_topics));
+    // Vector of gripper control objects
+    std::string gripper_library_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_library_name", n_);
+    std::unique_ptr<grippers::Grippers> gripper_ptr = std::unique_ptr<grippers::Grippers>(new grippers::Grippers(gripper_library_name));
+    end_effector_parameters_.gripper_interface_ptrs_.push_back( std::move(gripper_ptr));
+  }
 
   // Specify the current ee & move_group
   current_movegroup_ee_index_ = 0;
@@ -708,25 +705,13 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   }
   else if (voice_command.data == "close gripper")
   {
-    if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
-    {
-      ROS_INFO("Closing the gripper ...");
-      gripper_interface_->close(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
-    }
-    else
-      ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
+    end_effector_parameters_.gripper_interface_ptrs_.at(current_movegroup_ee_index_)->close();
 
     return;
   }
   else if (voice_command.data == "open gripper")
   {
-    if (end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_) != "")
-    {
-      ROS_INFO("Opening the gripper ...");
-      gripper_interface_->open(end_effector_parameters_.gripper_topics.at(current_movegroup_ee_index_));
-    }
-    else
-      ROS_WARN_STREAM("A gripper topic is not defined for this end-effector. Check yaml file.");
+    end_effector_parameters_.gripper_interface_ptrs_.at(current_movegroup_ee_index_)->open();
 
     return;
   }

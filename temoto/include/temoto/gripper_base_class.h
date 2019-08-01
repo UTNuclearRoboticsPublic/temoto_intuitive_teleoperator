@@ -1,16 +1,18 @@
-#ifndef __MYCLASS_H__
-#define __MYCLASS_H__
+#ifndef GRIPPER_BASE_CLASS_H
+#define GRIPPER_BASE_CLASS_H
 
-class MyClass
+#include "ros/ros.h"
+
+class GripperBaseClass
 {
 public:
-  MyClass();
+  GripperBaseClass();
 
   /* use virtual otherwise linker will try to perform static linkage */
-  virtual void DoSomething();
+  virtual void close();
+  virtual void open();
 
 private:
-  int x;
 };
 
 #endif

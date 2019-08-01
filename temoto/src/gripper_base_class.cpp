@@ -1,24 +1,28 @@
+
 #include "temoto/gripper_base_class.h"
-#include <iostream>
 
 using namespace std;
 
-extern "C" MyClass* create_object()
+extern "C" GripperBaseClass* create_object()
 {
-  return new MyClass;
+  return new GripperBaseClass;
 }
 
-extern "C" void destroy_object( MyClass* object )
+extern "C" void destroy_object( GripperBaseClass* object )
 {
   delete object;
 }
 
-MyClass::MyClass()
+GripperBaseClass::GripperBaseClass()
 {
-  x = 20;
 }
 
-void MyClass::DoSomething()
+void GripperBaseClass::close()
 {
-  cout<<x<<endl;
+  ROS_ERROR_STREAM("Closing");
+}
+
+void GripperBaseClass::open()
+{
+  ROS_ERROR_STREAM("Opening");
 }

@@ -37,73 +37,33 @@
 #include "temoto/grippers.h"
 
 #include "dlfcn.h"
-#include "temoto/gripper_base_class.h"
+#include "temoto/gripper_robotiq.h"
 
 namespace grippers
 {
-Grippers::Grippers(std::vector<std::string>& gripper_topics)
+Grippers::Grippers(std::string gripper_library_name)
 {
-  // Create a publisher for each gripper
-  for (std::string topic : gripper_topics)
+  // If gripper_library_name is empty, this end effector has no gripper.
+  // Otherwise, dynamically link to the gripper library.
+
+  if (gripper_library_name != "")
   {
-    ros::Publisher gripper_pub = nh_.advertise<robotiq_2f_gripper_control::Robotiq2FGripper_robot_output>(topic, 1);
-    gripper_publishers_.push_back(std::make_shared<ros::Publisher>(gripper_pub));
+    // TODO: Instantiate a gripper class here
   }
 }
 
-void Grippers::close(std::string& gripper_topic)
+bool Grippers::open()
 {
-  void* handle = dlopen("./myclass.so", RTLD_LAZY);
+  ROS_ERROR_STREAM("Opening");
 
-  MyClass* (*create)();
-  void (*destroy)(MyClass*);
-
-  create = (MyClass* (*)())dlsym(handle, "create_object");
-  destroy = (void (*)(MyClass*))dlsym(handle, "destroy_object");
-
-  MyClass* myClass = (MyClass*)create();
-  myClass->DoSomething();
-  destroy( myClass );
-
-
-  // Find the publisher on this topic
-  for (auto pub : gripper_publishers_)
-  {
-    if (pub->getTopic() == gripper_topic)
-    {
-      robotiq_2f_gripper_control::Robotiq2FGripper_robot_output gripper_msg;
-      gripper_msg.rPR = 255;
-      gripper_msg.rACT = 1;
-      gripper_msg.rGTO = 1;
-      gripper_msg.rATR = 0;
-      gripper_msg.rSP = 255;
-      gripper_msg.rFR = 150;
-
-      pub->publish(gripper_msg);
-      break;
-    }
-  }
+  return true;
 }
 
-void Grippers::open(std::string& gripper_topic)
+bool Grippers::close()
 {
-  // Find the publisher on this topic
-  for (auto pub : gripper_publishers_)
-  {
-    if (pub->getTopic() == gripper_topic)
-    {
-      robotiq_2f_gripper_control::Robotiq2FGripper_robot_output gripper_msg;
-      gripper_msg.rPR = 0;
-      gripper_msg.rACT = 1;
-      gripper_msg.rGTO = 1;
-      gripper_msg.rATR = 0;
-      gripper_msg.rSP = 255;
-      gripper_msg.rFR = 150;
+  ROS_ERROR_STREAM("Closing");
 
-      pub->publish(gripper_msg);
-      break;
-    }
-  }
+  return true;
 }
 
 }  // namespace grippers
