@@ -174,9 +174,6 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
 
-  // An object which sends commands to the grippers
-  std::unique_ptr<grippers::Grippers> gripper_interface_;
-
   // Vectors of data for each end-effector. These params are read from the config file.
   struct endEffectorParameters
   {
@@ -194,14 +191,17 @@ private:
     // determined at run time
     std::vector<std::unique_ptr<MoveRobotInterface>> arm_interface_ptrs;
 
-    // A list of gripper topic for each end-effector
-    std::vector<std::string> gripper_topics;
-
     // A list of services to toggle compliance for each end-effector
     std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
 
     // A list of MoveIt "named targets" -- default home poses
     std::vector<std::string> home_pose_names;
+
+    // An object which sends commands to the grippers
+    std::vector<std::unique_ptr<grippers::Grippers>> gripper_interface_ptrs;
+
+    // A list of gripper topic for each end-effector
+    std::vector<std::string> gripper_topics;
   };
   endEffectorParameters end_effector_parameters_;
 };

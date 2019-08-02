@@ -34,8 +34,8 @@
  *  @author andyz(at)utexas.edu
  */
 
-#include <robotiq_2f_gripper_control/Robotiq2FGripper_robot_output.h>  // RCGripper msg type
 #include "ros/ros.h"
+#include "temoto/gripper_robotiq.h"
 
 #ifndef GRIPPERS_H
 #define GRIPPERS_H
@@ -45,16 +45,14 @@ namespace grippers
 class Grippers
 {
 public:
-  // Constructor takes a vector of strings for each gripper topic
-  Grippers(std::vector<std::string>& gripper_topics);
+  Grippers(std::string gripper_library_name, std::string gripper_topic);
 
-  void close(std::string& gripper_topic);
+  bool open();
 
-  void open(std::string& gripper_topic);
+  bool close();
 
 private:
-  std::vector<std::shared_ptr<ros::Publisher>> gripper_publishers_;
-  ros::NodeHandle nh_;
+  std::unique_ptr<GripperBaseClass> gripper_object_;
 };
 }
 

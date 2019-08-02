@@ -36,58 +36,41 @@
 
 #include "temoto/grippers.h"
 
+#include "dlfcn.h"
+
 namespace grippers
 {
-Grippers::Grippers(std::vector<std::string>& gripper_topics)
+Grippers::Grippers(std::string gripper_type, std::string gripper_topic)
 {
-  // Create a publisher for each gripper
-  for (std::string topic : gripper_topics)
+  if (gripper_type == "")
   {
-    ros::Publisher gripper_pub = nh_.advertise<robotiq_2f_gripper_control::Robotiq2FGripper_robot_output>(topic, 1);
-    gripper_publishers_.push_back(std::make_shared<ros::Publisher>(gripper_pub));
+    // No gripper type was defined
+    gripper_object_ = std::unique_ptr<GripperBaseClass>(new GripperBaseClass());
   }
+  else if (gripper_type == "robotiq")
+  {
+    gripper_object_ = std::unique_ptr<GripperRobotiq>(new GripperRobotiq(gripper_topic));
+  }
+  else
+  {
+    ROS_ERROR_STREAM("This gripper type is not supported");
+    std::exit(EXIT_FAILURE);
+  }
+  
 }
 
-void Grippers::close(std::string& gripper_topic)
+bool Grippers::open()
 {
-  // Find the publisher on this topic
-  for (auto pub : gripper_publishers_)
-  {
-    if (pub->getTopic() == gripper_topic)
-    {
-      robotiq_2f_gripper_control::Robotiq2FGripper_robot_output gripper_msg;
-      gripper_msg.rPR = 255;
-      gripper_msg.rACT = 1;
-      gripper_msg.rGTO = 1;
-      gripper_msg.rATR = 0;
-      gripper_msg.rSP = 255;
-      gripper_msg.rFR = 150;
+  gripper_object_->open();
 
-      pub->publish(gripper_msg);
-      break;
-    }
-  }
+  return true;
 }
 
-void Grippers::open(std::string& gripper_topic)
+bool Grippers::close()
 {
-  // Find the publisher on this topic
-  for (auto pub : gripper_publishers_)
-  {
-    if (pub->getTopic() == gripper_topic)
-    {
-      robotiq_2f_gripper_control::Robotiq2FGripper_robot_output gripper_msg;
-      gripper_msg.rPR = 0;
-      gripper_msg.rACT = 1;
-      gripper_msg.rGTO = 1;
-      gripper_msg.rATR = 0;
-      gripper_msg.rSP = 255;
-      gripper_msg.rFR = 150;
+  gripper_object_->close();
 
-      pub->publish(gripper_msg);
-      break;
-    }
-  }
+  return true;
 }
 
 }  // namespace grippers
