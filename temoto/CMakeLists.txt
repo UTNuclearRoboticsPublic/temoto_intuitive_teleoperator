@@ -38,6 +38,14 @@ include_directories(
 )
 
 ##########################################
+# Gripper libraries are dynamically linked
+##########################################
+add_library(gripper_robotiq
+  src/gripper_base_class
+)
+add_dependencies(gripper_robotiq ${catkin_EXPORTED_TARGETS})
+
+##########################################
 # This is where most of the action happens
 ##########################################
 add_executable(start_teleop

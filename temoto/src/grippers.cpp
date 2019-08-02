@@ -37,7 +37,6 @@
 #include "temoto/grippers.h"
 
 #include "dlfcn.h"
-#include "temoto/gripper_robotiq.h"
 
 namespace grippers
 {
@@ -48,7 +47,7 @@ Grippers::Grippers(std::string gripper_library_name)
 
   if (gripper_library_name != "")
   {
-    // TODO: Instantiate a gripper class here
+    // TODO: Instantiate a gripper object here
   }
 }
 

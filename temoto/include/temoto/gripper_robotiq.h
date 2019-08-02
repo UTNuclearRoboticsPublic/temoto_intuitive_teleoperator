@@ -5,14 +5,19 @@
 #include "ros/ros.h"
 #include "temoto/gripper_base_class.h"
 
-class GripperRobotiq : GripperBaseClass
+class GripperRobotiq : public GripperBaseClass
 {
 public:
-  GripperRobotiq();
-
   /* use virtual otherwise linker will try to perform static linkage */
-  virtual void close();
-  virtual void open();
+  virtual void close()
+  {
+    ROS_ERROR_STREAM("Closing");
+  }
+
+  virtual void open()
+  {
+    ROS_ERROR_STREAM("Opening");
+  }
 
 private:
   //std::vector<std::shared_ptr<ros::Publisher>> gripper_publishers_;
