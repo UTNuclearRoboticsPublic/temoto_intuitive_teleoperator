@@ -5,21 +5,22 @@
 #include "ros/ros.h"
 #include "temoto/gripper_base_class.h"
 
+namespace grippers
+{
 class GripperRobotiq : public GripperBaseClass
 {
 public:
-  virtual void close()
-  {
-    ROS_INFO_STREAM("Closing");
-  }
+  GripperRobotiq(std::string gripper_topic);
 
-  virtual void open()
-  {
-    ROS_INFO_STREAM("Opening");
-  }
+  virtual void close();
+
+  virtual void open();
 
 private:
-  //std::vector<std::shared_ptr<ros::Publisher>> gripper_publishers_;
+  ros::Publisher gripper_publisher_;
+
+  ros::NodeHandle nh_;
 };
+}
 
 #endif

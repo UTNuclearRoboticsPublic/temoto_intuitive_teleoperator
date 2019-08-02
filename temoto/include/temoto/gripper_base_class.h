@@ -3,6 +3,8 @@
 
 #include "ros/ros.h"
 
+namespace grippers
+{
 class GripperBaseClass
 {
 public:
@@ -11,5 +13,6 @@ public:
 
 private:
 };
+}
 
 #endif

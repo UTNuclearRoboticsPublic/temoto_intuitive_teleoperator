@@ -49,8 +49,7 @@ Grippers::Grippers(std::string gripper_type, std::string gripper_topic)
   }
   else if (gripper_type == "robotiq")
   {
-    ROS_ERROR_STREAM("MAKING A ROBOTIQ GRIPPER");
-    gripper_object_ = std::unique_ptr<GripperRobotiq>(new GripperRobotiq());
+    gripper_object_ = std::unique_ptr<GripperRobotiq>(new GripperRobotiq(gripper_topic));
   }
   else
   {

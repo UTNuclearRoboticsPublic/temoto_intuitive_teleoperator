@@ -13,7 +13,7 @@ temoto:
       force_torque_frame: "right_ur5_base"
       force_torque_topic: "right_ur5_wrench"
       gripper_type: "robotiq" # robotiq, hebi, or nothing
-      gripper_topic: "" # empty if no gripper or no topic required
+      gripper_topic: "/Robotiq2FGripperRobotOutput" # empty if no gripper or no topic required
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
       home_pose_name: "right_ur5_temoto"
     ee1:
