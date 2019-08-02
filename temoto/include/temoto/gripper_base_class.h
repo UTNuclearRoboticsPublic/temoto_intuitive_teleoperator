@@ -6,9 +6,6 @@
 class GripperBaseClass
 {
 public:
-  GripperBaseClass();
-
-  /* use virtual otherwise linker will try to perform static linkage */
   virtual void close();
   virtual void open();
 

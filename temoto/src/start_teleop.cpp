@@ -104,9 +104,10 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     end_effector_parameters_.home_pose_names.push_back(named_target);
 
     // Vector of gripper control objects
-    std::string gripper_library_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_library_name", n_);
-    std::unique_ptr<grippers::Grippers> gripper_ptr = std::unique_ptr<grippers::Grippers>(new grippers::Grippers(gripper_library_name));
-    end_effector_parameters_.gripper_interface_ptrs_.push_back( std::move(gripper_ptr));
+    std::string gripper_type = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_type", n_);
+    std::string gripper_topic = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/gripper_topic", n_);
+    std::unique_ptr<grippers::Grippers> gripper_ptr = std::unique_ptr<grippers::Grippers>(new grippers::Grippers(gripper_type, gripper_topic));
+    end_effector_parameters_.gripper_interface_ptrs.push_back( std::move(gripper_ptr));
   }
 
   // Specify the current ee & move_group
@@ -705,13 +706,13 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   }
   else if (voice_command.data == "close gripper")
   {
-    end_effector_parameters_.gripper_interface_ptrs_.at(current_movegroup_ee_index_)->close();
+    end_effector_parameters_.gripper_interface_ptrs.at(current_movegroup_ee_index_)->close();
 
     return;
   }
   else if (voice_command.data == "open gripper")
   {
-    end_effector_parameters_.gripper_interface_ptrs_.at(current_movegroup_ee_index_)->open();
+    end_effector_parameters_.gripper_interface_ptrs.at(current_movegroup_ee_index_)->open();
 
     return;
   }

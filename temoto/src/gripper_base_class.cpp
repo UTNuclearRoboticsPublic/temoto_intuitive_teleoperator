@@ -3,26 +3,12 @@
 
 using namespace std;
 
-extern "C" GripperBaseClass* create_object()
-{
-  return new GripperBaseClass;
-}
-
-extern "C" void destroy_object( GripperBaseClass* object )
-{
-  delete object;
-}
-
-GripperBaseClass::GripperBaseClass()
-{
-}
-
 void GripperBaseClass::close()
 {
-  ROS_ERROR_STREAM("Closing");
+  ROS_WARN_STREAM("Invalid gripper type");
 }
 
 void GripperBaseClass::open()
 {
-  ROS_ERROR_STREAM("Opening");
+  ROS_WARN_STREAM("Invalid gripper type");
 }

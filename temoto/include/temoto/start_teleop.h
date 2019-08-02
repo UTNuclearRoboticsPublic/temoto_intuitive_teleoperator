@@ -198,7 +198,10 @@ private:
     std::vector<std::string> home_pose_names;
 
     // An object which sends commands to the grippers
-    std::vector<std::unique_ptr<grippers::Grippers>> gripper_interface_ptrs_;
+    std::vector<std::unique_ptr<grippers::Grippers>> gripper_interface_ptrs;
+
+    // A list of gripper topic for each end-effector
+    std::vector<std::string> gripper_topics;
   };
   endEffectorParameters end_effector_parameters_;
 };

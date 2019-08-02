@@ -8,15 +8,14 @@
 class GripperRobotiq : public GripperBaseClass
 {
 public:
-  /* use virtual otherwise linker will try to perform static linkage */
   virtual void close()
   {
-    ROS_ERROR_STREAM("Closing");
+    ROS_INFO_STREAM("Closing");
   }
 
   virtual void open()
   {
-    ROS_ERROR_STREAM("Opening");
+    ROS_INFO_STREAM("Opening");
   }
 
 private:

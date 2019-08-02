@@ -40,27 +40,36 @@
 
 namespace grippers
 {
-Grippers::Grippers(std::string gripper_library_name)
+Grippers::Grippers(std::string gripper_type, std::string gripper_topic)
 {
-  // If gripper_library_name is empty, this end effector has no gripper.
-  // Otherwise, dynamically link to the gripper library.
-
-  if (gripper_library_name != "")
+  if (gripper_type == "")
   {
-    // TODO: Instantiate a gripper object here
+    // No gripper type was defined
+    gripper_object_ = std::unique_ptr<GripperBaseClass>(new GripperBaseClass());
   }
+  else if (gripper_type == "robotiq")
+  {
+    ROS_ERROR_STREAM("MAKING A ROBOTIQ GRIPPER");
+    gripper_object_ = std::unique_ptr<GripperRobotiq>(new GripperRobotiq());
+  }
+  else
+  {
+    ROS_ERROR_STREAM("This gripper type is not supported");
+    std::exit(EXIT_FAILURE);
+  }
+  
 }
 
 bool Grippers::open()
 {
-  ROS_ERROR_STREAM("Opening");
+  gripper_object_->open();
 
   return true;
 }
 
 bool Grippers::close()
 {
-  ROS_ERROR_STREAM("Closing");
+  gripper_object_->close();
 
   return true;
 }

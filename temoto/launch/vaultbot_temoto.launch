@@ -5,7 +5,7 @@
 
 
   <!-- Most of the action happens here -->
-  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="gnome-terminal --command" />
+  <node name="start_teleop" pkg="temoto" type="start_teleop" launch-prefix="gnome-terminal --command"/>
 
 
   <!-- Bring up speech-to-text and text-to-speech -->

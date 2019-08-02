@@ -12,7 +12,8 @@ temoto:
       wrist_joint_name: "right_ur5_wrist_3_joint"
       force_torque_frame: "right_ur5_base"
       force_torque_topic: "right_ur5_wrench"
-      gripper_library_name: "gripper_robotiq" # comes from e.g. gripper_robotiq.cpp or gripper_heb.cpp
+      gripper_type: "robotiq" # robotiq, hebi, or nothing
+      gripper_topic: "" # empty if no gripper or no topic required
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
       home_pose_name: "right_ur5_temoto"
     ee1:
@@ -24,7 +25,8 @@ temoto:
       wrist_joint_name: "left_ur5_wrist_3_joint"
       force_torque_frame: "left_ur5_base"
       force_torque_topic: "left_ur5_wrench"
-      gripper_library_name: "" # comes from e.g. gripper_robotiq.cpp or gripper_heb.cpp
+      gripper_type: "" # robotiq, hebi, or nothing
+      gripper_topic: "" # empty if no gripper or no topic required
       toggle_compliance_service: "/left_ur5compliance_controller/toggle_compliance"
       home_pose_name: "left_ur5_temoto"
 
