@@ -38,7 +38,7 @@
 // ROS includes
 #include "geometry_msgs/PoseStamped.h"
 #include "griffin_powermate/PowermateEvent.h"
-#include "jog_msgs/JogJoint.h"
+#include "control_msgs/JointJog.h"
 #include "map"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
@@ -163,7 +163,7 @@ private:
   geometry_msgs::TwistStamped jog_twist_cmd_, nav_twist_cmd_;
 
   // For joint jogging
-  jog_msgs::JogJoint joint_jog_cmd_;
+  control_msgs::JointJog joint_jog_cmd_;
 
   // ROS publishers
   ros::Publisher pub_abort_, pub_jog_base_cmds_, pub_current_image_topic_;

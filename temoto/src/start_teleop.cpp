@@ -89,7 +89,7 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     // Joint jogging commands
     std::string joint_jog_topic =
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/joint_jog_topic", n_);
-    ros::Publisher joint_jog_pub = n_.advertise<jog_msgs::JogJoint>(joint_jog_topic, 1);
+    ros::Publisher joint_jog_pub = n_.advertise<control_msgs::JointJog>(joint_jog_topic, 1);
     end_effector_parameters_.joint_jog_publishers.push_back(std::make_shared<ros::Publisher>(joint_jog_pub));
 
     // Names of wrist joints, for jogging
@@ -123,7 +123,7 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   // Set up jogging msgs for the current EE
   jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
   joint_jog_cmd_.joint_names.push_back(end_effector_parameters_.wrist_joint_names.at(current_movegroup_ee_index_));
-  joint_jog_cmd_.deltas.push_back(0);
+  joint_jog_cmd_.displacements.push_back(0);
 
   // Subscribers
   sub_nav_spd_ = n_.subscribe("/nav_collision_warning/spd_fraction", 1, &Teleoperator::navCollisionCallback, this);
@@ -306,7 +306,7 @@ void Teleoperator::spaceNavCallback(sensor_msgs::Joy pose_cmd)
   if (!temoto_sleep_)
   {
     // Wrist joint jogging with these two buttons (SpaceNav Pro)
-    joint_jog_cmd_.deltas[0] = (pose_cmd.buttons[2] - pose_cmd.buttons[8]);
+    joint_jog_cmd_.displacements[0] = (pose_cmd.buttons[2] - pose_cmd.buttons[8]);
     joint_jog_cmd_.header.stamp = ros::Time::now();
 
     // Search for buttons that are mapped to verbal commands.
@@ -601,7 +601,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
-  if (voice_command.data == "toggle mode" && cur_control_mode_ JOG)
+  if (voice_command.data == "toggle mode" && cur_control_mode_ == JOG)
   {
     ROS_INFO("Switching to point-to-point mode");
     sound_client_.say("point-to-point mode");
@@ -961,7 +961,7 @@ int main(int argc, char** argv)
     if (!temoto_teleop.temoto_sleep_)
     {
       // Jog?
-      if (temoto_teleop.cur_control_mode_ == JOG)
+      if (temoto_teleop.cur_control_mode_ == temoto_teleop.JOG)
         temoto_teleop.callRobotMotionInterface(temoto_commands::GO);
       else
       {
