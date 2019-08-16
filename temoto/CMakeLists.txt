@@ -5,8 +5,8 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 
 find_package(catkin REQUIRED
   actionlib
+  control_msgs
   griffin_powermate
-  jog_msgs
   keyboard_reader
   moveit_ros_planning_interface
   robotiq_2f_gripper_control
@@ -19,8 +19,8 @@ catkin_package(
     include
   CATKIN_DEPENDS 
     actionlib
+    control_msgs
     griffin_powermate
-    jog_msgs
     keyboard_reader
     moveit_ros_planning_interface
     robotiq_2f_gripper_control

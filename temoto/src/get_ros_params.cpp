@@ -1,5 +1,13 @@
 #include "temoto/get_ros_params.h"
 
+std::vector<std::string> get_ros_params::getStrVecParam(std::string name, ros::NodeHandle& n)
+{
+  std::vector<std::string> str_vec;
+  if (!n.getParam(name, str_vec))
+    ROS_ERROR_STREAM("[getStringParam] YAML config file does not contain parameter " << name);
+  return str_vec;
+}
+
 std::string get_ros_params::getStringParam(std::string s, ros::NodeHandle& n)
 {
   if (!n.getParam(s, s))
