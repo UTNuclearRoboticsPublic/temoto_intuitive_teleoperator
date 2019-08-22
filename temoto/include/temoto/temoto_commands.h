@@ -13,19 +13,19 @@ namespace temoto_commands
 
   // Button map for SpaceNavigator controllers
   const std::map<int, std::string> spacenav_buttons_ = {
-    { 0, "robot please plan" },     // Menu button
-    { 1, "robot please execute" },  // Fit button
-    { 4, "close gripper" },         // R button
-    { 5, "open gripper" },          // F button
-    { 12, "stop stop" },            // 1 button
-    { 13, "unassigned" },           // 2 button
-    { 14, "toggle control" },       // 3 button
-    { 15, "toggle mode" },          // 4 button
-    { 22, "base move" },            // Esc button
-    { 23, "cycle camera feed" },    // Alt button
-    { 24, "toggle compliance" },    // Shift button
-    { 25, "arm plan home" },		// Ctrl button
-    { 26, "next end effector" }     // Rotation button
+    { 0, "robot please plan" },             // Menu button
+    { 1, "robot please execute" },          // Fit button
+    { 4, "close gripper" },                 // R button
+    { 5, "open gripper" },                  // F button
+    { 12, "base move" },                    // 1 button
+    { 13, "unassigned" },                   // 2 button
+    { 14, "toggle control" },               // 3 button
+    { 15, "toggle mode" },                  // 4 button
+    { 22, "bias compliance" },     // Esc button
+    { 23, "cycle camera feed" },            // Alt button
+    { 24, "toggle compliance" },            // Shift button
+    { 25, "arm plan home" },	    	        // Ctrl button
+    { 26, "next end effector" }             // Rotation button
   };
 }
 
