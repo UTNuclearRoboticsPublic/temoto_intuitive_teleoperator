@@ -46,6 +46,7 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
+#include "std_srvs/SetBool.h"
 #include "std_srvs/Trigger.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
@@ -80,9 +81,9 @@ public:
   enum control_mode_t
   {
     JOG,
-    P2P
+    POINT_TO_POINT
   };
-  control_mode_t cur_control_mode_ = P2P;
+  control_mode_t cur_control_mode_ = POINT_TO_POINT;
 
   /*
     navigation: interpret absolute_pose_cmd_ as 2D navigation goal;
@@ -202,6 +203,9 @@ private:
 
     // A list of services to toggle compliance for each end-effector
     std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
+
+    // A list of services to bias the compliance wrench-to-joint-velocity publishers
+    std::vector<std::shared_ptr<ros::ServiceClient>> bias_compliance_services;
 
     // A list of MoveIt "named targets" -- default home poses
     std::vector<std::string> home_pose_names;
