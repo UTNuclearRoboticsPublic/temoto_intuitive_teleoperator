@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "-std=c++11")
 find_package(catkin REQUIRED
   actionlib
   control_msgs
+  compliance_control_msgs
   griffin_powermate
   keyboard_reader
   moveit_ros_planning_interface
@@ -64,3 +65,7 @@ target_link_libraries(start_teleop ${catkin_LIBRARIES})
 add_executable(kb_fake_voice_commander src/kb_fake_voice_commander.cpp)		
 target_link_libraries(kb_fake_voice_commander ${catkin_LIBRARIES} )		
 add_dependencies(kb_fake_voice_commander ${catkin_EXPORTED_TARGETS})
+
+add_executable(gripper_frame_broadcaster src/gripper_frame_broadcaster.cpp)		
+target_link_libraries(gripper_frame_broadcaster ${catkin_LIBRARIES} )		
+add_dependencies(gripper_frame_broadcaster ${catkin_EXPORTED_TARGETS})

@@ -101,6 +101,16 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
     ros::ServiceClient client = n_.serviceClient<std_srvs::Trigger>(service_name);
     end_effector_parameters_.toggle_compliance_services.push_back(std::make_shared<ros::ServiceClient>(client));
 
+    // Names of the "bias compliance" topics
+    std::string bias_service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/bias_compliance_service", n_);
+    ros::ServiceClient bias_client = n_.serviceClient<std_srvs::SetBool>(bias_service_name);
+    end_effector_parameters_.bias_compliance_services.push_back(std::make_shared<ros::ServiceClient>(bias_client));
+
+    // Names of the "disable compliance dimensions" topics
+    std::string disable_compliance_dims = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/compliance_dimensions_service", n_);
+    ros::ServiceClient dimension_client = n_.serviceClient<compliance_control_msgs::DisableComplianceDimensions>(disable_compliance_dims);
+    end_effector_parameters_.set_compliance_direction_services.push_back(std::make_shared<ros::ServiceClient>(dimension_client));
+
     // MoveIt "named targets" -- pre-defined home poses
     std::string named_target = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/home_pose_name", n_);
     end_effector_parameters_.home_pose_names.push_back(named_target);
@@ -695,7 +705,17 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
       ROS_INFO_STREAM("Toggling compliance");
 
       std_srvs::Trigger srv;
+      // Call this empty service: enables all dimensions
+      // compliance_control_msgs::DisableComplianceDimensions dims;
+      // dims.request.dimensions_to_ignore.push_back(true);
+      // dims.request.dimensions_to_ignore.push_back(true);
+      // dims.request.dimensions_to_ignore.push_back(true);
+      // dims.request.dimensions_to_ignore.push_back(false);
+      // dims.request.dimensions_to_ignore.push_back(false);
+      // dims.request.dimensions_to_ignore.push_back(true);
 
+      // if (end_effector_parameters_.set_compliance_direction_services.at(current_movegroup_ee_index_)->call(dims) &&
+      //   end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
       if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
         ROS_INFO_STREAM("Message: " << srv.response.message);
       else
@@ -703,6 +723,26 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     }
     else
       ROS_WARN_STREAM("A toggle compliance service name is not defined for this end-effector. Check yaml file.");
+
+    return;
+  }
+  else if (voice_command.data == "bias compliance")
+  {
+    // If non-empty service name
+    if (end_effector_parameters_.bias_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
+    {
+      ROS_INFO_STREAM("Biasing compliance");
+
+      std_srvs::SetBool srv;
+      srv.request.data = true;
+
+      if (end_effector_parameters_.bias_compliance_services.at(current_movegroup_ee_index_)->call(srv))
+        ROS_INFO_STREAM("Message: " << srv.response.message);
+      else
+        ROS_ERROR("Failed to call service");
+    }
+    else
+      ROS_WARN_STREAM("A bias compliance service name is not defined for this end-effector. Check yaml file.");
 
     return;
   }
@@ -948,7 +988,9 @@ int main(int argc, char** argv)
     {
       // Jog?
       if (temoto_teleop.cur_control_mode_ == temoto_teleop.JOG)
+      {
         temoto_teleop.callRobotMotionInterface(temoto_commands::GO);
+      }
       else
       {
         // Update poses, scale, and nav-or-manip mode for the frames calculation
