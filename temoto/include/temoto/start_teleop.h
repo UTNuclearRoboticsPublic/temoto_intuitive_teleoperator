@@ -47,8 +47,10 @@
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
 #include "std_srvs/Trigger.h"
+#include "std_srvs/SetBool.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
 #include "tf2_ros/transform_listener.h"
+#include "compliance_control_msgs/DisableComplianceDimensions.h"
 
 // temoto includes
 #include "temoto/get_ros_params.h"
@@ -202,6 +204,12 @@ private:
 
     // A list of services to toggle compliance for each end-effector
     std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
+
+    // A list of services to bias compliance for each end-effector
+    std::vector<std::shared_ptr<ros::ServiceClient>> bias_compliance_services;
+
+    // A list of services to set compliant dimensions for each end-effector
+    std::vector<std::shared_ptr<ros::ServiceClient>> set_compliance_direction_services;
 
     // A list of MoveIt "named targets" -- default home poses
     std::vector<std::string> home_pose_names;

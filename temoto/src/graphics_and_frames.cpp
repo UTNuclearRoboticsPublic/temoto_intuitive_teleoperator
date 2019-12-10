@@ -73,9 +73,9 @@ void Visuals::initHandPoseMarker()
   cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
   cmd_pose_marker_.mesh_resource = manip_stl_names_.at(latest_status_.current_movegroup_ee_index);
   cmd_pose_marker_.action = visualization_msgs::Marker::ADD;
-  cmd_pose_marker_.scale.x = 0.001;
-  cmd_pose_marker_.scale.y = 0.001;
-  cmd_pose_marker_.scale.z = 0.001;
+  cmd_pose_marker_.scale.x = 1;
+  cmd_pose_marker_.scale.y = 1;
+  cmd_pose_marker_.scale.z = 1;
 
   // Orange.
   cmd_pose_marker_.color.r = 1.0;
@@ -190,9 +190,9 @@ bool Visuals::crunch()
     cmd_pose_marker_.header.stamp = ros::Time();
     cmd_pose_marker_.type = visualization_msgs::Marker::MESH_RESOURCE;
     cmd_pose_marker_.mesh_resource = manip_stl_names_.at(latest_status_.current_movegroup_ee_index);
-    cmd_pose_marker_.scale.x = 0.001;
-    cmd_pose_marker_.scale.y = 0.001;
-    cmd_pose_marker_.scale.z = 0.001;
+    cmd_pose_marker_.scale.x = 1;
+    cmd_pose_marker_.scale.y = 1;
+    cmd_pose_marker_.scale.z = 1;
 
     // Hand pose marker
     cmd_pose_marker_.header = latest_status_.commanded_pose.header;

@@ -17,6 +17,7 @@ namespace temoto_commands
     { 1, "robot please execute" },  // Fit button
     { 4, "close gripper" },         // R button
     { 5, "open gripper" },          // F button
+    { 8, "bias compliance" },       // Square with arrow button
     { 12, "stop stop" },            // 1 button
     { 13, "unassigned" },           // 2 button
     { 14, "toggle control" },       // 3 button
@@ -24,9 +25,40 @@ namespace temoto_commands
     { 22, "base move" },            // Esc button
     { 23, "cycle camera feed" },    // Alt button
     { 24, "toggle compliance" },    // Shift button
-    { 25, "arm plan home" },		// Ctrl button
+    { 25, "arm plan home" },		    // Ctrl button
     { 26, "next end effector" }     // Rotation button
   };
+  /*
+  // Empty numbers do not have a physical button to my knowledge
+      NUMBER        BUTTON DESCRIPTION
+      0             Menu button
+      1             Fit button
+      2             T button
+      3             
+      4             R button
+      5             F button
+      6
+      7
+      8             Square with arrow button
+      9
+      10
+      11
+      12            1 button
+      13            2 button
+      14            3 button
+      15            4 button
+      16
+      17
+      18
+      19
+      20
+      21
+      22            Esc button
+      23            Alt button
+      24            Shift button
+      25            Ctrl button
+      26            Rotation button
+  */
 }
 
 #endif

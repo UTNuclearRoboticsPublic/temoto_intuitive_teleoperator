@@ -11,6 +11,7 @@
 
   <depend>actionlib</depend>
   <depend>control_msgs</depend>
+  <depend>compliance_control_msgs</depend>
   <depend>geometry_msgs</depend>
   <depend>griffin_powermate</depend>
   <depend>keyboard_reader</depend>

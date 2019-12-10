@@ -6,7 +6,7 @@ temoto:
     ee0: # use this naming convention (ee + #). If one is used more heavily, put it first.
       end_effector: "r_temoto_end_effector"
       movegroup: "right_ur5_temoto"
-      manip_stl: "package://temoto/meshes/2_finger_140_gripper_marker.stl"
+      manip_stl: "package://temoto/meshes/robotiq_2f_140_visual_temoto.stl"
       jog_topic: "right_arm/jog_arm_server/delta_jog_cmds"
       joint_jog_topic: "right_arm/jog_arm_server/joint_delta_jog_cmds"
       wrist_joint_name: "right_ur5_wrist_3_joint"
@@ -15,6 +15,8 @@ temoto:
       gripper_type: "robotiq" # robotiq, hebi, or nothing
       gripper_topic: "/Robotiq2FGripperRobotOutput" # empty if no gripper or no topic required
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
+      bias_compliance_service: "/right_wrench_to_joint_vel_pub/bias_compliance_calcs"
+      compliance_dimensions_service: "/right_wrench_to_joint_vel_pub/disable_compliance_dimensions"
       home_pose_name: "right_ur5_temoto"
     ee1:
       end_effector: "left_ur5_ee_link"
@@ -28,6 +30,8 @@ temoto:
       gripper_type: "" # robotiq, hebi, or nothing
       gripper_topic: "" # empty if no gripper or no topic required
       toggle_compliance_service: "/left_ur5compliance_controller/toggle_compliance"
+      bias_compliance_service: "/left_wrench_to_joint_vel_pub/bias_compliance_calcs"
+      compliance_dimensions_service: "/left_wrench_to_joint_vel_pub/disable_compliance_dimensions"
       home_pose_name: "left_ur5_temoto"
 
   temoto_spacenav_pose_cmd_topic: "/spacenav/joy"

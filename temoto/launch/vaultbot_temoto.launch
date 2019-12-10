@@ -72,4 +72,10 @@
   <!-- Frame for VR headset attachment (OPTIONAL) -->
   <include file="$(find temoto)/launch/vr_setup.launch" />
 
+  <!-- The GUI for turning on/off control and compliance dimensions -->
+  <include file="$(find teleop_gui)/launch/teleop_gui.launch" />
+
+  <!-- Start the node that publishes the gripper frames -->
+  <node name="gripper_frame_broadcaster" pkg="temoto" type="gripper_frame_broadcaster" />
+
 </launch>
