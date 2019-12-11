@@ -46,6 +46,7 @@
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/String.h"
+#include "std_srvs/SetBool.h"
 #include "std_srvs/Trigger.h"
 #include "std_srvs/SetBool.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.h"
@@ -82,9 +83,9 @@ public:
   enum control_mode_t
   {
     JOG,
-    P2P
+    POINT_TO_POINT
   };
-  control_mode_t cur_control_mode_ = P2P;
+  control_mode_t cur_control_mode_ = POINT_TO_POINT;
 
   /*
     navigation: interpret absolute_pose_cmd_ as 2D navigation goal;

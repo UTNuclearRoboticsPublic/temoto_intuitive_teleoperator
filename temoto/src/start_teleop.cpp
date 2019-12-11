@@ -159,12 +159,10 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
   else if (enable_manipulation_ && !enable_navigation_)
     cur_teleop_mode_ = MANIPULATION;
 
-  ////////////////////////////////////////
-  // Wait for initial pose to be available
-  ////////////////////////////////////////
+  // Wait for robot state to be available
   ros::topic::waitForMessage<sensor_msgs::JointState>("/joint_states");
 
-  // The next few lines are hacks for MoveIt! Otherwise the first call to getCurrentPose() often fails.
+  // The next line is a hack for MoveIt! Otherwise the first call to getCurrentPose() often fails.
   absolute_pose_cmd_ = end_effector_parameters_.arm_interface_ptrs.at(current_movegroup_ee_index_)->movegroup_.getCurrentPose();
 
   // Make sure absolute_pose_cmd_ is in base_frame_ so nav will work properly
@@ -430,7 +428,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ////////////////////////////
   // POINT-TO-POINT NAVIGATION
   ////////////////////////////
-  if ((cur_teleop_mode_ == NAVIGATION) && cur_control_mode_ == P2P)
+  if ((cur_teleop_mode_ == NAVIGATION) && cur_control_mode_ == POINT_TO_POINT)
   {
     // ORIENTATION
     // new incremental yaw command
@@ -481,7 +479,7 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   //////////////////////////////
   // POINT-TO-POINT MANIPULATION
   //////////////////////////////
-  if ((cur_teleop_mode_ == MANIPULATION) && cur_control_mode_ == P2P)
+  if ((cur_teleop_mode_ == MANIPULATION) && cur_control_mode_ == POINT_TO_POINT)
   {
     // Integrate for point-to-point motion
     // Member variables (Vector3Stamped) that hold incoming cmds have already
@@ -613,7 +611,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   {
     ROS_INFO("Switching to point-to-point mode");
     sound_client_.say("point-to-point mode");
-    cur_control_mode_ = P2P;
+    cur_control_mode_ = POINT_TO_POINT;
     resetEEGraphicPose();
     setScale();
 
@@ -652,7 +650,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode. Don't want to start jogging an arm
     // suddenly
     ROS_INFO("Switching out of jog mode");
-    cur_control_mode_ = P2P;
+    cur_control_mode_ = POINT_TO_POINT;
     setScale();
 
     ROS_INFO("Going into MANIPULATION mode  ...");
@@ -674,7 +672,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode, for safety
     ROS_INFO("Switching out of jog mode");
     resetEEGraphicPose();
-    cur_control_mode_ = P2P;
+    cur_control_mode_ = POINT_TO_POINT;
     ROS_INFO("Going into NAVIGATION mode  ...");
     sound_client_.say("navigation mode");
     cur_teleop_mode_ = NAVIGATION;
@@ -692,7 +690,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     ROS_INFO("Controlling the next EE from yaml file ...");
 
     // No jogging, initially, for safety
-    cur_control_mode_ = P2P;
+    cur_control_mode_ = POINT_TO_POINT;
     switchEE();
 
     return;
@@ -777,7 +775,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   // There's nothing blocking any arbitrary command
   else
   {
-    if (voice_command.data == "toggle mode" && cur_control_mode_ == P2P)
+    if (voice_command.data == "toggle mode" && cur_control_mode_ == POINT_TO_POINT)
     {
       ROS_INFO("Switching to jog mode");
       sound_client_.say("jog mode");
