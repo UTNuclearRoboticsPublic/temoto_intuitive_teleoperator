@@ -15,6 +15,8 @@ temoto:
       gripper_type: "robotiq" # robotiq, hebi, or nothing
       gripper_topic: "/Robotiq2FGripperRobotOutput" # empty if no gripper or no topic required
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
+      enable_compliance_service: "/right_ur5compliance_controller/enable_compliance"
+      disable_compliance_service: "/right_ur5compliance_controller/disable_compliance"
       bias_compliance_service: "/right_wrench_to_joint_vel_pub/bias_compliance_calcs"
       compliance_dimensions_service: "/right_wrench_to_joint_vel_pub/disable_compliance_dimensions"
       home_pose_name: "right_ur5_temoto"

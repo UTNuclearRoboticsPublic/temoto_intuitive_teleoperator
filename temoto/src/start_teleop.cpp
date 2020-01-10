@@ -97,9 +97,14 @@ Teleoperator::Teleoperator() : nav_interface_("move_base"), tf_listener_(tf_buff
         get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/wrist_joint_name", n_));
 
     // Names of "enable compliance" topics
-    std::string service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/toggle_compliance_service", n_);
-    ros::ServiceClient client = n_.serviceClient<std_srvs::Trigger>(service_name);
-    end_effector_parameters_.toggle_compliance_services.push_back(std::make_shared<ros::ServiceClient>(client));
+    std::string enable_service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/enable_compliance_service", n_);
+    ros::ServiceClient enable_client = n_.serviceClient<std_srvs::Trigger>(enable_service_name);
+    end_effector_parameters_.enable_compliance_services.push_back(std::make_shared<ros::ServiceClient>(enable_client));
+
+    // Names of "disable compliance" topics
+    std::string disable_service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/disable_compliance_service", n_);
+    ros::ServiceClient disable_client = n_.serviceClient<std_srvs::Trigger>(disable_service_name);
+    end_effector_parameters_.disable_compliance_services.push_back(std::make_shared<ros::ServiceClient>(disable_client));
 
     // Names of the "bias compliance" topics
     std::string bias_service_name = get_ros_params::getStringParam("/temoto/ee/ee" + std::to_string(i) + "/bias_compliance_service", n_);
@@ -618,8 +623,15 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //  Stop jogging (jogging preempts other commands)
   //////////////////////////////////////////////////
 
-  if (voice_command.data == "toggle mode" && cur_control_mode_ == JOG)
+  if (voice_command.data == "plan execute mode")
   {
+    if(cur_control_mode_ == POINT_TO_POINT)
+    {
+      resetEEGraphicPose();
+      setScale();
+      return;
+    } 
+
     ROS_INFO("Switching to point-to-point mode");
     sound_client_.say("point-to-point mode");
     cur_control_mode_ = POINT_TO_POINT;
@@ -650,13 +662,20 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
   //  Handle all commands except ABORT
   ////////////////////////////////////
 
-  if (voice_command.data == "toggle control" && cur_teleop_mode_ == NAVIGATION)  // Switch over to manipulation (MoveIt!) mode
+  if (voice_command.data == "manipulation mode")  // Switch over to manipulation (MoveIt!) mode
   {
     if (!enable_manipulation_)
     {
       ROS_INFO_STREAM("Manipulation was not enabled in the yaml file.");
       return;
     }
+ 
+    if(cur_teleop_mode_ == MANIPULATION)
+    {
+      resetEEGraphicPose();
+      setScale();
+      return;
+    } 
 
     // Make sure we aren't in jog mode. Don't want to start jogging an arm
     // suddenly
@@ -672,11 +691,21 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
     return;
   }
-  else if (voice_command.data == "toggle control" && cur_teleop_mode_ == MANIPULATION)  // Switch to navigation mode
+  else if (voice_command.data == "navigation mode")  // Switch to navigation mode
   {
     if (!enable_navigation_)
     {
       ROS_INFO_STREAM("Navigation was not enabled in the yaml file.");
+      return;
+    }
+
+    if(cur_teleop_mode_ == NAVIGATION)
+    {
+      bool adjust_camera = true;
+      setGraphicsFramesStatus(adjust_camera);
+      graphics_and_frames_.crunch();
+      resetEEGraphicPose();
+      setScale();
       return;
     }
 
@@ -695,6 +724,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     setScale();
 
     return;
+    
   }
   else if (voice_command.data == "next end effector")
   {
@@ -706,32 +736,41 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
 
     return;
   }
-  else if (voice_command.data == "toggle compliance")
+  else if (voice_command.data == "enable compliance")
   {
     // If non-empty service name
-    if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
+    if (end_effector_parameters_.enable_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
     {
-      ROS_INFO_STREAM("Toggling compliance");
+      ROS_INFO_STREAM("Disabling compliance");
 
       std_srvs::Trigger srv;
-      // Call this empty service: enables all dimensions
-      // compliance_control_msgs::DisableComplianceDimensions dims;
-      // dims.request.dimensions_to_ignore.push_back(true);
-      // dims.request.dimensions_to_ignore.push_back(true);
-      // dims.request.dimensions_to_ignore.push_back(true);
-      // dims.request.dimensions_to_ignore.push_back(false);
-      // dims.request.dimensions_to_ignore.push_back(false);
-      // dims.request.dimensions_to_ignore.push_back(true);
 
-      // if (end_effector_parameters_.set_compliance_direction_services.at(current_movegroup_ee_index_)->call(dims) &&
-      //   end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
-      if (end_effector_parameters_.toggle_compliance_services.at(current_movegroup_ee_index_)->call(srv))
+      if (end_effector_parameters_.enable_compliance_services.at(current_movegroup_ee_index_)->call(srv))
         ROS_INFO_STREAM("Message: " << srv.response.message);
       else
         ROS_ERROR("Failed to call service");
     }
     else
-      ROS_WARN_STREAM("A toggle compliance service name is not defined for this end-effector. Check yaml file.");
+      ROS_WARN_STREAM("A enable compliance service name is not defined for this end-effector. Check yaml file.");
+
+    return;
+  }
+  else if (voice_command.data == "disable compliance")
+  {
+    // If non-empty service name
+    if (end_effector_parameters_.disable_compliance_services.at(current_movegroup_ee_index_)->getService() != "")
+    {
+      ROS_INFO_STREAM("Enabling compliance");
+
+      std_srvs::Trigger srv;
+
+      if (end_effector_parameters_.disable_compliance_services.at(current_movegroup_ee_index_)->call(srv))
+        ROS_INFO_STREAM("Message: " << srv.response.message);
+      else
+        ROS_ERROR("Failed to call service");
+    }
+    else
+      ROS_WARN_STREAM("A disable compliance service name is not defined for this end-effector. Check yaml file.");
 
     return;
   }
@@ -779,15 +818,33 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     return;
   }
 
-  // Avoid planning, executing, etc. while in jog mode
+  // Avoid planning, executing, etc. while in jog mode, but allow frame switching
   if (cur_control_mode_ == JOG)
-    return;
-
+  {
+    if (voice_command.data == "jog base frame") // Switch to jogging in base frame
+    {
+      jog_twist_cmd_.header.frame_id = base_frame_;
+      return;
+    }
+    if (voice_command.data == "jog eef frame") // Switch to jogging in EEF frame
+    {
+      jog_twist_cmd_.header.frame_id = end_effector_parameters_.ee_names.at(current_movegroup_ee_index_);
+      return;
+    }
+  }
   // There's nothing blocking any arbitrary command
   else
   {
-    if (voice_command.data == "toggle mode" && cur_control_mode_ == POINT_TO_POINT)
+    if (voice_command.data == "jog mode")
     {
+      
+      if(cur_control_mode_ == JOG)
+      {
+        resetEEGraphicPose();
+        setScale();
+        return;
+      }
+
       ROS_INFO("Switching to jog mode");
       sound_client_.say("jog mode");
       cur_control_mode_ = JOG;

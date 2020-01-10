@@ -207,8 +207,9 @@ private:
     // determined at run time
     std::vector<std::unique_ptr<MoveRobotInterface>> arm_interface_ptrs;
 
-    // A list of services to toggle compliance for each end-effector
-    std::vector<std::shared_ptr<ros::ServiceClient>> toggle_compliance_services;
+    // A list of services to enable/disable compliance for each end-effector
+    std::vector<std::shared_ptr<ros::ServiceClient>> enable_compliance_services;
+    std::vector<std::shared_ptr<ros::ServiceClient>> disable_compliance_services;
 
     // A list of services to bias compliance for each end-effector
     std::vector<std::shared_ptr<ros::ServiceClient>> bias_compliance_services;

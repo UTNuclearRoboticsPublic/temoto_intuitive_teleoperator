@@ -15,19 +15,21 @@ namespace temoto_commands
   const std::map<int, std::string> spacenav_buttons_ = {
     { 0, "robot please plan" },     // Menu button
     { 1, "robot please execute" },  // Fit button
-    { 4, "close gripper" },         // R button
-    { 5, "open gripper" },          // F button
-    { 8, "bias compliance" },       // Square with arrow button
-    { 12, "stop stop" },            // 1 button
-    { 13, "unassigned" },           // 2 button
-    { 14, "toggle control" },       // 3 button
-    { 15, "toggle mode" },          // 4 button
+    { 2, "disable compliance" },    // T button
+    { 4, "jog base frame" },        // R button
+    { 5, "jog eef frame" },         // F button
+    { 8, "enable compliance" },     // Square with arrow button
+    { 12, "navigation mode" },      // 1 button
+    { 13, "manipulation mode" },    // 2 button
+    { 14, "plan execute mode" },    // 3 button
+    { 15, "jog mode" },             // 4 button
     { 22, "base move" },            // Esc button
-    { 23, "cycle camera feed" },    // Alt button
-    { 24, "toggle compliance" },    // Shift button
-    { 25, "arm plan home" },		    // Ctrl button
-    { 26, "next end effector" }     // Rotation button
+    { 23, "next end effector" },    // Alt button
+    { 24, "open gripper" },         // Shift button
+    { 25, "close gripper" },		    // Ctrl button
+    { 26, "bias compliance" }       // Rotation button
   };
+
   /*
   // Empty numbers do not have a physical button to my knowledge
       NUMBER        BUTTON DESCRIPTION
