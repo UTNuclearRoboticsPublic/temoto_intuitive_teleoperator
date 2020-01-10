@@ -152,6 +152,10 @@ private:
   double pos_scale_;
   double rot_scale_;
 
+  // Jogging timeout: if we go some time without receiving a non-zero jog command, stop publishing (so other non-temoto inputs can jog the robot)
+  double jog_timeout_ = 0.2; // Seconds
+  ros::Time last_nonzero_jog_time_;
+
   // Scaling factor maxs
   double pos_scale_max_, rot_scale_max_;
 

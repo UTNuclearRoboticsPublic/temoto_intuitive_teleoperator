@@ -262,9 +262,13 @@ bool Teleoperator::callRobotMotionInterface(std::string action_type)
     // Jogging
     if (cur_control_mode_ == JOG)
     {
-      end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
+      // Only publish if we are within the timeout
+      if((ros::Time::now() - last_nonzero_jog_time_).toSec() <= jog_timeout_)
+      {
+        end_effector_parameters_.jog_publishers.at(current_movegroup_ee_index_)->publish(jog_twist_cmd_);
 
-      end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+        end_effector_parameters_.joint_jog_publishers.at(current_movegroup_ee_index_)->publish(joint_jog_cmd_);
+      }
 
       return true;
     }
@@ -402,6 +406,13 @@ void Teleoperator::processIncrementalPoseCmd(double x_pos, double y_pos, double 
   ///////////////////////////////////////////////////////////
   if (cur_control_mode_ == JOG)
   {
+    // If this command is non-zero, update the timeout window
+    if(fabs(x_pos) > 0.001 || fabs(y_pos) > 0.001 || fabs(z_pos) > 0.001 || 
+        fabs(x_ori) > 0.001 || fabs(y_ori) > 0.001 || fabs(z_ori) > 0.001)
+    {
+      last_nonzero_jog_time_ = ros::Time::now();
+    }
+
     if (cur_teleop_mode_ == NAVIGATION)
     {
       nav_twist_cmd_.header.stamp = ros::Time::now();
