@@ -680,7 +680,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode. Don't want to start jogging an arm
     // suddenly
     ROS_INFO("Switching out of jog mode");
-    cur_control_mode_ = POINT_TO_POINT;
+    cur_control_mode_ = JOG;
     setScale();
 
     ROS_INFO("Going into MANIPULATION mode  ...");
@@ -712,7 +712,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     // Make sure we aren't in jog mode, for safety
     ROS_INFO("Switching out of jog mode");
     resetEEGraphicPose();
-    cur_control_mode_ = POINT_TO_POINT;
+    cur_control_mode_ = JOG;
     ROS_INFO("Going into NAVIGATION mode  ...");
     sound_client_.say("navigation mode");
     cur_teleop_mode_ = NAVIGATION;
@@ -731,7 +731,7 @@ void Teleoperator::processStringCommand(std_msgs::String voice_command)
     ROS_INFO("Controlling the next EE from yaml file ...");
 
     // No jogging, initially, for safety
-    cur_control_mode_ = POINT_TO_POINT;
+    cur_control_mode_ = JOG;
     switchEE();
 
     return;
