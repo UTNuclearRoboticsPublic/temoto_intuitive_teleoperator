@@ -59,6 +59,7 @@ int main(int argc, char** argv)
         catch (tf2::TransformException &ex)
         {
         ROS_WARN_THROTTLE(1, "%s",ex.what());
+        node_rate.sleep();
         continue;
         }
 
