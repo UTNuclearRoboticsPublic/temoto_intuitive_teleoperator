@@ -8,7 +8,7 @@
 
 // ~~~~~~~ PARAMETERS ~~~~~~~~~~~~
 double loop_rate = 20; //hz
-std::string ee_fixed_frame_name = "right_gripper_toolpoint";
+std::string ee_fixed_frame_name = "right_ur5_grasp_frame";
 std::string ee_world_up_frame_name = "ee_world_up";
 std::string base_link_name = "base_link";
 std::string ur_ee_link_name = "right_ur5_2_finger_140_gripper_link";
@@ -48,8 +48,8 @@ int main(int argc, char** argv)
     while(ros::ok())
     {
         // Publish the gripper -> toolpoint transform
-        gripper_toolpoint_tf_msg.header.stamp = ros::Time::now();
-        tfBroadcaster.sendTransform(gripper_toolpoint_tf_msg);
+        // gripper_toolpoint_tf_msg.header.stamp = ros::Time::now();
+        // tfBroadcaster.sendTransform(gripper_toolpoint_tf_msg);
 
         // Get the base -> gripper transform
         try
