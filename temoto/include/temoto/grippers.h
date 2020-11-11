@@ -36,6 +36,7 @@
 
 #include "ros/ros.h"
 #include "temoto/gripper_robotiq.h"
+#include "temoto/gripper_zimmer.h"
 
 #ifndef GRIPPERS_H
 #define GRIPPERS_H

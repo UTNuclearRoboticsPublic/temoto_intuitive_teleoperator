@@ -12,7 +12,7 @@ temoto:
       wrist_joint_name: "right_ur5_wrist_3_joint"
       force_torque_frame: "right_ur5_base"
       force_torque_topic: "right_ur5_wrench"
-      gripper_type: "robotiq" # robotiq, hebi, or nothing
+      gripper_type: "robotiq" # robotiq, zimmer, or nothing
       gripper_topic: "/Robotiq2FGripperRobotOutput" # empty if no gripper or no topic required
       toggle_compliance_service: "/right_ur5compliance_controller/toggle_compliance"
       enable_compliance_service: "/right_ur5compliance_controller/enable_compliance"
@@ -29,7 +29,7 @@ temoto:
       wrist_joint_name: "left_ur5_wrist_3_joint"
       force_torque_frame: "left_ur5_base"
       force_torque_topic: "left_ur5_wrench"
-      gripper_type: "" # robotiq, hebi, or nothing
+      gripper_type: "" # robotiq, zimmer, or nothing
       gripper_topic: "" # empty if no gripper or no topic required
       toggle_compliance_service: "/left_ur5compliance_controller/toggle_compliance"
       bias_compliance_service: "/left_wrench_to_joint_vel_pub/bias_compliance_calcs"

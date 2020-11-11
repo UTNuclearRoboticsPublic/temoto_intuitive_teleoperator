@@ -46,6 +46,11 @@ add_library(gripper_robotiq
 )
 add_dependencies(gripper_robotiq ${catkin_EXPORTED_TARGETS})
 
+add_library(gripper_zimmer
+  src/gripper_base_class
+)
+add_dependencies(gripper_zimmer ${catkin_EXPORTED_TARGETS})
+
 ##########################################
 # This is where most of the action happens
 ##########################################
@@ -54,6 +59,7 @@ add_executable(start_teleop
   src/graphics_and_frames.cpp
   src/gripper_base_class.cpp
   src/gripper_robotiq.cpp
+  src/gripper_zimmer.cpp
   src/grippers.cpp
   src/move_robot.cpp
   src/navigate_robot.cpp

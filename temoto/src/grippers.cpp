@@ -51,6 +51,10 @@ Grippers::Grippers(std::string gripper_type, std::string gripper_topic)
   {
     gripper_object_ = std::unique_ptr<GripperRobotiq>(new GripperRobotiq(gripper_topic));
   }
+  else if (gripper_type == "zimmer")
+  {
+    gripper_object_ = std::unique_ptr<GripperZimmer>(new GripperZimmer(gripper_topic));
+  }
   else
   {
     ROS_ERROR_STREAM("This gripper type is not supported");
