@@ -15,7 +15,7 @@ void GripperZimmer::close()
   control_msgs::GripperCommandGoal goal;
   goal.command.position = zimmer::ZIMMER_CLOSE_POSITION;
   action_client_.sendGoal(goal);
-  bool finished_before_timeout = action_client_.waitForResult(ros::Duration(30.0));
+  // bool finished_before_timeout = action_client_.waitForResult(ros::Duration(30.0));
 }
 
 void GripperZimmer::open()
@@ -24,6 +24,6 @@ void GripperZimmer::open()
   control_msgs::GripperCommandGoal goal;
   goal.command.position = zimmer::ZIMMER_OPEN_POSITION;
   action_client_.sendGoal(goal);
-  bool finished_before_timeout = action_client_.waitForResult(ros::Duration(30.0));
+  // bool finished_before_timeout = action_client_.waitForResult(ros::Duration(30.0));
 }
 }
